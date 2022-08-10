@@ -46,6 +46,7 @@ type metrics struct {
 	numAddSubnetValidatorTxs,
 	numAddValidatorTxs,
 	numAdvanceTimeTxs,
+	numWriteAtomicTxs,
 	numCreateChainTxs,
 	numCreateSubnetTxs,
 	numExportTxs,
@@ -130,6 +131,7 @@ func (m *metrics) Initialize(
 	m.numCreateChainTxs = newTxMetrics(namespace, "create_chain")
 	m.numCreateSubnetTxs = newTxMetrics(namespace, "create_subnet")
 	m.numExportTxs = newTxMetrics(namespace, "export")
+	m.numWriteAtomicTxs = newTxMetrics(namespace, "write_atomic")
 	m.numImportTxs = newTxMetrics(namespace, "import")
 	m.numRewardValidatorTxs = newTxMetrics(namespace, "reward_validator")
 
@@ -178,6 +180,7 @@ func (m *metrics) Initialize(
 		registerer.Register(m.numAddSubnetValidatorTxs),
 		registerer.Register(m.numAddValidatorTxs),
 		registerer.Register(m.numAdvanceTimeTxs),
+		registerer.Register(m.numWriteAtomicTxs),
 		registerer.Register(m.numCreateChainTxs),
 		registerer.Register(m.numCreateSubnetTxs),
 		registerer.Register(m.numExportTxs),
@@ -233,6 +236,8 @@ func (m *metrics) AcceptTx(tx *Tx) error {
 		m.numAddValidatorTxs.Inc()
 	case *UnsignedAdvanceTimeTx:
 		m.numAdvanceTimeTxs.Inc()
+	case *UnsignedWriteAtomicTx:
+		m.numWriteAtomicTxs.Inc()
 	case *UnsignedCreateChainTx:
 		m.numCreateChainTxs.Inc()
 	case *UnsignedCreateSubnetTx:

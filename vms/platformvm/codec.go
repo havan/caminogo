@@ -72,6 +72,7 @@ func init() {
 
 			c.RegisterType(&UnsignedAdvanceTimeTx{}),
 			c.RegisterType(&UnsignedRewardValidatorTx{}),
+			c.RegisterType(&UnsignedWriteAtomicTx{}),
 
 			c.RegisterType(&StakeableLockIn{}),
 			c.RegisterType(&StakeableLockOut{}),
