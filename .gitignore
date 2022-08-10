@@ -49,3 +49,4 @@ keys/staker.*
 !*.proto
 
 scripts/.build_image_gopath/
+.pre-commit-config.yaml
