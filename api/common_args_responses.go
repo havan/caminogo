@@ -59,6 +59,11 @@ type JSONTxIDChangeAddr struct {
 	JSONChangeAddr
 }
 
+type SharedMemoryRecord struct {
+	Key   string
+	Value string
+}
+
 // JSONFromAddrs is a list of addresses to send funds from
 type JSONFromAddrs struct {
 	From []string `json:"from"`

@@ -15,6 +15,7 @@
 package platformvm
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"net/http"
@@ -1455,6 +1456,88 @@ func (service *Service) ExportAVAX(_ *http.Request, args *ExportAVAXArgs, respon
 		user.Close(),
 	)
 	return errs.Err
+}
+
+// WriteAtomicArgs are the arguments to WriteAtomic
+type WriteAtomicArgs struct {
+	// Key value pair to write
+	Key   string `json:"key"`
+	Value string `json:"value"`
+
+	// Target chain alias to write to
+	TargetChain string `json:"targetChain"`
+}
+
+// WriteAtomic allows to writing semi-arbitrary bytes to the shared memory of other chains in the same subnet
+func (service *Service) WriteAtomic(_ *http.Request, args *WriteAtomicArgs, response *api.JSONTxID) error {
+	service.vm.ctx.Log.Debug("Platform: WriteAtomic called")
+
+	chainID, err := service.vm.ctx.BCLookup.Lookup(args.TargetChain)
+	if err != nil {
+		return fmt.Errorf("problem parsing chainID %q: %w", args.TargetChain, err)
+	}
+
+	keyBytes, err := hex.DecodeString(args.Key)
+	if err != nil {
+		return fmt.Errorf("failed to decode key: %v", err)
+	}
+	valueBytes, err := hex.DecodeString(args.Value)
+	if err != nil {
+		return fmt.Errorf("failed to decode value: %v", err)
+	}
+
+	tx, err := service.vm.newWriteAtomicTx(keyBytes, valueBytes, chainID)
+	if err != nil {
+		return fmt.Errorf("failed to build WriteAtomicTx: %v", err)
+	}
+
+	response.TxID = tx.ID()
+
+	errs := wrappers.Errs{}
+	errs.Add(
+		err,
+		service.vm.blockBuilder.AddUnverifiedTx(tx),
+	)
+	return errs.Err
+}
+
+// ReadAtomicMemoryArgs are the arguments to ReadSharedMemory
+type ReadAtomicMemoryArgs struct {
+	// key to read
+	Key string `json:"key"`
+	// source chain alias to read from
+	SourceChain string `json:"sourceChain"`
+}
+
+// Read Shared Memory allows the reading of shared memory with each other chain
+// TODO @jax it currently does not check if the chains are in the same subnet, maybe this can lead to issues, but as its just a read op
+// TODO @jax im not too concerned
+func (service *Service) ReadSharedMemory(_ *http.Request, args *ReadAtomicMemoryArgs, response *api.SharedMemoryRecord) error {
+	service.vm.ctx.Log.Debug("Platform: ReadAtomicMemory called")
+
+	chainID, err := service.vm.ctx.BCLookup.Lookup(args.SourceChain)
+	if err != nil {
+		return fmt.Errorf("problem parsing chainID %q: %w", args.SourceChain, err)
+	}
+
+	keyBytes, err := hex.DecodeString(args.Key)
+	if err != nil {
+		return fmt.Errorf("failed to decode key: %v", err)
+	}
+
+	prefixedKeyBytes := PrefixKeyForAtomic(keyBytes)
+
+	valueBytes, err := service.vm.ctx.SharedMemory.Get(chainID, [][]byte{prefixedKeyBytes})
+	if err != nil {
+		return fmt.Errorf("could not read from shared memory of chain with id %s: %v", err, chainID)
+	}
+
+	valueString := hex.EncodeToString(valueBytes[0])
+
+	response.Key = args.Key
+	response.Value = valueString
+
+	return nil
 }
 
 // ImportAVAXArgs are the arguments to ImportAVAX
