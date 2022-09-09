@@ -342,7 +342,6 @@ func TestGetTx(t *testing.T) {
 			"proposal block",
 			func(service *Service) (*Tx, error) {
 				return service.vm.newAddValidatorTx( // Test GetTx works for proposal blocks
-					service.vm.MinValidatorStake,
 					uint64(service.vm.clock.Time().Add(syncBound).Unix()),
 					uint64(service.vm.clock.Time().Add(syncBound).Add(defaultMinStakingDuration).Unix()),
 					ids.GenerateTestShortID(),
@@ -480,9 +479,9 @@ func TestGetStake(t *testing.T) {
 		service.vm.ctx.Lock.Unlock()
 	}()
 
+	addrsStrs := []string{}
 	// Ensure GetStake is correct for each of the genesis validators
 	genesis, _ := defaultGenesis()
-	addrsStrs := []string{}
 	for i, validator := range genesis.Validators {
 		addr := fmt.Sprintf("P-%s", validator.RewardOwner.Addresses[0])
 		addrsStrs = append(addrsStrs, addr)
@@ -495,7 +494,7 @@ func TestGetStake(t *testing.T) {
 		response := GetStakeReply{}
 		err := service.GetStake(nil, &args, &response)
 		assert.NoError(err)
-		assert.EqualValues(uint64(defaultWeight), uint64(response.Staked))
+		assert.EqualValues(defaultValidatorStake, uint64(response.Staked))
 		assert.Len(response.Outputs, 1)
 		// Unmarshal into an output
 		outputBytes, err := formatting.Decode(args.Encoding, response.Outputs[0])
@@ -505,7 +504,7 @@ func TestGetStake(t *testing.T) {
 		assert.NoError(err)
 		out, ok := output.Out.(*secp256k1fx.TransferOutput)
 		assert.True(ok)
-		assert.EqualValues(out.Amount(), defaultWeight)
+		assert.EqualValues(out.Amount(), defaultValidatorStake)
 		assert.EqualValues(out.Threshold, 1)
 		assert.Len(out.Addrs, 1)
 		assert.Equal(keys[i].PublicKey().Address(), out.Addrs[0])
@@ -522,7 +521,7 @@ func TestGetStake(t *testing.T) {
 	response := GetStakeReply{}
 	err := service.GetStake(nil, &args, &response)
 	assert.NoError(err)
-	assert.EqualValues(len(genesis.Validators)*defaultWeight, response.Staked)
+	assert.EqualValues(len(genesis.Validators)*int(defaultValidatorStake), response.Staked)
 	assert.Len(response.Outputs, len(genesis.Validators))
 	for _, outputStr := range response.Outputs {
 		outputBytes, err := formatting.Decode(args.Encoding, outputStr)
@@ -532,21 +531,19 @@ func TestGetStake(t *testing.T) {
 		assert.NoError(err)
 		out, ok := output.Out.(*secp256k1fx.TransferOutput)
 		assert.True(ok)
-		assert.EqualValues(defaultWeight, out.Amount())
+		assert.EqualValues(defaultValidatorStake, out.Amount())
 		assert.EqualValues(out.Threshold, 1)
 		assert.EqualValues(out.Locktime, 0)
 		assert.Len(out.Addrs, 1)
 	}
 
-	oldStake := uint64(defaultWeight)
+	oldStake := defaultValidatorStake
 
 	// Make sure this works for pending stakers
 	// Add a pending staker
-	stakeAmt := service.vm.MinValidatorStake + 54321
 	pendingStakerNodeID := ids.GenerateTestShortID()
 	pendingStakerEndTime := uint64(defaultGenesisTime.Add(defaultMinStakingDuration).Unix())
 	tx, err := service.vm.newAddValidatorTx(
-		stakeAmt,
 		uint64(defaultGenesisTime.Unix()),
 		pendingStakerEndTime,
 		pendingStakerNodeID,
@@ -563,12 +560,12 @@ func TestGetStake(t *testing.T) {
 	err = service.vm.internalState.(*internalStateImpl).loadPendingValidators()
 	assert.NoError(err)
 
-	// Make sure the new staked amount includes the stake (old stake + stakeAmt)
+	// Make sure the new staked amount includes the stake (old stake + stakeAmt (defaultValidatorStake))
 	addr, _ := service.vm.FormatLocalAddress(keys[0].PublicKey().Address())
 	args.Addresses = []string{addr}
 	err = service.GetStake(nil, &args, &response)
 	assert.NoError(err)
-	assert.EqualValues(oldStake+stakeAmt, uint64(response.Staked))
+	assert.EqualValues(oldStake+defaultValidatorStake, uint64(response.Staked))
 	assert.Len(response.Outputs, 2)
 	outputs := make([]avax.TransferableOutput, 2)
 	// Unmarshal
@@ -579,7 +576,7 @@ func TestGetStake(t *testing.T) {
 		assert.NoError(err)
 	}
 	// Make sure the stake amount is as expected
-	assert.EqualValues(stakeAmt+oldStake, outputs[0].Out.Amount()+outputs[1].Out.Amount())
+	assert.EqualValues(defaultValidatorStake+oldStake, outputs[0].Out.Amount()+outputs[1].Out.Amount())
 }
 
 // Test method GetCurrentValidators

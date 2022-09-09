@@ -995,7 +995,6 @@ func (service *Service) AddValidator(_ *http.Request, args *AddValidatorArgs, re
 
 	// Create the transaction
 	tx, err := service.vm.newAddValidatorTx(
-		args.weight(),          // Stake amount
 		uint64(args.StartTime), // Start time
 		uint64(args.EndTime),   // End time
 		nodeID,                 // Node ID
@@ -2011,13 +2010,13 @@ func (service *Service) GetStake(_ *http.Request, args *GetStakeArgs, response *
 
 // GetMinStakeReply is the response from calling GetMinStake.
 type GetMinStakeReply struct {
-	//  The minimum amount of tokens one must bond to be a validator
-	MinValidatorStake json.Uint64 `json:"minValidatorStake"`
+	//  The amount of tokens one must bond to be a validator
+	ValidatorBondAmount json.Uint64 `json:"minValidatorStake"`
 }
 
 // GetMinStake returns the minimum staking amount in nAVAX.
 func (service *Service) GetMinStake(_ *http.Request, _ *struct{}, reply *GetMinStakeReply) error {
-	reply.MinValidatorStake = json.Uint64(service.vm.MinValidatorStake)
+	reply.ValidatorBondAmount = json.Uint64(service.vm.internalState.GetValidatorBondAmount())
 	return nil
 }
 
@@ -2192,10 +2191,6 @@ type GetConfigurationReply struct {
 	MinStakeDuration json.Uint64 `json:"minStakeDuration"`
 	// The maximum duration a validator can stake
 	MaxStakeDuration json.Uint64 `json:"maxStakeDuration"`
-	// The minimum amount of tokens one must bond to be a validator
-	MinValidatorStake json.Uint64 `json:"minValidatorStake"`
-	// The maximum amount of tokens bondable to a validator
-	MaxValidatorStake json.Uint64 `json:"maxValidatorStake"`
 	// The minimum consumption rate
 	MinConsumptionRate json.Uint64 `json:"minConsumptionRate"`
 	// The maximum consumption rate
@@ -2224,9 +2219,6 @@ func (service *Service) GetConfiguration(_ *http.Request, _ *struct{}, reply *Ge
 	// Staking information
 	reply.MinStakeDuration = json.Uint64(service.vm.MinStakeDuration)
 	reply.MaxStakeDuration = json.Uint64(service.vm.MaxStakeDuration)
-
-	reply.MaxValidatorStake = json.Uint64(service.vm.MaxValidatorStake)
-	reply.MinValidatorStake = json.Uint64(service.vm.MinValidatorStake)
 
 	reply.MinConsumptionRate = json.Uint64(service.vm.RewardConfig.MinConsumptionRate)
 	reply.MaxConsumptionRate = json.Uint64(service.vm.RewardConfig.MaxConsumptionRate)

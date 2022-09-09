@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	"github.com/chain4travel/caminogo/chains"
+	"github.com/chain4travel/caminogo/database"
 	"github.com/chain4travel/caminogo/database/manager"
 	"github.com/chain4travel/caminogo/ids"
 	"github.com/chain4travel/caminogo/snow"
@@ -103,9 +104,9 @@ func TestUnsignedRewardValidatorTxExecuteOnCommit(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if onCommitBalance != oldBalance+toRemove.Validator.Weight()+27 {
+	if onCommitBalance != oldBalance+toRemove.Validator.Weight()+13773 {
 		t.Fatalf("on commit, should have old balance (%d) + staked amount (%d) + reward (%d) but have %d",
-			oldBalance, toRemove.Validator.Weight(), 27, onCommitBalance)
+			oldBalance, toRemove.Validator.Weight(), 13773, onCommitBalance)
 	}
 }
 
@@ -381,8 +382,8 @@ func TestUptimeDisallowedWithRestart(t *testing.T) {
 	}
 
 	currentStakers := secondVM.internalState.CurrentStakerChainState()
-	_, err = currentStakers.GetValidator(keys[1].PublicKey().Address())
-	if err == nil {
+	_, err = currentStakers.GetValidator(keys[0].PublicKey().Address())
+	if err != database.ErrNotFound {
 		t.Fatal("should have removed a genesis validator")
 	}
 }
@@ -513,8 +514,8 @@ func TestUptimeDisallowedAfterNeverConnecting(t *testing.T) {
 	}
 
 	currentStakers := vm.internalState.CurrentStakerChainState()
-	_, err = currentStakers.GetValidator(keys[1].PublicKey().Address())
-	if err == nil {
+	_, err = currentStakers.GetValidator(keys[0].PublicKey().Address())
+	if err != database.ErrNotFound {
 		t.Fatal("should have removed a genesis validator")
 	}
 }

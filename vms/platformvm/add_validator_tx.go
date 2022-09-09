@@ -34,9 +34,9 @@ import (
 var (
 	errNilTx           = errors.New("tx is nil")
 	errWeightTooSmall  = errors.New("weight of this validator is too low")
-	errWeightTooLarge  = errors.New("weight of this validator is too large")
 	errStakeTooShort   = errors.New("staking period is too short")
 	errStakeTooLong    = errors.New("staking period is too long")
+	errWrongBondAmount = errors.New("wrong bond amount for this validator")
 	errFutureStakeTime = fmt.Errorf("staker is attempting to start staking more than %s ahead of the current chain time", maxFutureStartTime)
 
 	_ UnsignedProposalTx = &UnsignedAddValidatorTx{}
@@ -154,11 +154,8 @@ func (tx *UnsignedAddValidatorTx) Execute(
 		return nil, nil, err
 	}
 
-	switch {
-	case tx.Validator.Wght < vm.MinValidatorStake: // Ensure validator is staking at least the minimum amount
-		return nil, nil, errWeightTooSmall
-	case tx.Validator.Wght > vm.MaxValidatorStake: // Ensure validator isn't staking too much
-		return nil, nil, errWeightTooLarge
+	if tx.Validator.Wght != parentState.GetValidatorBondAmount() {
+		return nil, nil, errWrongBondAmount
 	}
 
 	duration := tx.Validator.Duration()
@@ -262,7 +259,6 @@ func (tx *UnsignedAddValidatorTx) InitiallyPrefersCommit(vm *VM) bool {
 
 // NewAddValidatorTx returns a new NewAddValidatorTx
 func (vm *VM) newAddValidatorTx(
-	stakeAmt, // Amount the validator stakes
 	startTime, // Unix time they start validating
 	endTime uint64, // Unix time they stop validating
 	nodeID ids.ShortID, // ID of the node we want to validate with
@@ -270,7 +266,8 @@ func (vm *VM) newAddValidatorTx(
 	keys []*crypto.PrivateKeySECP256K1R, // Keys providing the staked tokens
 	changeAddr ids.ShortID, // Address to send change to, if there is any
 ) (*Tx, error) {
-	ins, unlockedOuts, lockedOuts, signers, err := vm.stake(keys, stakeAmt, vm.AddStakerTxFee, changeAddr)
+	bondAmount := vm.internalState.GetValidatorBondAmount()
+	ins, unlockedOuts, lockedOuts, signers, err := vm.stake(keys, bondAmount, vm.AddStakerTxFee, changeAddr)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't generate tx inputs/outputs: %w", err)
 	}
@@ -286,7 +283,7 @@ func (vm *VM) newAddValidatorTx(
 			NodeID: nodeID,
 			Start:  startTime,
 			End:    endTime,
-			Wght:   stakeAmt,
+			Wght:   bondAmount,
 		},
 		Stake: lockedOuts,
 		RewardsOwner: &secp256k1fx.OutputOwners{

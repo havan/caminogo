@@ -24,11 +24,6 @@ import (
 type StakingConfig struct {
 	// Staking uptime requirements
 	UptimeRequirement float64 `json:"uptimeRequirement"`
-	// Minimum stake, in nAVAX, required to validate the primary network
-	MinValidatorStake uint64 `json:"minValidatorStake"`
-	// Maximum stake, in nAVAX, allowed to be placed on a single validator in
-	// the primary network
-	MaxValidatorStake uint64 `json:"maxValidatorStake"`
 	// MinStakeDuration is the minimum amount of time a validator can validate
 	// for in a single period.
 	MinStakeDuration time.Duration `json:"minStakeDuration"`

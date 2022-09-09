@@ -631,7 +631,7 @@ func (c *client) GetStake(ctx context.Context, addrs []string, options ...rpc.Op
 func (c *client) GetMinStake(ctx context.Context, options ...rpc.Option) (uint64, error) {
 	res := new(GetMinStakeReply)
 	err := c.requester.SendRequest(ctx, "getMinStake", struct{}{}, res, options...)
-	return uint64(res.MinValidatorStake), err
+	return uint64(res.ValidatorBondAmount), err
 }
 
 func (c *client) GetTotalStake(ctx context.Context, options ...rpc.Option) (uint64, error) {

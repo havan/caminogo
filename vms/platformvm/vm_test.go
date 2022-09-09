@@ -95,11 +95,10 @@ var (
 	// each key controls an address that has [defaultBalance] AVAX at genesis
 	keys []*crypto.PrivateKeySECP256K1R
 
-	defaultMinValidatorStake = 5 * units.MilliAvax
-	defaultMaxValidatorStake = 500 * units.MilliAvax
+	defaultValidatorStake = 5 * units.MilliAvax
 
 	// amount all genesis validators have in defaultVM
-	defaultBalance = 100 * defaultMinValidatorStake
+	defaultBalance = 100 * defaultValidatorStake
 
 	// subnet that exists at genesis in defaultVM
 	// Its controlKeys are keys[0], keys[1], keys[2]
@@ -125,11 +124,11 @@ func init() {
 	ctx := defaultContext()
 	factory := crypto.FactorySECP256K1R{}
 	for _, key := range []string{
-		"24jUJ9vZexUM6expyMcT48LBx27k1m7xpraoV62oSQAHdziao5",
-		"2MMvUMsxx6zsHSNXJdFD8yc5XkancvwyKPwpw4xUK3TCGDuNBY",
-		"cxb7KpGWhDMALTjNNSJ7UQkkomPesyWAPUaWRGdyeBNzR6f35",
 		"ewoqjP7PxY4yr3iLTpLisriqt94hdyDFNgchSxGGztUrTXtNN",
 		"2RWLv6YVEXDiWLpaCbXhhqxtLbnFaKQsWPSSMSPhpWo47uJAeV",
+		"cxb7KpGWhDMALTjNNSJ7UQkkomPesyWAPUaWRGdyeBNzR6f35",
+		"2MMvUMsxx6zsHSNXJdFD8yc5XkancvwyKPwpw4xUK3TCGDuNBY",
+		"24jUJ9vZexUM6expyMcT48LBx27k1m7xpraoV62oSQAHdziao5",
 	} {
 		privKeyBytes, err := formatting.Decode(formatting.CB58, key)
 		ctx.Log.AssertNoError(err)
@@ -219,21 +218,22 @@ func defaultGenesis() (*BuildGenesisArgs, []byte) {
 				Addresses: []string{addr},
 			},
 			Staked: []APIUTXO{{
-				Amount:  json.Uint64(defaultWeight),
+				Amount:  json.Uint64(defaultValidatorStake),
 				Address: addr,
 			}},
 		}
 	}
 
 	buildGenesisArgs := BuildGenesisArgs{
-		Encoding:      formatting.Hex,
-		NetworkID:     json.Uint32(testNetworkID),
-		AvaxAssetID:   avaxAssetID,
-		UTXOs:         genesisUTXOs,
-		Validators:    genesisValidators,
-		Chains:        nil,
-		Time:          json.Uint64(defaultGenesisTime.Unix()),
-		InitialSupply: json.Uint64(360 * units.MegaAvax),
+		Encoding:            formatting.Hex,
+		NetworkID:           json.Uint32(testNetworkID),
+		AvaxAssetID:         avaxAssetID,
+		UTXOs:               genesisUTXOs,
+		Validators:          genesisValidators,
+		Chains:              nil,
+		Time:                json.Uint64(defaultGenesisTime.Unix()),
+		InitialSupply:       json.Uint64(360 * units.MegaAvax),
+		ValidatorBondAmount: json.Uint64(defaultValidatorStake),
 	}
 
 	buildGenesisResponse := BuildGenesisReply{}
@@ -300,14 +300,15 @@ func BuildGenesisTestWithArgs(t *testing.T, args *BuildGenesisArgs) (*BuildGenes
 	}
 
 	buildGenesisArgs := BuildGenesisArgs{
-		NetworkID:     json.Uint32(testNetworkID),
-		AvaxAssetID:   avaxAssetID,
-		UTXOs:         genesisUTXOs,
-		Validators:    genesisValidators,
-		Chains:        nil,
-		Time:          json.Uint64(defaultGenesisTime.Unix()),
-		InitialSupply: json.Uint64(360 * units.MegaAvax),
-		Encoding:      formatting.CB58,
+		NetworkID:           json.Uint32(testNetworkID),
+		AvaxAssetID:         avaxAssetID,
+		UTXOs:               genesisUTXOs,
+		Validators:          genesisValidators,
+		Chains:              nil,
+		Time:                json.Uint64(defaultGenesisTime.Unix()),
+		InitialSupply:       json.Uint64(360 * units.MegaAvax),
+		Encoding:            formatting.CB58,
+		ValidatorBondAmount: json.Uint64(defaultValidatorStake),
 	}
 
 	if args != nil {
@@ -336,8 +337,6 @@ func defaultVM() (*VM, database.Database, *common.SenderTest) {
 		TxFee:                  defaultTxFee,
 		CreateSubnetTxFee:      100 * defaultTxFee,
 		CreateBlockchainTxFee:  100 * defaultTxFee,
-		MinValidatorStake:      defaultMinValidatorStake,
-		MaxValidatorStake:      defaultMaxValidatorStake,
 		MinStakeDuration:       defaultMinStakingDuration,
 		MaxStakeDuration:       defaultMaxStakingDuration,
 		RewardConfig:           defaultRewardConfig,
@@ -413,8 +412,6 @@ func GenesisVMWithArgs(t *testing.T, args *BuildGenesisArgs) ([]byte, chan commo
 		Validators:             validators.NewManager(),
 		UptimeLockedCalculator: uptime.NewLockedCalculator(),
 		TxFee:                  defaultTxFee,
-		MinValidatorStake:      defaultMinValidatorStake,
-		MaxValidatorStake:      defaultMaxValidatorStake,
 		MinStakeDuration:       defaultMinStakingDuration,
 		MaxStakeDuration:       defaultMaxStakingDuration,
 		RewardConfig:           defaultRewardConfig,
@@ -578,7 +575,6 @@ func TestAddValidatorCommit(t *testing.T) {
 
 	// create valid tx
 	tx, err := vm.newAddValidatorTx(
-		vm.MinValidatorStake,
 		uint64(startTime.Unix()),
 		uint64(endTime.Unix()),
 		nodeID,
@@ -654,7 +650,6 @@ func TestInvalidAddValidatorCommit(t *testing.T) {
 
 	// create invalid tx
 	tx, err := vm.newAddValidatorTx(
-		vm.MinValidatorStake,
 		uint64(startTime.Unix()),
 		uint64(endTime.Unix()),
 		nodeID,
@@ -709,7 +704,6 @@ func TestAddValidatorReject(t *testing.T) {
 
 	// create valid tx
 	tx, err := vm.newAddValidatorTx(
-		vm.MinValidatorStake,
 		uint64(startTime.Unix()),
 		uint64(endTime.Unix()),
 		nodeID,
@@ -784,7 +778,6 @@ func TestAddValidatorInvalidNotReissued(t *testing.T) {
 
 	// create valid tx
 	tx, err := vm.newAddValidatorTx(
-		vm.MinValidatorStake,
 		uint64(startTime.Unix()),
 		uint64(endTime.Unix()),
 		repeatNodeID,
@@ -1062,7 +1055,8 @@ func TestRewardValidatorAccept(t *testing.T) {
 	}
 
 	currentStakers := vm.internalState.CurrentStakerChainState()
-	if _, err := currentStakers.GetValidator(keys[1].PublicKey().Address()); err == nil {
+	_, err = currentStakers.GetValidator(keys[0].PublicKey().Address())
+	if err != database.ErrNotFound {
 		t.Fatal("should have removed a genesis validator")
 	}
 }
@@ -1150,7 +1144,8 @@ func TestRewardValidatorReject(t *testing.T) {
 	}
 
 	currentStakers := vm.internalState.CurrentStakerChainState()
-	if _, err := currentStakers.GetValidator(keys[1].PublicKey().Address()); err == nil {
+	_, err = currentStakers.GetValidator(keys[0].PublicKey().Address())
+	if err != database.ErrNotFound {
 		t.Fatal("should have removed a genesis validator")
 	}
 }
@@ -1236,7 +1231,8 @@ func TestRewardValidatorPreferred(t *testing.T) {
 	}
 
 	currentStakers := vm.internalState.CurrentStakerChainState()
-	if _, err := currentStakers.GetValidator(keys[1].PublicKey().Address()); err == nil {
+	_, err = currentStakers.GetValidator(keys[0].PublicKey().Address())
+	if err != database.ErrNotFound {
 		t.Fatal("should have removed a genesis validator")
 	}
 }
@@ -2347,35 +2343,35 @@ func TestMaxStakeAmount(t *testing.T) {
 			startTime:      defaultValidateEndTime,
 			endTime:        defaultValidateEndTime.Add(2 * time.Minute),
 			validatorID:    keys[0].PublicKey().Address(),
-			expectedAmount: defaultWeight,
+			expectedAmount: defaultValidatorStake,
 		},
 		{
 			description:    "startTime before validation period ends",
 			startTime:      defaultValidateEndTime.Add(-time.Minute),
 			endTime:        defaultValidateEndTime.Add(2 * time.Minute),
 			validatorID:    keys[0].PublicKey().Address(),
-			expectedAmount: defaultWeight,
+			expectedAmount: defaultValidatorStake,
 		},
 		{
 			description:    "endTime after validation period ends",
 			startTime:      defaultValidateStartTime,
 			endTime:        defaultValidateEndTime.Add(time.Minute),
 			validatorID:    keys[0].PublicKey().Address(),
-			expectedAmount: defaultWeight,
+			expectedAmount: defaultValidatorStake,
 		},
 		{
 			description:    "endTime when validation period ends",
 			startTime:      defaultValidateStartTime,
 			endTime:        defaultValidateEndTime,
 			validatorID:    keys[0].PublicKey().Address(),
-			expectedAmount: defaultWeight,
+			expectedAmount: defaultValidatorStake,
 		},
 		{
 			description:    "endTime before validation period ends",
 			startTime:      defaultValidateStartTime,
 			endTime:        defaultValidateEndTime.Add(-time.Minute),
 			validatorID:    keys[0].PublicKey().Address(),
-			expectedAmount: defaultWeight,
+			expectedAmount: defaultValidatorStake,
 		},
 	}
 
@@ -2510,7 +2506,6 @@ func TestRejectedStateRegressionInvalidValidatorTimestamp(t *testing.T) {
 
 	// Create the tx to add a new validator
 	addValidatorTx, err := vm.newAddValidatorTx(
-		vm.MinValidatorStake,
 		uint64(newValidatorStartTime.Unix()),
 		uint64(newValidatorEndTime.Unix()),
 		nodeID,
@@ -2736,7 +2731,6 @@ func TestRejectedStateRegressionInvalidValidatorReward(t *testing.T) {
 
 	// Create the tx to add the first new validator
 	addValidatorTx0, err := vm.newAddValidatorTx(
-		vm.MaxValidatorStake,
 		uint64(newValidatorStartTime0.Unix()),
 		uint64(newValidatorEndTime0.Unix()),
 		nodeID0,
@@ -2922,7 +2916,6 @@ func TestRejectedStateRegressionInvalidValidatorReward(t *testing.T) {
 
 	// Create the tx to add the second new validator
 	addValidatorTx1, err := vm.newAddValidatorTx(
-		vm.MaxValidatorStake,
 		uint64(newValidatorStartTime1.Unix()),
 		uint64(newValidatorEndTime1.Unix()),
 		nodeID1,
@@ -3044,12 +3037,12 @@ func TestRejectedStateRegressionInvalidValidatorReward(t *testing.T) {
 		node0, err := currentStakers.GetValidator(nodeID0)
 		assert.NoError(err)
 		potentialReward := node0.PotentialReward()
-		assert.Equal(uint64(60000000), potentialReward)
+		assert.Equal(uint64(600000), potentialReward)
 
 		node1, err := currentStakers.GetValidator(nodeID1)
 		assert.NoError(err)
 		potentialReward = node1.PotentialReward()
-		assert.EqualValues(uint64(59999999), potentialReward)
+		assert.EqualValues(uint64(599999), potentialReward)
 
 		pendingStakers := vm.internalState.PendingStakerChainState()
 		_, err = pendingStakers.GetValidatorTx(nodeID1)

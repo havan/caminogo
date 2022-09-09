@@ -594,7 +594,6 @@ func TestAdvanceTimeTxUnmarshal(t *testing.T) {
 
 func addPendingValidator(vm *VM, startTime time.Time, endTime time.Time, nodeID ids.ShortID, keys []*crypto.PrivateKeySECP256K1R) (*Tx, error) {
 	addPendingValidatorTx, err := vm.newAddValidatorTx(
-		vm.MinValidatorStake,
 		uint64(startTime.Unix()),
 		uint64(endTime.Unix()),
 		nodeID,

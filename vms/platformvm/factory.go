@@ -57,12 +57,6 @@ type Factory struct {
 	// Fee that must be burned by every blockchain creating transaction after AP3
 	CreateBlockchainTxFee uint64
 
-	// The minimum amount of tokens one must bond to be a validator
-	MinValidatorStake uint64
-
-	// The maximum amount of tokens that can be bonded on a validator
-	MaxValidatorStake uint64
-
 	// UptimePercentage is the minimum uptime required to be rewarded for staking
 	UptimePercentage float64
 
