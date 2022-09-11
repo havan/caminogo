@@ -38,9 +38,10 @@ import (
 // state of the network.
 
 var (
-	errUTXOHasNoValue       = errors.New("genesis UTXO has no value")
-	errValidatorAddsNoValue = errors.New("validator would have already unstaked")
-	errStakeOverflow        = errors.New("too many funds staked on single validator")
+	errUTXOHasNoValue                  = errors.New("genesis UTXO has no value")
+	errValidatorZeroStake              = errors.New("validator hase no stake")
+	errValidatorEndsBeforeGenesisStart = errors.New("validator would have already unstaked")
+	errStakeOverflow                   = errors.New("too many funds staked on single validator")
 )
 
 // StaticService defines the static API methods exposed by the platform VM
@@ -121,15 +122,16 @@ type APIChain struct {
 // [Chains] are the chains that exist at genesis.
 // [Time] is the Platform Chain's time at network genesis.
 type BuildGenesisArgs struct {
-	AvaxAssetID   ids.ID                `json:"avaxAssetID"`
-	NetworkID     json.Uint32           `json:"networkID"`
-	UTXOs         []APIUTXO             `json:"utxos"`
-	Validators    []APIPrimaryValidator `json:"validators"`
-	Chains        []APIChain            `json:"chains"`
-	Time          json.Uint64           `json:"time"`
-	InitialSupply json.Uint64           `json:"initialSupply"`
-	Message       string                `json:"message"`
-	Encoding      formatting.Encoding   `json:"encoding"`
+	AvaxAssetID         ids.ID                `json:"avaxAssetID"`
+	NetworkID           json.Uint32           `json:"networkID"`
+	UTXOs               []APIUTXO             `json:"utxos"`
+	Validators          []APIPrimaryValidator `json:"validators"`
+	Chains              []APIChain            `json:"chains"`
+	Time                json.Uint64           `json:"time"`
+	InitialSupply       json.Uint64           `json:"initialSupply"`
+	ValidatorBondAmount json.Uint64           `json:"validatorBondAmount"`
+	Message             string                `json:"message"`
+	Encoding            formatting.Encoding   `json:"encoding"`
 }
 
 // BuildGenesisReply is the reply from BuildGenesis
@@ -146,12 +148,13 @@ type GenesisUTXO struct {
 
 // Genesis represents a genesis state of the platform chain
 type Genesis struct {
-	UTXOs         []*GenesisUTXO `serialize:"true"`
-	Validators    []*Tx          `serialize:"true"`
-	Chains        []*Tx          `serialize:"true"`
-	Timestamp     uint64         `serialize:"true"`
-	InitialSupply uint64         `serialize:"true"`
-	Message       string         `serialize:"true"`
+	UTXOs               []*GenesisUTXO `serialize:"true"`
+	Validators          []*Tx          `serialize:"true"`
+	Chains              []*Tx          `serialize:"true"`
+	Timestamp           uint64         `serialize:"true"`
+	InitialSupply       uint64         `serialize:"true"`
+	ValidatorBondAmount uint64         `serialize:"true"`
+	Message             string         `serialize:"true"`
 }
 
 func (g *Genesis) Initialize() error {
@@ -259,11 +262,14 @@ func (ss *StaticService) BuildGenesis(_ *http.Request, args *BuildGenesisArgs, r
 			weight = newWeight
 		}
 
-		if weight == 0 {
-			return errValidatorAddsNoValue
+		switch {
+		case weight == 0:
+			return errValidatorZeroStake
+		case weight != uint64(args.ValidatorBondAmount):
+			return errWrongBondAmount
 		}
 		if uint64(validator.EndTime) <= uint64(args.Time) {
-			return errValidatorAddsNoValue
+			return errValidatorEndsBeforeGenesisStart
 		}
 		nodeID, err := ids.ShortFromPrefixedString(validator.NodeID, constants.NodeIDPrefix)
 		if err != nil {
@@ -337,12 +343,13 @@ func (ss *StaticService) BuildGenesis(_ *http.Request, args *BuildGenesisArgs, r
 
 	// genesis holds the genesis state
 	genesis := Genesis{
-		UTXOs:         utxos,
-		Validators:    validatorTxs,
-		Chains:        chains,
-		Timestamp:     uint64(args.Time),
-		InitialSupply: uint64(args.InitialSupply),
-		Message:       args.Message,
+		UTXOs:               utxos,
+		Validators:          validatorTxs,
+		Chains:              chains,
+		Timestamp:           uint64(args.Time),
+		InitialSupply:       uint64(args.InitialSupply),
+		Message:             args.Message,
+		ValidatorBondAmount: uint64(args.ValidatorBondAmount),
 	}
 
 	// Marshal genesis to bytes

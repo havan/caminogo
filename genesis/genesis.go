@@ -45,6 +45,7 @@ var (
 	errNoInitiallyStakedFunds = errors.New("initial staked funds cannot be empty")
 	errNoSupply               = errors.New("initial supply must be > 0")
 	errNoStakeDuration        = errors.New("initial stake duration must be > 0")
+	errNoValidatorBondAmount  = errors.New("validator bond amount must be > 0")
 	errNoStakers              = errors.New("initial stakers must be > 0")
 	errNoCChainGenesis        = errors.New("C-Chain genesis cannot be empty")
 	errNoTxs                  = errors.New("genesis creates no transactions")
@@ -150,6 +151,10 @@ func validateConfig(networkID uint32, config *Config) error {
 
 	if len(config.InitialStakers) == 0 {
 		return errNoStakers
+	}
+
+	if config.ValidatorBondAmount == 0 {
+		return errNoValidatorBondAmount
 	}
 
 	offsetTimeRequired := config.InitialStakeDurationOffset * uint64(len(config.InitialStakers)-1)
@@ -337,12 +342,13 @@ func FromConfig(config *Config) ([]byte, ids.ID, error) {
 
 	// Specify the initial state of the Platform Chain
 	platformvmArgs := platformvm.BuildGenesisArgs{
-		AvaxAssetID:   avaxAssetID,
-		NetworkID:     json.Uint32(config.NetworkID),
-		Time:          json.Uint64(config.StartTime),
-		InitialSupply: json.Uint64(initialSupply),
-		Message:       config.Message,
-		Encoding:      defaultEncoding,
+		AvaxAssetID:         avaxAssetID,
+		NetworkID:           json.Uint32(config.NetworkID),
+		Time:                json.Uint64(config.StartTime),
+		InitialSupply:       json.Uint64(initialSupply),
+		Message:             config.Message,
+		Encoding:            defaultEncoding,
+		ValidatorBondAmount: json.Uint64(config.ValidatorBondAmount),
 	}
 	for _, allocation := range config.Allocations {
 		if initiallyStaked.Contains(allocation.AVAXAddr) {

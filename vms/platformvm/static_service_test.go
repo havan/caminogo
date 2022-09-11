@@ -31,41 +31,35 @@ func TestBuildGenesisInvalidUTXOBalance(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	utxo := APIUTXO{
-		Address: addr,
-		Amount:  0,
-	}
-	weight := json.Uint64(987654321)
-	validator := APIPrimaryValidator{
-		APIStaker: APIStaker{
-			EndTime: 15,
-			Weight:  &weight,
-			NodeID:  nodeID,
-		},
-		RewardOwner: &APIOwner{
-			Threshold: 1,
-			Addresses: []string{addr},
-		},
-		Staked: []APIUTXO{{
-			Amount:  weight,
-			Address: addr,
-		}},
-	}
+	weight := json.Uint64(defaultValidatorStake)
 
 	args := BuildGenesisArgs{
-		UTXOs: []APIUTXO{
-			utxo,
-		},
-		Validators: []APIPrimaryValidator{
-			validator,
-		},
+		UTXOs: []APIUTXO{{
+			Address: addr,
+			Amount:  0,
+		}},
+		Validators: []APIPrimaryValidator{{
+			APIStaker: APIStaker{
+				EndTime: 15,
+				Weight:  &weight,
+				NodeID:  nodeID,
+			},
+			RewardOwner: &APIOwner{
+				Threshold: 1,
+				Addresses: []string{addr},
+			},
+			Staked: []APIUTXO{{
+				Amount:  weight,
+				Address: addr,
+			}},
+		}},
 		Time:     5,
 		Encoding: formatting.Hex,
 	}
 	reply := BuildGenesisReply{}
 
 	ss := StaticService{}
-	if err := ss.BuildGenesis(nil, &args, &reply); err == nil {
+	if err := ss.BuildGenesis(nil, &args, &reply); err != errUTXOHasNoValue {
 		t.Fatalf("Should have errored due to an invalid balance")
 	}
 }
@@ -78,41 +72,30 @@ func TestBuildGenesisInvalidAmount(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	utxo := APIUTXO{
-		Address: addr,
-		Amount:  123456789,
-	}
-	weight := json.Uint64(0)
-	validator := APIPrimaryValidator{
-		APIStaker: APIStaker{
-			StartTime: 0,
-			EndTime:   15,
-			NodeID:    nodeID,
-		},
-		RewardOwner: &APIOwner{
-			Threshold: 1,
-			Addresses: []string{addr},
-		},
-		Staked: []APIUTXO{{
-			Amount:  weight,
-			Address: addr,
-		}},
-	}
 
 	args := BuildGenesisArgs{
-		UTXOs: []APIUTXO{
-			utxo,
-		},
-		Validators: []APIPrimaryValidator{
-			validator,
-		},
+		Validators: []APIPrimaryValidator{{
+			APIStaker: APIStaker{
+				StartTime: 0,
+				EndTime:   15,
+				NodeID:    nodeID,
+			},
+			RewardOwner: &APIOwner{
+				Threshold: 1,
+				Addresses: []string{addr},
+			},
+			Staked: []APIUTXO{{
+				Amount:  json.Uint64(0),
+				Address: addr,
+			}},
+		}},
 		Time:     5,
 		Encoding: formatting.Hex,
 	}
 	reply := BuildGenesisReply{}
 
 	ss := StaticService{}
-	if err := ss.BuildGenesis(nil, &args, &reply); err == nil {
+	if err := ss.BuildGenesis(nil, &args, &reply); err != errValidatorZeroStake {
 		t.Fatalf("Should have errored due to an invalid amount")
 	}
 }
@@ -125,42 +108,33 @@ func TestBuildGenesisInvalidEndtime(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	utxo := APIUTXO{
-		Address: addr,
-		Amount:  123456789,
-	}
 
-	weight := json.Uint64(987654321)
-	validator := APIPrimaryValidator{
-		APIStaker: APIStaker{
-			StartTime: 0,
-			EndTime:   5,
-			NodeID:    nodeID,
-		},
-		RewardOwner: &APIOwner{
-			Threshold: 1,
-			Addresses: []string{addr},
-		},
-		Staked: []APIUTXO{{
-			Amount:  weight,
-			Address: addr,
-		}},
-	}
+	weight := json.Uint64(defaultValidatorStake)
 
 	args := BuildGenesisArgs{
-		UTXOs: []APIUTXO{
-			utxo,
-		},
-		Validators: []APIPrimaryValidator{
-			validator,
-		},
-		Time:     5,
-		Encoding: formatting.Hex,
+		Validators: []APIPrimaryValidator{{
+			APIStaker: APIStaker{
+				StartTime: 0,
+				EndTime:   5,
+				NodeID:    nodeID,
+			},
+			RewardOwner: &APIOwner{
+				Threshold: 1,
+				Addresses: []string{addr},
+			},
+			Staked: []APIUTXO{{
+				Amount:  weight,
+				Address: addr,
+			}},
+		}},
+		Time:                5,
+		Encoding:            formatting.Hex,
+		ValidatorBondAmount: weight,
 	}
 	reply := BuildGenesisReply{}
 
 	ss := StaticService{}
-	if err := ss.BuildGenesis(nil, &args, &reply); err == nil {
+	if err := ss.BuildGenesis(nil, &args, &reply); err != errValidatorEndsBeforeGenesisStart {
 		t.Fatalf("Should have errored due to an invalid end time")
 	}
 }
@@ -173,12 +147,8 @@ func TestBuildGenesisReturnsSortedValidators(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	utxo := APIUTXO{
-		Address: addr,
-		Amount:  123456789,
-	}
 
-	weight := json.Uint64(987654321)
+	weight := json.Uint64(defaultValidatorStake)
 	validator1 := APIPrimaryValidator{
 		APIStaker: APIStaker{
 			StartTime: 0,
@@ -229,16 +199,14 @@ func TestBuildGenesisReturnsSortedValidators(t *testing.T) {
 
 	args := BuildGenesisArgs{
 		AvaxAssetID: ids.ID{'d', 'u', 'm', 'm', 'y', ' ', 'I', 'D'},
-		UTXOs: []APIUTXO{
-			utxo,
-		},
 		Validators: []APIPrimaryValidator{
 			validator1,
 			validator2,
 			validator3,
 		},
-		Time:     5,
-		Encoding: formatting.Hex,
+		Time:                5,
+		Encoding:            formatting.Hex,
+		ValidatorBondAmount: json.Uint64(defaultValidatorStake),
 	}
 	reply := BuildGenesisReply{}
 
