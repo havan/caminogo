@@ -21,6 +21,7 @@ import (
 
 	"github.com/chain4travel/caminogo/ids"
 	"github.com/chain4travel/caminogo/utils/hashing"
+	"github.com/chain4travel/caminogo/utils/nodeid"
 	"github.com/chain4travel/caminogo/utils/wrappers"
 )
 
@@ -92,7 +93,16 @@ func (b *statelessBlock) initialize(bytes []byte) error {
 		return err
 	}
 	b.cert = cert
-	b.proposer = hashing.ComputeHash160Array(hashing.ComputeHash256(cert.Raw))
+
+	nodeIDBytes, err := nodeid.RecoverSecp256PublicKey(cert)
+	if err != nil {
+		return err
+	}
+	nodeID, err := ids.ToShortID(nodeIDBytes)
+	if err != nil {
+		return err
+	}
+	b.proposer = nodeID
 	return nil
 }
 

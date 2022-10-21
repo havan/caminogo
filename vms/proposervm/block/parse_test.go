@@ -23,6 +23,7 @@ import (
 
 	"github.com/chain4travel/caminogo/ids"
 	"github.com/chain4travel/caminogo/staking"
+	"github.com/chain4travel/caminogo/utils/nodeid"
 )
 
 func TestParse(t *testing.T) {
@@ -40,10 +41,17 @@ func TestParse(t *testing.T) {
 	cert := tlsCert.Leaf
 	key := tlsCert.PrivateKey.(crypto.Signer)
 
+	nodeIDBytes, err := nodeid.RecoverSecp256PublicKey(cert)
+	assert.NoError(err)
+
+	nodeID, err := ids.ToShortID(nodeIDBytes)
+	assert.NoError(err)
+
 	builtBlock, err := Build(
 		parentID,
 		timestamp,
 		pChainHeight,
+		nodeID,
 		cert,
 		innerBlockBytes,
 		chainID,

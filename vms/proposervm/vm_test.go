@@ -33,7 +33,7 @@ import (
 	"github.com/chain4travel/caminogo/snow/engine/snowman/block"
 	"github.com/chain4travel/caminogo/snow/validators"
 	"github.com/chain4travel/caminogo/staking"
-	"github.com/chain4travel/caminogo/utils/hashing"
+	"github.com/chain4travel/caminogo/utils/nodeid"
 	"github.com/chain4travel/caminogo/utils/timer/mockable"
 	"github.com/chain4travel/caminogo/version"
 	"github.com/chain4travel/caminogo/vms/proposervm/proposer"
@@ -42,7 +42,8 @@ import (
 )
 
 var (
-	pTestCert *tls.Certificate
+	pTestCert   *tls.Certificate
+	pTestNodeID ids.ShortID
 
 	genesisUnixTimestamp int64 = 1000
 	genesisTimestamp           = time.Unix(genesisUnixTimestamp, 0)
@@ -57,6 +58,14 @@ var (
 func init() {
 	var err error
 	pTestCert, err = staking.NewTLSCert()
+	if err != nil {
+		panic(err)
+	}
+	nodeIDBytes, err := nodeid.RecoverSecp256PublicKey(pTestCert.Leaf)
+	if err != nil {
+		panic(err)
+	}
+	pTestNodeID, err = ids.ToShortID(nodeIDBytes)
 	if err != nil {
 		panic(err)
 	}
@@ -131,7 +140,7 @@ func initTestProposerVM(
 	}
 
 	ctx := snow.DefaultContextTest()
-	ctx.NodeID = hashing.ComputeHash160Array(hashing.ComputeHash256(pTestCert.Leaf.Raw))
+	ctx.NodeID = pTestNodeID
 	ctx.StakingCertLeaf = pTestCert.Leaf
 	ctx.StakingLeafSigner = pTestCert.PrivateKey.(crypto.Signer)
 	ctx.ValidatorState = valState
@@ -465,6 +474,7 @@ func TestCoreBlockFailureCauseProposerBlockParseFailure(t *testing.T) {
 		proVM.preferred,
 		innerBlk.Timestamp(),
 		100, // pChainHeight,
+		proVM.ctx.NodeID,
 		proVM.ctx.StakingCertLeaf,
 		innerBlk.Bytes(),
 		proVM.ctx.ChainID,
@@ -510,6 +520,7 @@ func TestTwoProBlocksWrappingSameCoreBlockCanBeParsed(t *testing.T) {
 		proVM.preferred,
 		innerBlk.Timestamp(),
 		100, // pChainHeight,
+		proVM.ctx.NodeID,
 		proVM.ctx.StakingCertLeaf,
 		innerBlk.Bytes(),
 		proVM.ctx.ChainID,
@@ -531,6 +542,7 @@ func TestTwoProBlocksWrappingSameCoreBlockCanBeParsed(t *testing.T) {
 		proVM.preferred,
 		innerBlk.Timestamp(),
 		200, // pChainHeight,
+		proVM.ctx.NodeID,
 		proVM.ctx.StakingCertLeaf,
 		innerBlk.Bytes(),
 		proVM.ctx.ChainID,
@@ -865,7 +877,7 @@ func TestExpiredBuildBlock(t *testing.T) {
 	}
 
 	ctx := snow.DefaultContextTest()
-	ctx.NodeID = hashing.ComputeHash160Array(hashing.ComputeHash256(pTestCert.Leaf.Raw))
+	ctx.NodeID = pTestNodeID
 	ctx.StakingCertLeaf = pTestCert.Leaf
 	ctx.StakingLeafSigner = pTestCert.PrivateKey.(crypto.Signer)
 	ctx.ValidatorState = valState
@@ -1164,7 +1176,7 @@ func TestInnerVMRollback(t *testing.T) {
 	}
 
 	ctx := snow.DefaultContextTest()
-	ctx.NodeID = hashing.ComputeHash160Array(hashing.ComputeHash256(pTestCert.Leaf.Raw))
+	ctx.NodeID = pTestNodeID
 	ctx.StakingCertLeaf = pTestCert.Leaf
 	ctx.StakingLeafSigner = pTestCert.PrivateKey.(crypto.Signer)
 	ctx.ValidatorState = valState
