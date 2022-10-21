@@ -44,6 +44,7 @@ func TestBuild(t *testing.T) {
 		parentID,
 		timestamp,
 		pChainHeight,
+		ids.ShortID{},
 		cert,
 		innerBlockBytes,
 		chainID,

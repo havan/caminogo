@@ -27,6 +27,7 @@ import (
 	"github.com/chain4travel/caminogo/ids"
 	"github.com/chain4travel/caminogo/snow/choices"
 	"github.com/chain4travel/caminogo/staking"
+	"github.com/chain4travel/caminogo/utils/nodeid"
 	"github.com/chain4travel/caminogo/vms/proposervm/block"
 )
 
@@ -110,10 +111,14 @@ func initCommonTestData() (database.Database, BlockState, block.SignedBlock, err
 	cert := tlsCert.Leaf
 	key := tlsCert.PrivateKey.(crypto.Signer)
 
+	nodeIDBytes, _ := nodeid.RecoverSecp256PublicKey(cert)
+	nodeID, _ := ids.ToShortID(nodeIDBytes)
+
 	blk, err := block.Build(
 		parentID,
 		timestamp,
 		pChainHeight,
+		nodeID,
 		cert,
 		innerBlockBytes,
 		chainID,
