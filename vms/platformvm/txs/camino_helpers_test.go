@@ -4,7 +4,12 @@
 package txs
 
 import (
+	"errors"
 	"time"
+
+	"github.com/ava-labs/avalanchego/snow"
+	"github.com/ava-labs/avalanchego/utils/constants"
+	"github.com/ava-labs/avalanchego/utils/wrappers"
 
 	"github.com/ava-labs/avalanchego/vms/platformvm/stakeable"
 
@@ -20,6 +25,13 @@ const (
 	defaultCaminoValidatorWeight = 2 * units.KiloAvax
 	defaultMinStakingDuration    = 24 * time.Hour
 	defaultTxFee                 = uint64(100)
+	testNetworkID                = 10
+)
+
+var (
+	xChainID    = ids.Empty.Prefix(0)
+	cChainID    = ids.Empty.Prefix(1)
+	avaxAssetID = ids.ID{'y', 'e', 'e', 't'}
 )
 
 var (
@@ -28,6 +40,50 @@ var (
 	defaultValidateStartTime = defaultGenesisTime
 	defaultValidateEndTime   = defaultValidateStartTime.Add(10 * defaultMinStakingDuration)
 )
+
+type snLookup struct {
+	chainsToSubnet map[ids.ID]ids.ID
+}
+
+func (sn *snLookup) SubnetID(chainID ids.ID) (ids.ID, error) {
+	subnetID, ok := sn.chainsToSubnet[chainID]
+	if !ok {
+		return ids.ID{}, errors.New("missing subnet associated with requested chainID")
+	}
+	return subnetID, nil
+}
+
+func defaultContext() *snow.Context {
+	ctx := snow.DefaultContextTest()
+	ctx.NetworkID = testNetworkID
+	ctx.XChainID = xChainID
+	ctx.CChainID = cChainID
+	ctx.AVAXAssetID = avaxAssetID
+	aliaser := ids.NewAliaser()
+
+	errs := wrappers.Errs{}
+	errs.Add(
+		aliaser.Alias(constants.PlatformChainID, "P"),
+		aliaser.Alias(constants.PlatformChainID, constants.PlatformChainID.String()),
+		aliaser.Alias(xChainID, "X"),
+		aliaser.Alias(xChainID, xChainID.String()),
+		aliaser.Alias(cChainID, "C"),
+		aliaser.Alias(cChainID, cChainID.String()),
+	)
+	if errs.Errored() {
+		panic(errs.Err)
+	}
+	ctx.BCLookup = aliaser
+
+	ctx.SNLookup = &snLookup{
+		chainsToSubnet: map[ids.ID]ids.ID{
+			constants.PlatformChainID: constants.PrimaryNetworkID,
+			xChainID:                  constants.PrimaryNetworkID,
+			cChainID:                  constants.PrimaryNetworkID,
+		},
+	}
+	return ctx
+}
 
 func generateTestOut(assetID ids.ID, amount uint64, outputOwners secp256k1fx.OutputOwners, depositTxID, bondTxID ids.ID) *avax.TransferableOutput {
 	var out avax.TransferableOut = &secp256k1fx.TransferOutput{
