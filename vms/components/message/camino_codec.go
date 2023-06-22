@@ -23,6 +23,7 @@ func init() {
 	errs := wrappers.Errs{}
 	errs.Add(
 		lc.RegisterType(&CaminoRewardMessage{}),
+		lc.RegisterType(&CaminoCommandMessage{}),
 		Codec.RegisterCodec(CodecVersion, lc),
 	)
 	if errs.Errored() {
