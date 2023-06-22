@@ -55,6 +55,10 @@ func (*StandardTxExecutor) RewardValidatorTx(*txs.RewardValidatorTx) error {
 	return errWrongTxType
 }
 
+func (*StandardTxExecutor) SendCommandTx(*txs.SendCommandTx) error {
+	return errWrongTxType
+}
+
 func (e *StandardTxExecutor) CreateChainTx(tx *txs.CreateChainTx) error {
 	if err := e.Tx.SyntacticVerify(e.Ctx); err != nil {
 		return err

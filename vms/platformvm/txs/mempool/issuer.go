@@ -74,6 +74,11 @@ func (i *issuer) TransformSubnetTx(*txs.TransformSubnetTx) error {
 	return nil
 }
 
+func (i *issuer) SendCommandTx(*txs.SendCommandTx) error {
+	i.m.addDecisionTx(i.tx)
+	return nil
+}
+
 func (i *issuer) AddPermissionlessValidatorTx(*txs.AddPermissionlessValidatorTx) error {
 	i.m.addStakerTx(i.tx)
 	return nil

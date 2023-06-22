@@ -90,6 +90,10 @@ func (e *AtomicTxExecutor) ExportTx(tx *txs.ExportTx) error {
 	return e.atomicTx(tx)
 }
 
+func (e *AtomicTxExecutor) SendCommandTx(tx *txs.SendCommandTx) error {
+	return e.atomicTx(tx)
+}
+
 func (e *AtomicTxExecutor) atomicTx(tx txs.UnsignedTx) error {
 	onAccept, err := state.NewDiff(
 		e.ParentID,

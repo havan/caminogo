@@ -21,6 +21,7 @@ import (
 	"github.com/ava-labs/avalanchego/vms/platformvm/state"
 	"github.com/ava-labs/avalanchego/vms/platformvm/treasury"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
+	"github.com/ava-labs/avalanchego/vms/platformvm/txs/commands"
 	"github.com/ava-labs/avalanchego/vms/platformvm/utxo"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 
@@ -1586,6 +1587,48 @@ func (e *CaminoStandardTxExecutor) AddressStateTx(tx *txs.AddressStateTx) error 
 	if states != newStates {
 		e.State.SetAddressStates(tx.Address, newStates)
 	}
+
+	return nil
+}
+
+func (e *CaminoStandardTxExecutor) SendCommandTx(tx *txs.SendCommandTx) error {
+	if err := e.Tx.SyntacticVerify(e.Ctx); err != nil {
+		return err
+	}
+
+	// Verify the flowcheck
+	if err := e.FlowChecker.VerifySpend(
+		tx,
+		e.State,
+		tx.Ins,
+		tx.Outs,
+		e.Tx.Creds,
+		map[ids.ID]uint64{
+			e.Ctx.AVAXAssetID: e.Config.TxFee,
+		},
+	); err != nil {
+		return err
+	}
+
+	txID := e.Tx.ID()
+
+	commandBytes, err := commands.Codec.Marshal(commands.Version, tx.Command)
+	if err != nil {
+		return err
+	}
+
+	elems := []*atomic.Element{{
+		Key:   txID[:],
+		Value: commandBytes,
+	}}
+
+	e.AtomicRequests = map[ids.ID]*atomic.Requests{
+		tx.DestinationChain: {
+			PutRequests: elems,
+		},
+	}
+
+	// TODO: needs to send the crosschain request
 
 	return nil
 }
