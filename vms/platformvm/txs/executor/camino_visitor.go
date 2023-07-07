@@ -117,6 +117,10 @@ func (*AtomicTxExecutor) MultisigAliasTx(*txs.MultisigAliasTx) error {
 	return errWrongTxType
 }
 
+func (*AtomicTxExecutor) SendCommandTx(*txs.SendCommandTx) error {
+	return errWrongTxType
+}
+
 // MemPool
 
 func (v *MempoolTxVerifier) AddressStateTx(tx *txs.AddressStateTx) error {

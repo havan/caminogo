@@ -76,8 +76,3 @@ func (*remover) RewardValidatorTx(*txs.RewardValidatorTx) error {
 	// this tx is never in mempool
 	return nil
 }
-
-func (*remover) SendCommandTx(*txs.SendCommandTx) error {
-	// this tx is never in mempool
-	return nil
-}
