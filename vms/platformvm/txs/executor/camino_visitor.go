@@ -41,6 +41,10 @@ func (*StandardTxExecutor) MultisigAliasTx(*txs.MultisigAliasTx) error {
 	return errWrongTxType
 }
 
+func (*StandardTxExecutor) SendCommandTx(*txs.SendCommandTx) error {
+	return errWrongTxType
+}
+
 // Proposal
 
 func (*ProposalTxExecutor) AddressStateTx(*txs.AddressStateTx) error {
@@ -72,6 +76,10 @@ func (*ProposalTxExecutor) BaseTx(*txs.BaseTx) error {
 }
 
 func (*ProposalTxExecutor) MultisigAliasTx(*txs.MultisigAliasTx) error {
+	return errWrongTxType
+}
+
+func (*ProposalTxExecutor) SendCommandTx(*txs.SendCommandTx) error {
 	return errWrongTxType
 }
 
@@ -140,5 +148,9 @@ func (v *MempoolTxVerifier) BaseTx(tx *txs.BaseTx) error {
 }
 
 func (v *MempoolTxVerifier) MultisigAliasTx(tx *txs.MultisigAliasTx) error {
+	return v.standardTx(tx)
+}
+
+func (v *MempoolTxVerifier) SendCommandTx(tx *txs.SendCommandTx) error {
 	return v.standardTx(tx)
 }

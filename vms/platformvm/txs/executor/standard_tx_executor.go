@@ -15,9 +15,10 @@ package executor
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/ava-labs/avalanchego/chains/atomic"
 	"github.com/ava-labs/avalanchego/ids"
@@ -52,10 +53,6 @@ func (*StandardTxExecutor) AdvanceTimeTx(*txs.AdvanceTimeTx) error {
 }
 
 func (*StandardTxExecutor) RewardValidatorTx(*txs.RewardValidatorTx) error {
-	return errWrongTxType
-}
-
-func (*StandardTxExecutor) SendCommandTx(*txs.SendCommandTx) error {
 	return errWrongTxType
 }
 

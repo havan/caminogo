@@ -88,10 +88,6 @@ func (*ProposalTxExecutor) ExportTx(*txs.ExportTx) error {
 	return errWrongTxType
 }
 
-func (*ProposalTxExecutor) SendCommandTx(*txs.SendCommandTx) error {
-	return errWrongTxType
-}
-
 func (*ProposalTxExecutor) RemoveSubnetValidatorTx(*txs.RemoveSubnetValidatorTx) error {
 	return errWrongTxType
 }

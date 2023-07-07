@@ -68,10 +68,6 @@ func (v *MempoolTxVerifier) ExportTx(tx *txs.ExportTx) error {
 	return v.standardTx(tx)
 }
 
-func (v *MempoolTxVerifier) SendCommandTx(tx *txs.SendCommandTx) error {
-	return v.standardTx(tx)
-}
-
 func (v *MempoolTxVerifier) RemoveSubnetValidatorTx(tx *txs.RemoveSubnetValidatorTx) error {
 	return v.standardTx(tx)
 }

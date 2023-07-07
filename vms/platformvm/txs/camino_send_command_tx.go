@@ -4,17 +4,18 @@
 package txs
 
 import (
-	"fmt"
+	"github.com/pkg/errors"
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/snow"
-	"github.com/ava-labs/avalanchego/vms/platformvm/txs/commands"
+	"github.com/ava-labs/coreth/commands"
 )
 
 var (
 	_ UnsignedTx = (*SendCommandTx)(nil)
 
-	errNopForbidden = fmt.Errorf("no NOP tx allowed")
+	errNopForbidden      = errors.New("no NOP tx allowed")
+	errOnlyCChainAllwoed = errors.New("only CChain commands are allowed")
 )
 
 // SendCommandTx is an unsigned SendCommandTx
@@ -42,11 +43,17 @@ func (tx *SendCommandTx) SyntacticVerify(ctx *snow.Context) error {
 		return ErrNilTx
 	case tx.Command == nil:
 		return errNopForbidden
+	case tx.DestinationChain != ctx.CChainID:
+		return errOnlyCChainAllwoed
 	case tx.SyntacticallyVerified: // already passed syntactic verification
 		return nil
 	}
 
 	if err := tx.BaseTx.SyntacticVerify(ctx); err != nil {
+		return err
+	}
+
+	if err := tx.Command.Verify(); err != nil {
 		return err
 	}
 
