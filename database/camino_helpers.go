@@ -3,9 +3,7 @@
 
 package database
 
-import (
-	"encoding/binary"
-)
+import "encoding/binary"
 
 func PutUInt64Slice(db KeyValueWriter, key []byte, val []uint64) error {
 	b := PackUInt64Slice(val)

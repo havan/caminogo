@@ -782,7 +782,8 @@ func TestWriteDeposits(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			actualCaminoState := tt.caminoState(ctrl)
-			require.ErrorIs(t, actualCaminoState.writeDeposits(), tt.expectedErr)
+			err := actualCaminoState.writeDeposits()
+			require.ErrorIs(t, err, tt.expectedErr)
 			require.Equal(t, tt.expectedCaminoState(actualCaminoState), actualCaminoState)
 		})
 	}
@@ -846,7 +847,8 @@ func TestLoadDeposits(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			actualCaminoState := tt.caminoState(ctrl)
-			require.ErrorIs(t, actualCaminoState.loadDeposits(), tt.expectedErr)
+			err := actualCaminoState.loadDeposits()
+			require.ErrorIs(t, err, tt.expectedErr)
 			require.Equal(t, tt.expectedCaminoState(actualCaminoState), actualCaminoState)
 		})
 	}

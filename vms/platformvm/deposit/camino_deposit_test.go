@@ -41,7 +41,7 @@ func TestTotalReward(t *testing.T) {
 				Duration: uint32(tt.DepositDuration),
 			}
 
-			require.EqualValues(expectedRewardAmount, dep.TotalReward(&Offer{
+			require.Equal(expectedRewardAmount, dep.TotalReward(&Offer{
 				InterestRateNominator:   tt.InterestRateNominator,
 				NoRewardsPeriodDuration: tt.NoRewardsPeriodDuration,
 			}))

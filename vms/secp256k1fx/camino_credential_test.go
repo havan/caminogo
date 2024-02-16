@@ -23,7 +23,8 @@ func TestMultisigCredentialUnordered(t *testing.T) {
 	require := require.New(t)
 	cred := MultisigCredential{}
 	cred.SigIdxs = []uint32{0, 0}
-	require.ErrorIs(cred.Verify(), errSigIdxsNotUniqueOrSorted)
+	err := cred.Verify()
+	require.ErrorIs(err, errSigIdxsNotUniqueOrSorted)
 }
 
 func TestMultisigCredentialSerialize(t *testing.T) {

@@ -83,7 +83,7 @@ func TestSupplyInState(t *testing.T) {
 
 			expectedSupply := getExpectedSupply(t, genesisConfig, tt.lockModeDepositBond, state.rewards)
 
-			require.EqualValues(expectedSupply, state.currentSupply)
+			require.Equal(expectedSupply, state.currentSupply)
 		})
 	}
 }

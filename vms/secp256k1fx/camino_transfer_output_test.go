@@ -48,7 +48,8 @@ func TestCrossOutputVerifyEmpty(t *testing.T) {
 		},
 		Recipient: ids.ShortEmpty,
 	}
-	require.ErrorIs(out.Verify(), ErrEmptyRecipient)
+	err := out.Verify()
+	require.ErrorIs(err, ErrEmptyRecipient)
 }
 
 func TestCrossOutputSerialize(t *testing.T) {

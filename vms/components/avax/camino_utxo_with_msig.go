@@ -3,9 +3,7 @@
 
 package avax
 
-import (
-	"github.com/ava-labs/avalanchego/vms/components/verify"
-)
+import "github.com/ava-labs/avalanchego/vms/components/verify"
 
 type UTXOWithMSig struct {
 	UTXO    `serialize:"true"`

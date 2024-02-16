@@ -24,23 +24,30 @@ fi
 TESTS=${TESTS:-"golangci_lint license_header require_error_is_no_funcs_as_params single_import interface_compliance_nil require_equal_zero require_len_zero require_equal_len require_nil"}
 
 function test_golangci_lint {
-  if ! [ -x "$(command -v golangci-lint)" ]; then
-    go install -v github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
-  fi
+  go install -v github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.2
   golangci-lint run --config .golangci.yml
 }
 
-# automatically checks license headers
-# to modify the file headers (if missing), remove "--verify" flag
-# TESTS='license_header' ADDLICENSE_FLAGS="--debug" ./scripts/lint.sh
-_addlicense_flags=${ADDLICENSE_FLAGS:-"--verify --debug"}
-function test_license_header {
-  go install -v github.com/palantir/go-license@v1.25.0
-  local files=()
-  while IFS= read -r line; do files+=("$line"); done < <(find . -type f -name '*.go' ! -name '*.pb.go' ! -name 'mock_*.go')
+# find_go_files [package]
+# all go files except generated ones
+function find_go_files {
+  local target="${1}"
+  go fmt -n "${target}"  | grep -Eo "([^ ]*)$" | grep -vE "(\\.pb\\.go|\\.pb\\.gw.go)"
+}
 
-  go-license \
-  --config=./license.yml \
+# automatically checks license headers
+# to modify the file headers (if missing), remove "--check" flag
+# TESTS='license_header' ADDLICENSE_FLAGS="-v" ./scripts/lint.sh
+_addlicense_flags=${ADDLICENSE_FLAGS:-"--check -v"}
+function test_license_header {
+  go install -v github.com/google/addlicense@latest
+  local target="${1}"
+  local files=()
+  while IFS= read -r line; do files+=("$line"); done < <(find_go_files "${target}")
+
+  # ignore 3rd party code
+  addlicense \
+  -f ./LICENSE.header \
   ${_addlicense_flags} \
   --ignore 'utils/ip_test.go' \
   --ignore 'utils/logging/highlight.go' \

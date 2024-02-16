@@ -4913,7 +4913,8 @@ func TestCaminoStandardTxExecutorRewardsImportTx(t *testing.T) {
 				},
 			}
 
-			require.ErrorIs(tx.Unsigned.Visit(e), tt.expectedErr)
+			err = tx.Unsigned.Visit(e)
+			require.ErrorIs(err, tt.expectedErr)
 
 			if tt.expectedAtomicInputs != nil {
 				require.Equal(tt.expectedAtomicInputs(tt.utxos), e.Inputs)

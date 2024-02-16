@@ -52,7 +52,7 @@ func TestUpgrade(codec GeneralCodec, t testing.TB) {
 	require.NoError(err)
 	// Because UpgradeVersionID doesn't match UpgradeVersionPrefix,
 	// UpgradeVersionID will not be marshalled
-	require.Equal(10, len(bytes))
+	require.Len(bytes, 10)
 
 	output := UpgradeStruct{}
 	_, err = manager.Unmarshal(bytes, &output)
@@ -60,14 +60,14 @@ func TestUpgrade(codec GeneralCodec, t testing.TB) {
 	require.Equal(input.UpgradeVersionID, output.UpgradeVersionID)
 	require.Equal(input.Field1, output.Field1)
 	require.Equal(input.Field2, output.Field2)
-	require.Equal(uint32(0), output.Version1)
+	require.Zero(output.Version1)
 
 	input.UpgradeVersionID = BuildUpgradeVersionID(1)
 	bytes, err = manager.Marshal(0, &input)
 	require.NoError(err)
 	// Because UpgradeVersionID does match UpgradeVersionPrefix,
 	// UpgradeVersionID will be marshalled and upgradeVersion 1 is used
-	require.Equal(22, len(bytes))
+	require.Len(bytes, 22)
 
 	output = UpgradeStruct{}
 	_, err = manager.Unmarshal(bytes, &output)
@@ -76,14 +76,14 @@ func TestUpgrade(codec GeneralCodec, t testing.TB) {
 	require.Equal(input.Field1, output.Field1)
 	require.Equal(input.Field2, output.Field2)
 	require.Equal(input.Version1, output.Version1)
-	require.Equal(uint32(0), output.Version2)
+	require.Zero(output.Version2)
 
 	input.UpgradeVersionID = BuildUpgradeVersionID(2)
 	bytes, err = manager.Marshal(0, &input)
 	require.NoError(err)
 	// Because UpgradeVersionID does match UpgradeVersionPrefix,
 	// UpgradeVersionID will be marshalled and upgradeVersion 2 is used
-	require.Equal(26, len(bytes))
+	require.Len(bytes, 26)
 
 	// This should fail because we try to unmarshal version2 but struct only knows version 1
 	outputOld := UpgradeStructOld{}

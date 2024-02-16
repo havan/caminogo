@@ -69,7 +69,8 @@ func TestRewardsImportTxSyntacticVerify(t *testing.T) {
 			if tt.tx != nil {
 				avax.SortTransferableInputs(tt.tx.Ins)
 			}
-			require.ErrorIs(t, tt.tx.SyntacticVerify(ctx), tt.expectedErr)
+			err := tt.tx.SyntacticVerify(ctx)
+			require.ErrorIs(t, err, tt.expectedErr)
 		})
 	}
 }
