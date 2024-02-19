@@ -84,8 +84,7 @@ func defaultService(t *testing.T) (*Service, *mutableSharedMemory) {
 	vm.ctx.Lock.Lock()
 	defer vm.ctx.Lock.Unlock()
 	ks := keystore.New(logging.NoLog{}, manager.NewMemDB(version.Semantic1_0_0))
-	err := ks.CreateUser(testUsername, testPassword)
-	require.NoError(t, err)
+	require.NoError(t, ks.CreateUser(testUsername, testPassword))
 
 	vm.ctx.Keystore = ks.NewBlockchainKeyStore(vm.ctx.ChainID)
 	return &Service{
@@ -107,8 +106,7 @@ func defaultAddress(t *testing.T, service *Service) {
 	pk, err := testKeyFactory.ToPrivateKey(testPrivateKey)
 	require.NoError(t, err)
 
-	err = user.PutKeys(pk, keys[0])
-	require.NoError(t, err)
+	require.NoError(t, user.PutKeys(pk, keys[0]))
 }
 
 func TestAddValidator(t *testing.T) {
@@ -122,10 +120,9 @@ func TestAddValidator(t *testing.T) {
 func TestCreateBlockchainArgsParsing(t *testing.T) {
 	jsonString := `{"vmID":"lol","fxIDs":["secp256k1"], "name":"awesome", "username":"bob loblaw", "password":"yeet", "genesisData":"SkB92YpWm4Q2iPnLGCuDPZPgUQMxajqQQuz91oi3xD984f8r"}`
 	args := CreateBlockchainArgs{}
-	err := stdjson.Unmarshal([]byte(jsonString), &args)
-	require.NoError(t, err)
+	require.NoError(t, stdjson.Unmarshal([]byte(jsonString), &args))
 
-	_, err = stdjson.Marshal(args.GenesisData)
+	_, err := stdjson.Marshal(args.GenesisData)
 	require.NoError(t, err)
 }
 
@@ -133,21 +130,18 @@ func TestExportKey(t *testing.T) {
 	require := require.New(t)
 	jsonString := `{"username":"ScoobyUser","password":"ShaggyPassword1Zoinks!","address":"` + testAddress + `"}`
 	args := ExportKeyArgs{}
-	err := stdjson.Unmarshal([]byte(jsonString), &args)
-	require.NoError(err)
+	require.NoError(stdjson.Unmarshal([]byte(jsonString), &args))
 
 	service, _ := defaultService(t)
 	defaultAddress(t, service)
 	service.vm.ctx.Lock.Lock()
 	defer func() {
-		err := service.vm.Shutdown(context.Background())
-		require.NoError(err)
+		require.NoError(service.vm.Shutdown(context.Background()))
 		service.vm.ctx.Lock.Unlock()
 	}()
 
 	reply := ExportKeyReply{}
-	err = service.ExportKey(nil, &args, &reply)
-	require.NoError(err)
+	require.NoError(service.ExportKey(nil, &args, &reply))
 
 	require.Equal(testPrivateKey, reply.PrivateKey.Bytes())
 }
@@ -156,20 +150,17 @@ func TestImportKey(t *testing.T) {
 	require := require.New(t)
 	jsonString := `{"username":"ScoobyUser","password":"ShaggyPassword1Zoinks!","privateKey":"PrivateKey-ewoqjP7PxY4yr3iLTpLisriqt94hdyDFNgchSxGGztUrTXtNN"}`
 	args := ImportKeyArgs{}
-	err := stdjson.Unmarshal([]byte(jsonString), &args)
-	require.NoError(err)
+	require.NoError(stdjson.Unmarshal([]byte(jsonString), &args))
 
 	service, _ := defaultService(t)
 	service.vm.ctx.Lock.Lock()
 	defer func() {
-		err := service.vm.Shutdown(context.Background())
-		require.NoError(err)
+		require.NoError(service.vm.Shutdown(context.Background()))
 		service.vm.ctx.Lock.Unlock()
 	}()
 
 	reply := api.JSONAddress{}
-	err = service.ImportKey(nil, &args, &reply)
-	require.NoError(err)
+	require.NoError(service.ImportKey(nil, &args, &reply))
 	require.Equal(testAddress, reply.Address)
 }
 
@@ -180,8 +171,7 @@ func TestGetTxStatus(t *testing.T) {
 	defaultAddress(t, service)
 	service.vm.ctx.Lock.Lock()
 	defer func() {
-		err := service.vm.Shutdown(context.Background())
-		require.NoError(err)
+		require.NoError(service.vm.Shutdown(context.Background()))
 		service.vm.ctx.Lock.Unlock()
 	}()
 
@@ -214,7 +204,7 @@ func TestGetTxStatus(t *testing.T) {
 	require.NoError(err)
 
 	inputID := utxo.InputID()
-	err = peerSharedMemory.Apply(map[ids.ID]*atomic.Requests{
+	require.NoError(peerSharedMemory.Apply(map[ids.ID]*atomic.Requests{
 		service.vm.ctx.ChainID: {
 			PutRequests: []*atomic.Element{
 				{
@@ -226,8 +216,7 @@ func TestGetTxStatus(t *testing.T) {
 				},
 			},
 		},
-	})
-	require.NoError(err)
+	}))
 
 	oldSharedMemory := mutableSharedMemory.SharedMemory
 	mutableSharedMemory.SharedMemory = sm
@@ -241,8 +230,7 @@ func TestGetTxStatus(t *testing.T) {
 		arg  = &GetTxStatusArgs{TxID: tx.ID()}
 		resp GetTxStatusResponse
 	)
-	err = service.GetTxStatus(nil, arg, &resp)
-	require.NoError(err)
+	require.NoError(service.GetTxStatus(nil, arg, &resp))
 	require.Equal(status.Unknown, resp.Status)
 	require.Zero(resp.Reason)
 
@@ -252,22 +240,18 @@ func TestGetTxStatus(t *testing.T) {
 
 	mutableSharedMemory.SharedMemory = sm
 
-	err = service.vm.Builder.AddUnverifiedTx(tx)
-	require.NoError(err)
+	require.NoError(service.vm.Builder.AddUnverifiedTx(tx))
 
 	block, err := service.vm.BuildBlock(context.Background())
 	require.NoError(err)
 
 	blk := block.(*blockexecutor.Block)
-	err = blk.Verify(context.Background())
-	require.NoError(err)
+	require.NoError(blk.Verify(context.Background()))
 
-	err = blk.Accept(context.Background())
-	require.NoError(err)
+	require.NoError(blk.Accept(context.Background()))
 
 	resp = GetTxStatusResponse{} // reset
-	err = service.GetTxStatus(nil, arg, &resp)
-	require.NoError(err)
+	require.NoError(service.GetTxStatus(nil, arg, &resp))
 	require.Equal(status.Committed, resp.Status)
 	require.Zero(resp.Reason)
 }
@@ -346,17 +330,14 @@ func TestGetTx(t *testing.T) {
 				err = service.GetTx(nil, arg, &response)
 				require.ErrorIs(err, database.ErrNotFound) // We haven't issued the tx yet
 
-				err = service.vm.Builder.AddUnverifiedTx(tx)
-				require.NoError(err)
+				require.NoError(service.vm.Builder.AddUnverifiedTx(tx))
 
 				block, err := service.vm.BuildBlock(context.Background())
 				require.NoError(err)
 
-				err = block.Verify(context.Background())
-				require.NoError(err)
+				require.NoError(block.Verify(context.Background()))
 
-				err = block.Accept(context.Background())
-				require.NoError(err)
+				require.NoError(block.Accept(context.Background()))
 
 				if blk, ok := block.(snowman.OracleBlock); ok { // For proposal blocks, commit them
 					options, err := blk.Options(context.Background())
@@ -366,16 +347,13 @@ func TestGetTx(t *testing.T) {
 						commit := options[0].(*blockexecutor.Block)
 						require.IsType(&blocks.BanffCommitBlock{}, commit.Block)
 
-						err := commit.Verify(context.Background())
-						require.NoError(err)
+						require.NoError(commit.Verify(context.Background()))
 
-						err = commit.Accept(context.Background())
-						require.NoError(err)
+						require.NoError(commit.Accept(context.Background()))
 					}
 				}
 
-				err = service.GetTx(nil, arg, &response)
-				require.NoError(err)
+				require.NoError(service.GetTx(nil, arg, &response))
 
 				switch encoding {
 				case formatting.Hex:
@@ -390,8 +368,7 @@ func TestGetTx(t *testing.T) {
 					require.Equal(tx.ID(), responseTx.ID())
 				}
 
-				err = service.vm.Shutdown(context.Background())
-				require.NoError(err)
+				require.NoError(service.vm.Shutdown(context.Background()))
 				service.vm.ctx.Lock.Unlock()
 			})
 		}
@@ -405,8 +382,7 @@ func TestGetBalance(t *testing.T) {
 	defaultAddress(t, service)
 	service.vm.ctx.Lock.Lock()
 	defer func() {
-		err := service.vm.Shutdown(context.Background())
-		require.NoError(err)
+		require.NoError(service.vm.Shutdown(context.Background()))
 		service.vm.ctx.Lock.Unlock()
 	}()
 
@@ -601,8 +577,7 @@ func TestGetCurrentValidators(t *testing.T) {
 	defaultAddress(t, service)
 	service.vm.ctx.Lock.Lock()
 	defer func() {
-		err := service.vm.Shutdown(context.Background())
-		require.NoError(err)
+		require.NoError(service.vm.Shutdown(context.Background()))
 		service.vm.ctx.Lock.Unlock()
 	}()
 
@@ -612,8 +587,7 @@ func TestGetCurrentValidators(t *testing.T) {
 	args := GetCurrentValidatorsArgs{SubnetID: constants.PrimaryNetworkID}
 	response := GetCurrentValidatorsReply{}
 
-	err := service.GetCurrentValidators(nil, &args, &response)
-	require.NoError(err)
+	require.NoError(service.GetCurrentValidators(nil, &args, &response))
 	require.Len(response.Validators, len(genesis.Validators))
 
 	for _, vdr := range genesis.Validators {
@@ -657,13 +631,11 @@ func TestGetCurrentValidators(t *testing.T) {
 
 	service.vm.state.PutCurrentDelegator(staker)
 	service.vm.state.AddTx(delTx, status.Committed)
-	err = service.vm.state.Commit()
-	require.NoError(err)
+	require.NoError(service.vm.state.Commit())
 
 	// Call getCurrentValidators
 	args = GetCurrentValidatorsArgs{SubnetID: constants.PrimaryNetworkID}
-	err = service.GetCurrentValidators(nil, &args, &response)
-	require.NoError(err)
+	require.NoError(service.GetCurrentValidators(nil, &args, &response))
 	require.Len(response.Validators, len(genesis.Validators))
 
 	// Make sure the delegator is there
@@ -682,8 +654,7 @@ func TestGetCurrentValidators(t *testing.T) {
 			NodeIDs:  []ids.NodeID{vdr.NodeID},
 		}
 		innerResponse := GetCurrentValidatorsReply{}
-		err = service.GetCurrentValidators(nil, &innerArgs, &innerResponse)
-		require.NoError(err)
+		require.NoError(service.GetCurrentValidators(nil, &innerArgs, &innerResponse))
 		require.Len(innerResponse.Validators, 1)
 
 		innerVdr := innerResponse.Validators[0].(pchainapi.PermissionlessValidator)
@@ -798,8 +769,7 @@ func TestGetBlock(t *testing.T) {
 				Encoding: test.encoding,
 			}
 			response := api.GetBlockResponse{}
-			err = service.GetBlock(nil, &args, &response)
-			require.NoError(err)
+			require.NoError(service.GetBlock(nil, &args, &response))
 
 			switch {
 			case test.encoding == formatting.JSON:

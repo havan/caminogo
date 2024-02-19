@@ -42,9 +42,9 @@ func TestCoreVMNotRemote(t *testing.T) {
 	_, _, proVM, _, _ := initTestProposerVM(t, time.Time{}, 0) // enable ProBlks
 
 	blkID := ids.Empty
-	maxBlocksNum := 1000                            // an high value to get all built blocks
-	maxBlocksSize := 1000000                        // an high value to get all built blocks
-	maxBlocksRetrivalTime := time.Duration(1000000) // an high value to get all built blocks
+	maxBlocksNum := 1000               // a high value to get all built blocks
+	maxBlocksSize := 1000000           // a high value to get all built blocks
+	maxBlocksRetrivalTime := time.Hour // a high value to get all built blocks
 	_, err := proVM.GetAncestors(
 		context.Background(),
 		blkID,
@@ -66,7 +66,7 @@ func TestGetAncestorsPreForkOnly(t *testing.T) {
 	// Build some prefork blocks....
 	coreBlk1 := &snowman.TestBlock{
 		TestDecidable: choices.TestDecidable{
-			IDV:     ids.Empty.Prefix(111),
+			IDV:     ids.GenerateTestID(),
 			StatusV: choices.Processing,
 		},
 		BytesV:     []byte{1},
@@ -78,7 +78,7 @@ func TestGetAncestorsPreForkOnly(t *testing.T) {
 		return coreBlk1, nil
 	}
 	builtBlk1, err := proRemoteVM.BuildBlock(context.Background())
-	require.NoError(err, "Could not build preFork block")
+	require.NoError(err)
 
 	// prepare build of next block
 	require.NoError(proRemoteVM.SetPreference(context.Background(), builtBlk1.ID()))
@@ -93,7 +93,7 @@ func TestGetAncestorsPreForkOnly(t *testing.T) {
 
 	coreBlk2 := &snowman.TestBlock{
 		TestDecidable: choices.TestDecidable{
-			IDV:     ids.Empty.Prefix(222),
+			IDV:     ids.GenerateTestID(),
 			StatusV: choices.Processing,
 		},
 		BytesV:     []byte{2},
@@ -105,7 +105,7 @@ func TestGetAncestorsPreForkOnly(t *testing.T) {
 		return coreBlk2, nil
 	}
 	builtBlk2, err := proRemoteVM.BuildBlock(context.Background())
-	require.NoError(err, "Could not build proposer block")
+	require.NoError(err)
 
 	// prepare build of next block
 	require.NoError(proRemoteVM.SetPreference(context.Background(), builtBlk2.ID()))
@@ -120,7 +120,7 @@ func TestGetAncestorsPreForkOnly(t *testing.T) {
 
 	coreBlk3 := &snowman.TestBlock{
 		TestDecidable: choices.TestDecidable{
-			IDV:     ids.Empty.Prefix(222),
+			IDV:     ids.GenerateTestID(),
 			StatusV: choices.Processing,
 		},
 		BytesV:     []byte{3},
@@ -132,7 +132,7 @@ func TestGetAncestorsPreForkOnly(t *testing.T) {
 		return coreBlk3, nil
 	}
 	builtBlk3, err := proRemoteVM.BuildBlock(context.Background())
-	require.NoError(err, "Could not build proposer block")
+	require.NoError(err)
 
 	// ...Call GetAncestors on them ...
 	// Note: we assumed that if blkID is not known, that's NOT an error.
@@ -158,9 +158,9 @@ func TestGetAncestorsPreForkOnly(t *testing.T) {
 	}
 
 	reqBlkID := builtBlk3.ID()
-	maxBlocksNum := 1000                            // an high value to get all built blocks
-	maxBlocksSize := 1000000                        // an high value to get all built blocks
-	maxBlocksRetrivalTime := time.Duration(1000000) // an high value to get all built blocks
+	maxBlocksNum := 1000               // a high value to get all built blocks
+	maxBlocksSize := 1000000           // a high value to get all built blocks
+	maxBlocksRetrivalTime := time.Hour // a high value to get all built blocks
 	res, err := proRemoteVM.GetAncestors(
 		context.Background(),
 		reqBlkID,
@@ -170,11 +170,11 @@ func TestGetAncestorsPreForkOnly(t *testing.T) {
 	)
 
 	// ... and check returned values are as expected
-	require.NoError(err, "Error calling GetAncestors: %v", err)
-	require.Len(res, 3, "GetAncestor returned %v entries instead of %v", len(res), 3)
-	require.Equal(res[0], builtBlk3.Bytes())
-	require.Equal(res[1], builtBlk2.Bytes())
-	require.Equal(res[2], builtBlk1.Bytes())
+	require.NoError(err)
+	require.Len(res, 3)
+	require.Equal(builtBlk3.Bytes(), res[0])
+	require.Equal(builtBlk2.Bytes(), res[1])
+	require.Equal(builtBlk1.Bytes(), res[2])
 
 	// another good call
 	reqBlkID = builtBlk1.ID()
@@ -185,9 +185,9 @@ func TestGetAncestorsPreForkOnly(t *testing.T) {
 		maxBlocksSize,
 		maxBlocksRetrivalTime,
 	)
-	require.NoError(err, "Error calling GetAncestors: %v", err)
-	require.Len(res, 1, "GetAncestor returned %v entries instead of %v", len(res), 1)
-	require.Equal(res[0], builtBlk1.Bytes())
+	require.NoError(err)
+	require.Len(res, 1)
+	require.Equal(builtBlk1.Bytes(), res[0])
 
 	// a faulty call
 	reqBlkID = ids.Empty
@@ -198,8 +198,8 @@ func TestGetAncestorsPreForkOnly(t *testing.T) {
 		maxBlocksSize,
 		maxBlocksRetrivalTime,
 	)
-	require.NoError(err, "Error calling GetAncestors: %v", err)
-	require.Empty(res, "GetAncestor returned %v entries instead of %v", len(res), 0)
+	require.NoError(err)
+	require.Empty(res)
 }
 
 func TestGetAncestorsPostForkOnly(t *testing.T) {
@@ -209,7 +209,7 @@ func TestGetAncestorsPostForkOnly(t *testing.T) {
 	// Build some post-Fork blocks....
 	coreBlk1 := &snowman.TestBlock{
 		TestDecidable: choices.TestDecidable{
-			IDV:     ids.Empty.Prefix(111),
+			IDV:     ids.GenerateTestID(),
 			StatusV: choices.Processing,
 		},
 		BytesV:     []byte{1},
@@ -221,7 +221,7 @@ func TestGetAncestorsPostForkOnly(t *testing.T) {
 		return coreBlk1, nil
 	}
 	builtBlk1, err := proRemoteVM.BuildBlock(context.Background())
-	require.NoError(err, "Could not build preFork block")
+	require.NoError(err)
 
 	// prepare build of next block
 	require.NoError(builtBlk1.Verify(context.Background()))
@@ -230,7 +230,7 @@ func TestGetAncestorsPostForkOnly(t *testing.T) {
 
 	coreBlk2 := &snowman.TestBlock{
 		TestDecidable: choices.TestDecidable{
-			IDV:     ids.Empty.Prefix(222),
+			IDV:     ids.GenerateTestID(),
 			StatusV: choices.Processing,
 		},
 		BytesV:     []byte{2},
@@ -242,7 +242,7 @@ func TestGetAncestorsPostForkOnly(t *testing.T) {
 		return coreBlk2, nil
 	}
 	builtBlk2, err := proRemoteVM.BuildBlock(context.Background())
-	require.NoError(err, "Could not build proposer block")
+	require.NoError(err)
 
 	// prepare build of next block
 	require.NoError(builtBlk2.Verify(context.Background()))
@@ -251,7 +251,7 @@ func TestGetAncestorsPostForkOnly(t *testing.T) {
 
 	coreBlk3 := &snowman.TestBlock{
 		TestDecidable: choices.TestDecidable{
-			IDV:     ids.Empty.Prefix(333),
+			IDV:     ids.GenerateTestID(),
 			StatusV: choices.Processing,
 		},
 		BytesV:     []byte{3},
@@ -263,7 +263,7 @@ func TestGetAncestorsPostForkOnly(t *testing.T) {
 		return coreBlk3, nil
 	}
 	builtBlk3, err := proRemoteVM.BuildBlock(context.Background())
-	require.NoError(err, "Could not build proposer block")
+	require.NoError(err)
 
 	require.NoError(builtBlk3.Verify(context.Background()))
 	require.NoError(proRemoteVM.SetPreference(context.Background(), builtBlk3.ID()))
@@ -307,9 +307,9 @@ func TestGetAncestorsPostForkOnly(t *testing.T) {
 	}
 
 	reqBlkID := builtBlk3.ID()
-	maxBlocksNum := 1000                            // an high value to get all built blocks
-	maxBlocksSize := 1000000                        // an high value to get all built blocks
-	maxBlocksRetrivalTime := time.Duration(1000000) // an high value to get all built blocks
+	maxBlocksNum := 1000               // a high value to get all built blocks
+	maxBlocksSize := 1000000           // a high value to get all built blocks
+	maxBlocksRetrivalTime := time.Hour // a high value to get all built blocks
 	res, err := proRemoteVM.GetAncestors(
 		context.Background(),
 		reqBlkID,
@@ -319,11 +319,11 @@ func TestGetAncestorsPostForkOnly(t *testing.T) {
 	)
 
 	// ... and check returned values are as expected
-	require.NoError(err, "Error calling GetAncestors: %v", err)
+	require.NoError(err)
 	require.Len(res, 3)
-	require.Equal(res[0], builtBlk3.Bytes())
-	require.Equal(res[1], builtBlk2.Bytes())
-	require.Equal(res[2], builtBlk1.Bytes())
+	require.Equal(builtBlk3.Bytes(), res[0])
+	require.Equal(builtBlk2.Bytes(), res[1])
+	require.Equal(builtBlk1.Bytes(), res[2])
 
 	// another good call
 	reqBlkID = builtBlk1.ID()
@@ -334,9 +334,9 @@ func TestGetAncestorsPostForkOnly(t *testing.T) {
 		maxBlocksSize,
 		maxBlocksRetrivalTime,
 	)
-	require.NoError(err, "Error calling GetAncestors: %v", err)
-	require.Len(res, 1, "GetAncestor returned %v entries instead of %v", len(res), 1)
-	require.Equal(res[0], builtBlk1.Bytes())
+	require.NoError(err)
+	require.Len(res, 1)
+	require.Equal(builtBlk1.Bytes(), res[0])
 
 	// a faulty call
 	reqBlkID = ids.Empty
@@ -347,8 +347,8 @@ func TestGetAncestorsPostForkOnly(t *testing.T) {
 		maxBlocksSize,
 		maxBlocksRetrivalTime,
 	)
-	require.NoError(err, "Error calling GetAncestors: %v", err)
-	require.Empty(res, "GetAncestor returned %v entries instead of %v", len(res), 0)
+	require.NoError(err)
+	require.Empty(res)
 }
 
 func TestGetAncestorsAtSnomanPlusPlusFork(t *testing.T) {
@@ -364,7 +364,7 @@ func TestGetAncestorsAtSnomanPlusPlusFork(t *testing.T) {
 	proRemoteVM.Set(preForkTime)
 	coreBlk1 := &snowman.TestBlock{
 		TestDecidable: choices.TestDecidable{
-			IDV:     ids.Empty.Prefix(111),
+			IDV:     ids.GenerateTestID(),
 			StatusV: choices.Processing,
 		},
 		BytesV:     []byte{1},
@@ -376,7 +376,7 @@ func TestGetAncestorsAtSnomanPlusPlusFork(t *testing.T) {
 		return coreBlk1, nil
 	}
 	builtBlk1, err := proRemoteVM.BuildBlock(context.Background())
-	require.NoError(err, "Could not build preFork block")
+	require.NoError(err)
 	require.IsType(&preForkBlock{}, builtBlk1)
 
 	// prepare build of next block
@@ -392,7 +392,7 @@ func TestGetAncestorsAtSnomanPlusPlusFork(t *testing.T) {
 
 	coreBlk2 := &snowman.TestBlock{
 		TestDecidable: choices.TestDecidable{
-			IDV:     ids.Empty.Prefix(222),
+			IDV:     ids.GenerateTestID(),
 			StatusV: choices.Processing,
 		},
 		BytesV:     []byte{2},
@@ -404,7 +404,7 @@ func TestGetAncestorsAtSnomanPlusPlusFork(t *testing.T) {
 		return coreBlk2, nil
 	}
 	builtBlk2, err := proRemoteVM.BuildBlock(context.Background())
-	require.NoError(err, "Could not build proposer block")
+	require.NoError(err)
 	require.IsType(&preForkBlock{}, builtBlk2)
 
 	// prepare build of next block
@@ -422,7 +422,7 @@ func TestGetAncestorsAtSnomanPlusPlusFork(t *testing.T) {
 	proRemoteVM.Set(postForkTime)
 	coreBlk3 := &snowman.TestBlock{
 		TestDecidable: choices.TestDecidable{
-			IDV:     ids.Empty.Prefix(333),
+			IDV:     ids.GenerateTestID(),
 			StatusV: choices.Processing,
 		},
 		BytesV:     []byte{3},
@@ -434,7 +434,7 @@ func TestGetAncestorsAtSnomanPlusPlusFork(t *testing.T) {
 		return coreBlk3, nil
 	}
 	builtBlk3, err := proRemoteVM.BuildBlock(context.Background())
-	require.NoError(err, "Could not build proposer block")
+	require.NoError(err)
 	require.IsType(&postForkBlock{}, builtBlk3)
 
 	// prepare build of next block
@@ -444,7 +444,7 @@ func TestGetAncestorsAtSnomanPlusPlusFork(t *testing.T) {
 
 	coreBlk4 := &snowman.TestBlock{
 		TestDecidable: choices.TestDecidable{
-			IDV:     ids.Empty.Prefix(444),
+			IDV:     ids.GenerateTestID(),
 			StatusV: choices.Processing,
 		},
 		BytesV:     []byte{4},
@@ -456,7 +456,7 @@ func TestGetAncestorsAtSnomanPlusPlusFork(t *testing.T) {
 		return coreBlk4, nil
 	}
 	builtBlk4, err := proRemoteVM.BuildBlock(context.Background())
-	require.NoError(err, "Could not build proposer block")
+	require.NoError(err)
 	require.IsType(&postForkBlock{}, builtBlk4)
 	require.NoError(builtBlk4.Verify(context.Background()))
 
@@ -502,12 +502,12 @@ func TestGetAncestorsAtSnomanPlusPlusFork(t *testing.T) {
 	)
 
 	// ... and check returned values are as expected
-	require.NoError(err, "Error calling GetAncestors")
-	require.Len(res, 4, "Wrong GetAncestor response")
-	require.Equal(res[0], builtBlk4.Bytes())
-	require.Equal(res[1], builtBlk3.Bytes())
-	require.Equal(res[2], builtBlk2.Bytes())
-	require.Equal(res[3], builtBlk1.Bytes())
+	require.NoError(err)
+	require.Len(res, 4)
+	require.Equal(builtBlk4.Bytes(), res[0])
+	require.Equal(builtBlk3.Bytes(), res[1])
+	require.Equal(builtBlk2.Bytes(), res[2])
+	require.Equal(builtBlk1.Bytes(), res[3])
 
 	// Regression case: load some prefork and some postfork blocks.
 	reqBlkID = builtBlk4.ID()
@@ -521,11 +521,11 @@ func TestGetAncestorsAtSnomanPlusPlusFork(t *testing.T) {
 	)
 
 	// ... and check returned values are as expected
-	require.NoError(err, "Error calling GetAncestors")
-	require.Len(res, 3, "Wrong GetAncestor response")
-	require.Equal(res[0], builtBlk4.Bytes())
-	require.Equal(res[1], builtBlk3.Bytes())
-	require.Equal(res[2], builtBlk2.Bytes())
+	require.NoError(err)
+	require.Len(res, 3)
+	require.Equal(builtBlk4.Bytes(), res[0])
+	require.Equal(builtBlk3.Bytes(), res[1])
+	require.Equal(builtBlk2.Bytes(), res[2])
 
 	// another good call
 	reqBlkID = builtBlk1.ID()
@@ -536,9 +536,9 @@ func TestGetAncestorsAtSnomanPlusPlusFork(t *testing.T) {
 		maxBlocksSize,
 		maxBlocksRetrivalTime,
 	)
-	require.NoError(err, "Error calling GetAncestors")
-	require.Len(res, 1, "Wrong GetAncestor response")
-	require.Equal(res[0], builtBlk1.Bytes())
+	require.NoError(err)
+	require.Len(res, 1)
+	require.Equal(builtBlk1.Bytes(), res[0])
 
 	// a faulty call
 	reqBlkID = ids.Empty
@@ -549,8 +549,8 @@ func TestGetAncestorsAtSnomanPlusPlusFork(t *testing.T) {
 		maxBlocksSize,
 		maxBlocksRetrivalTime,
 	)
-	require.NoError(err, "Error calling GetAncestors")
-	require.Empty(res, "Wrong GetAncestor response")
+	require.NoError(err)
+	require.Empty(res)
 }
 
 func TestBatchedParseBlockPreForkOnly(t *testing.T) {
@@ -560,7 +560,7 @@ func TestBatchedParseBlockPreForkOnly(t *testing.T) {
 	// Build some prefork blocks....
 	coreBlk1 := &snowman.TestBlock{
 		TestDecidable: choices.TestDecidable{
-			IDV:     ids.Empty.Prefix(111),
+			IDV:     ids.GenerateTestID(),
 			StatusV: choices.Processing,
 		},
 		BytesV:     []byte{1},
@@ -572,7 +572,7 @@ func TestBatchedParseBlockPreForkOnly(t *testing.T) {
 		return coreBlk1, nil
 	}
 	builtBlk1, err := proRemoteVM.BuildBlock(context.Background())
-	require.NoError(err, "Could not build preFork block")
+	require.NoError(err)
 
 	// prepare build of next block
 	require.NoError(proRemoteVM.SetPreference(context.Background(), builtBlk1.ID()))
@@ -587,7 +587,7 @@ func TestBatchedParseBlockPreForkOnly(t *testing.T) {
 
 	coreBlk2 := &snowman.TestBlock{
 		TestDecidable: choices.TestDecidable{
-			IDV:     ids.Empty.Prefix(222),
+			IDV:     ids.GenerateTestID(),
 			StatusV: choices.Processing,
 		},
 		BytesV:     []byte{2},
@@ -599,7 +599,7 @@ func TestBatchedParseBlockPreForkOnly(t *testing.T) {
 		return coreBlk2, nil
 	}
 	builtBlk2, err := proRemoteVM.BuildBlock(context.Background())
-	require.NoError(err, "Could not build proposer block")
+	require.NoError(err)
 
 	// prepare build of next block
 	require.NoError(proRemoteVM.SetPreference(context.Background(), builtBlk2.ID()))
@@ -614,7 +614,7 @@ func TestBatchedParseBlockPreForkOnly(t *testing.T) {
 
 	coreBlk3 := &snowman.TestBlock{
 		TestDecidable: choices.TestDecidable{
-			IDV:     ids.Empty.Prefix(222),
+			IDV:     ids.GenerateTestID(),
 			StatusV: choices.Processing,
 		},
 		BytesV:     []byte{3},
@@ -626,7 +626,7 @@ func TestBatchedParseBlockPreForkOnly(t *testing.T) {
 		return coreBlk3, nil
 	}
 	builtBlk3, err := proRemoteVM.BuildBlock(context.Background())
-	require.NoError(err, "Could not build proposer block")
+	require.NoError(err)
 
 	coreVM.ParseBlockF = func(_ context.Context, b []byte) (snowman.Block, error) {
 		switch {
@@ -664,11 +664,11 @@ func TestBatchedParseBlockPreForkOnly(t *testing.T) {
 		builtBlk3.Bytes(),
 	}
 	res, err := proRemoteVM.BatchedParseBlock(context.Background(), bytesToParse)
-	require.NoError(err, "Error calling BatchedParseBlock: %v", err)
-	require.Len(res, 3, "BatchedParseBlock returned %v entries instead of %v", len(res), 3)
-	require.Equal(res[0].ID(), builtBlk1.ID())
-	require.Equal(res[1].ID(), builtBlk2.ID())
-	require.Equal(res[2].ID(), builtBlk3.ID())
+	require.NoError(err)
+	require.Len(res, 3)
+	require.Equal(builtBlk1.ID(), res[0].ID())
+	require.Equal(builtBlk2.ID(), res[1].ID())
+	require.Equal(builtBlk3.ID(), res[2].ID())
 }
 
 func TestBatchedParseBlockPostForkOnly(t *testing.T) {
@@ -678,7 +678,7 @@ func TestBatchedParseBlockPostForkOnly(t *testing.T) {
 	// Build some post-Fork blocks....
 	coreBlk1 := &snowman.TestBlock{
 		TestDecidable: choices.TestDecidable{
-			IDV:     ids.Empty.Prefix(111),
+			IDV:     ids.GenerateTestID(),
 			StatusV: choices.Processing,
 		},
 		BytesV:     []byte{1},
@@ -690,7 +690,7 @@ func TestBatchedParseBlockPostForkOnly(t *testing.T) {
 		return coreBlk1, nil
 	}
 	builtBlk1, err := proRemoteVM.BuildBlock(context.Background())
-	require.NoError(err, "Could not build preFork block")
+	require.NoError(err)
 
 	// prepare build of next block
 	require.NoError(builtBlk1.Verify(context.Background()))
@@ -699,7 +699,7 @@ func TestBatchedParseBlockPostForkOnly(t *testing.T) {
 
 	coreBlk2 := &snowman.TestBlock{
 		TestDecidable: choices.TestDecidable{
-			IDV:     ids.Empty.Prefix(222),
+			IDV:     ids.GenerateTestID(),
 			StatusV: choices.Processing,
 		},
 		BytesV:     []byte{2},
@@ -711,7 +711,7 @@ func TestBatchedParseBlockPostForkOnly(t *testing.T) {
 		return coreBlk2, nil
 	}
 	builtBlk2, err := proRemoteVM.BuildBlock(context.Background())
-	require.NoError(err, "Could not build proposer block")
+	require.NoError(err)
 
 	// prepare build of next block
 	require.NoError(builtBlk2.Verify(context.Background()))
@@ -720,7 +720,7 @@ func TestBatchedParseBlockPostForkOnly(t *testing.T) {
 
 	coreBlk3 := &snowman.TestBlock{
 		TestDecidable: choices.TestDecidable{
-			IDV:     ids.Empty.Prefix(333),
+			IDV:     ids.GenerateTestID(),
 			StatusV: choices.Processing,
 		},
 		BytesV:     []byte{3},
@@ -732,7 +732,7 @@ func TestBatchedParseBlockPostForkOnly(t *testing.T) {
 		return coreBlk3, nil
 	}
 	builtBlk3, err := proRemoteVM.BuildBlock(context.Background())
-	require.NoError(err, "Could not build proposer block")
+	require.NoError(err)
 
 	coreVM.ParseBlockF = func(_ context.Context, b []byte) (snowman.Block, error) {
 		switch {
@@ -770,11 +770,11 @@ func TestBatchedParseBlockPostForkOnly(t *testing.T) {
 		builtBlk3.Bytes(),
 	}
 	res, err := proRemoteVM.BatchedParseBlock(context.Background(), bytesToParse)
-	require.NoError(err, "Error calling BatchedParseBlock: %v", err)
-	require.Len(res, 3, "BatchedParseBlock returned %v entries instead of %v", len(res), 3)
-	require.Equal(res[0].ID(), builtBlk1.ID())
-	require.Equal(res[1].ID(), builtBlk2.ID())
-	require.Equal(res[2].ID(), builtBlk3.ID())
+	require.NoError(err)
+	require.Len(res, 3)
+	require.Equal(builtBlk1.ID(), res[0].ID())
+	require.Equal(builtBlk2.ID(), res[1].ID())
+	require.Equal(builtBlk3.ID(), res[2].ID())
 }
 
 func TestBatchedParseBlockAtSnomanPlusPlusFork(t *testing.T) {
@@ -790,7 +790,7 @@ func TestBatchedParseBlockAtSnomanPlusPlusFork(t *testing.T) {
 	proRemoteVM.Set(preForkTime)
 	coreBlk1 := &snowman.TestBlock{
 		TestDecidable: choices.TestDecidable{
-			IDV:     ids.Empty.Prefix(111),
+			IDV:     ids.GenerateTestID(),
 			StatusV: choices.Processing,
 		},
 		BytesV:     []byte{1},
@@ -802,7 +802,7 @@ func TestBatchedParseBlockAtSnomanPlusPlusFork(t *testing.T) {
 		return coreBlk1, nil
 	}
 	builtBlk1, err := proRemoteVM.BuildBlock(context.Background())
-	require.NoError(err, "Could not build preFork block")
+	require.NoError(err)
 	require.IsType(&preForkBlock{}, builtBlk1)
 
 	// prepare build of next block
@@ -818,7 +818,7 @@ func TestBatchedParseBlockAtSnomanPlusPlusFork(t *testing.T) {
 
 	coreBlk2 := &snowman.TestBlock{
 		TestDecidable: choices.TestDecidable{
-			IDV:     ids.Empty.Prefix(222),
+			IDV:     ids.GenerateTestID(),
 			StatusV: choices.Processing,
 		},
 		BytesV:     []byte{2},
@@ -830,7 +830,7 @@ func TestBatchedParseBlockAtSnomanPlusPlusFork(t *testing.T) {
 		return coreBlk2, nil
 	}
 	builtBlk2, err := proRemoteVM.BuildBlock(context.Background())
-	require.NoError(err, "Could not build proposer block")
+	require.NoError(err)
 	require.IsType(&preForkBlock{}, builtBlk2)
 
 	// prepare build of next block
@@ -848,7 +848,7 @@ func TestBatchedParseBlockAtSnomanPlusPlusFork(t *testing.T) {
 	proRemoteVM.Set(postForkTime)
 	coreBlk3 := &snowman.TestBlock{
 		TestDecidable: choices.TestDecidable{
-			IDV:     ids.Empty.Prefix(333),
+			IDV:     ids.GenerateTestID(),
 			StatusV: choices.Processing,
 		},
 		BytesV:     []byte{3},
@@ -860,7 +860,7 @@ func TestBatchedParseBlockAtSnomanPlusPlusFork(t *testing.T) {
 		return coreBlk3, nil
 	}
 	builtBlk3, err := proRemoteVM.BuildBlock(context.Background())
-	require.NoError(err, "Could not build proposer block")
+	require.NoError(err)
 	require.IsType(&postForkBlock{}, builtBlk3)
 
 	// prepare build of next block
@@ -870,7 +870,7 @@ func TestBatchedParseBlockAtSnomanPlusPlusFork(t *testing.T) {
 
 	coreBlk4 := &snowman.TestBlock{
 		TestDecidable: choices.TestDecidable{
-			IDV:     ids.Empty.Prefix(444),
+			IDV:     ids.GenerateTestID(),
 			StatusV: choices.Processing,
 		},
 		BytesV:     []byte{4},
@@ -882,7 +882,7 @@ func TestBatchedParseBlockAtSnomanPlusPlusFork(t *testing.T) {
 		return coreBlk4, nil
 	}
 	builtBlk4, err := proRemoteVM.BuildBlock(context.Background())
-	require.NoError(err, "Could not build proposer block")
+	require.NoError(err)
 	require.IsType(&postForkBlock{}, builtBlk4)
 	require.NoError(builtBlk4.Verify(context.Background()))
 
@@ -928,12 +928,12 @@ func TestBatchedParseBlockAtSnomanPlusPlusFork(t *testing.T) {
 	}
 
 	res, err := proRemoteVM.BatchedParseBlock(context.Background(), bytesToParse)
-	require.NoError(err, "Error calling BatchedParseBlock: %v", err)
-	require.Len(res, 4, "BatchedParseBlock returned %v entries instead of %v", len(res), 4)
-	require.Equal(res[0].ID(), builtBlk4.ID())
-	require.Equal(res[1].ID(), builtBlk3.ID())
-	require.Equal(res[2].ID(), builtBlk2.ID())
-	require.Equal(res[3].ID(), builtBlk1.ID())
+	require.NoError(err)
+	require.Len(res, 4)
+	require.Equal(builtBlk4.ID(), res[0].ID())
+	require.Equal(builtBlk3.ID(), res[1].ID())
+	require.Equal(builtBlk2.ID(), res[2].ID())
+	require.Equal(builtBlk1.ID(), res[3].ID())
 }
 
 type TestRemoteProposerVM struct {
@@ -949,6 +949,8 @@ func initTestRemoteProposerVM(
 	*VM,
 	*snowman.TestBlock,
 ) {
+	require := require.New(t)
+
 	coreGenBlk := &snowman.TestBlock{
 		TestDecidable: choices.TestDecidable{
 			IDV:     ids.GenerateTestID(),
@@ -1046,7 +1048,7 @@ func initTestRemoteProposerVM(
 	dummyDBManager := manager.NewMemDB(version.Semantic1_0_0)
 	// make sure that DBs are compressed correctly
 	dummyDBManager = dummyDBManager.NewPrefixDBManager([]byte{})
-	err := proVM.Initialize(
+	require.NoError(proVM.Initialize(
 		context.Background(),
 		ctx,
 		dummyDBManager,
@@ -1056,21 +1058,12 @@ func initTestRemoteProposerVM(
 		nil,
 		nil,
 		nil,
-	)
-	if err != nil {
-		t.Fatalf("failed to initialize proposerVM with %s", err)
-	}
+	))
 
 	// Initialize shouldn't be called again
 	coreVM.InitializeF = nil
 
-	if err := proVM.SetState(context.Background(), snow.NormalOp); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := proVM.SetPreference(context.Background(), coreGenBlk.IDV); err != nil {
-		t.Fatal(err)
-	}
-
+	require.NoError(proVM.SetState(context.Background(), snow.NormalOp))
+	require.NoError(proVM.SetPreference(context.Background(), coreGenBlk.IDV))
 	return coreVM, proVM, coreGenBlk
 }
