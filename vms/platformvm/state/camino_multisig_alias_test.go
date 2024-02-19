@@ -320,7 +320,8 @@ func TestWriteMultisigAliases(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			actualCaminoState := tt.caminoState(ctrl)
-			require.ErrorIs(t, actualCaminoState.writeMultisigAliases(), tt.expectedErr)
+			err := actualCaminoState.writeMultisigAliases()
+			require.ErrorIs(t, err, tt.expectedErr)
 			require.Equal(t, tt.expectedCaminoState(actualCaminoState), actualCaminoState)
 		})
 	}

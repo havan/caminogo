@@ -25,14 +25,15 @@ func TestAddressStateTxSyntacticVerify(t *testing.T) {
 	var (
 		stx            *Tx
 		addressStateTx *AddressStateTx
-		err            error
 	)
 
 	// Case : signed tx is nil
-	require.ErrorIs(stx.SyntacticVerify(ctx), ErrNilSignedTx)
+	err := stx.SyntacticVerify(ctx)
+	require.ErrorIs(err, ErrNilSignedTx)
 
 	// Case : unsigned tx is nil
-	require.ErrorIs(addressStateTx.SyntacticVerify(ctx), ErrNilTx)
+	err = addressStateTx.SyntacticVerify(ctx)
+	require.ErrorIs(err, ErrNilTx)
 
 	inputs := []*avax.TransferableInput{{
 		UTXOID: avax.UTXOID{

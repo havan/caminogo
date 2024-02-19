@@ -18,10 +18,6 @@ jobs:
         with:
           go-version: 1.19
           cache: false
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: v1.51
       - name: Run static analysis tests
         shell: bash
         run: scripts/lint.sh

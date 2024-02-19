@@ -134,7 +134,8 @@ func TestFeeDistributionProposalVerify(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			require.ErrorIs(t, tt.proposal.Verify(), tt.expectedErr)
+			err := tt.proposal.Verify()
+			require.ErrorIs(t, err, tt.expectedErr)
 			require.Equal(t, tt.expectedProposal, tt.proposal)
 		})
 	}

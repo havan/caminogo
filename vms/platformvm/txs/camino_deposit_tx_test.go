@@ -112,7 +112,8 @@ func TestDepositTxSyntacticVerify(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			require.ErrorIs(t, tt.tx.SyntacticVerify(ctx), tt.expectedErr)
+			err := tt.tx.SyntacticVerify(ctx)
+			require.ErrorIs(t, err, tt.expectedErr)
 		})
 	}
 }

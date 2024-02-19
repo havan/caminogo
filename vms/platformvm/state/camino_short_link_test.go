@@ -344,7 +344,8 @@ func TestWriteShortLinks(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			actualCaminoState := tt.caminoState(ctrl)
-			require.ErrorIs(t, actualCaminoState.writeShortLinks(), tt.expectedErr)
+			err := actualCaminoState.writeShortLinks()
+			require.ErrorIs(t, err, tt.expectedErr)
 			require.Equal(t, tt.expectedCaminoState(actualCaminoState), actualCaminoState)
 		})
 	}

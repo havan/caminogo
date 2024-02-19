@@ -42,8 +42,7 @@ import (
 func TestRemoveDeferredValidator(t *testing.T) {
 	require := require.New(t)
 	addr := caminoPreFundedKeys[0].Address()
-	hrp := constants.NetworkIDToHRP[testNetworkID]
-	bech32Addr, err := address.FormatBech32(hrp, addr.Bytes())
+	bech32Addr, err := address.FormatBech32(constants.UnitTestHRP, addr.Bytes())
 	require.NoError(err)
 
 	nodeKey, nodeID := nodeid.GenerateCaminoNodeKeyAndID()
@@ -228,8 +227,7 @@ func TestRemoveDeferredValidator(t *testing.T) {
 func TestRemoveReactivatedValidator(t *testing.T) {
 	require := require.New(t)
 	addr := caminoPreFundedKeys[0].Address()
-	hrp := constants.NetworkIDToHRP[testNetworkID]
-	bech32Addr, err := address.FormatBech32(hrp, addr.Bytes())
+	bech32Addr, err := address.FormatBech32(constants.UnitTestHRP, addr.Bytes())
 	require.NoError(err)
 
 	nodeKey, nodeID := nodeid.GenerateCaminoNodeKeyAndID()
@@ -427,7 +425,7 @@ func TestDepositsAutoUnlock(t *testing.T) {
 	depositOwnerKey, depositOwnerAddr, depositOwner := generateKeyAndOwner(t)
 	ownerID, err := txs.GetOwnerID(depositOwner)
 	require.NoError(err)
-	depositOwnerAddrBech32, err := address.FormatBech32(constants.NetworkIDToHRP[testNetworkID], depositOwnerAddr.Bytes())
+	depositOwnerAddrBech32, err := address.FormatBech32(constants.UnitTestHRP, depositOwnerAddr.Bytes())
 	require.NoError(err)
 
 	depositOffer := &deposit.Offer{
@@ -501,9 +499,9 @@ func TestDepositsAutoUnlock(t *testing.T) {
 
 func TestProposals(t *testing.T) {
 	proposerKey, proposerAddr, _ := generateKeyAndOwner(t)
-	proposerAddrStr, err := address.FormatBech32(constants.NetworkIDToHRP[testNetworkID], proposerAddr.Bytes())
+	proposerAddrStr, err := address.FormatBech32(constants.UnitTestHRP, proposerAddr.Bytes())
 	require.NoError(t, err)
-	caminoPreFundedKey0AddrStr, err := address.FormatBech32(constants.NetworkIDToHRP[testNetworkID], caminoPreFundedKeys[0].Address().Bytes())
+	caminoPreFundedKey0AddrStr, err := address.FormatBech32(constants.UnitTestHRP, caminoPreFundedKeys[0].Address().Bytes())
 	require.NoError(t, err)
 
 	defaultConfig := defaultCaminoConfig(true)
@@ -616,7 +614,7 @@ func TestProposals(t *testing.T) {
 			proposalState, nextProposalIDsToExpire, nexExpirationTime, proposalIDsToFinish := makeProposalWithTx(t, vm, proposalTx)
 			baseFeeProposalState, ok := proposalState.(*dac.BaseFeeProposalState)
 			require.True(ok)
-			require.EqualValues(5, baseFeeProposalState.TotalAllowedVoters)   // all 5 validators must vote
+			require.Equal(uint32(5), baseFeeProposalState.TotalAllowedVoters) // all 5 validators must vote
 			require.Equal([]ids.ID{proposalTx.ID()}, nextProposalIDsToExpire) // we have only one proposal
 			require.Equal(proposalState.EndTime(), nexExpirationTime)
 			require.Empty(proposalIDsToFinish) // no early-finished proposals
@@ -631,7 +629,8 @@ func TestProposals(t *testing.T) {
 			// Try to vote on proposal, expect to fail
 			vm.clock.Set(baseFeeProposalState.StartTime().Add(-time.Second))
 			addVoteTx := buildSimpleVoteTx(t, vm, proposerKey, fee, proposalTx.ID(), caminoPreFundedKeys[0], 0)
-			require.ErrorIs(vm.Builder.AddUnverifiedTx(addVoteTx), txexecutor.ErrProposalInactive)
+			err = vm.Builder.AddUnverifiedTx(addVoteTx)
+			require.ErrorIs(err, txexecutor.ErrProposalInactive)
 			vm.clock.Set(baseFeeProposalState.StartTime())
 
 			optionWeights := make([]uint32, len(baseFeeProposalState.Options))
@@ -701,9 +700,9 @@ func TestAdminProposals(t *testing.T) {
 	require := require.New(t)
 
 	proposerKey, proposerAddr, _ := generateKeyAndOwner(t)
-	proposerAddrStr, err := address.FormatBech32(constants.NetworkIDToHRP[testNetworkID], proposerAddr.Bytes())
+	proposerAddrStr, err := address.FormatBech32(constants.UnitTestHRP, proposerAddr.Bytes())
 	require.NoError(err)
-	caminoPreFundedKey0AddrStr, err := address.FormatBech32(constants.NetworkIDToHRP[testNetworkID], caminoPreFundedKeys[0].Address().Bytes())
+	caminoPreFundedKey0AddrStr, err := address.FormatBech32(constants.UnitTestHRP, caminoPreFundedKeys[0].Address().Bytes())
 	require.NoError(err)
 
 	applicantAddr := proposerAddr
@@ -776,7 +775,7 @@ func TestAdminProposals(t *testing.T) {
 	proposalState, nextProposalIDsToExpire, nexExpirationTime, proposalIDsToFinish := makeProposalWithTx(t, vm, proposalTx)
 	addMemberProposalState, ok := proposalState.(*dac.AddMemberProposalState)
 	require.True(ok)
-	require.EqualValues(0, addMemberProposalState.TotalAllowedVoters) // its admin proposal
+	require.Zero(addMemberProposalState.TotalAllowedVoters)           // its admin proposal
 	require.Equal([]ids.ID{proposalTx.ID()}, nextProposalIDsToExpire) // we have only one proposal
 	require.Equal(proposalState.EndTime(), nexExpirationTime)
 	require.Equal([]ids.ID{proposalTx.ID()}, proposalIDsToFinish) // admin proposal must be immediately finished
@@ -821,7 +820,7 @@ func TestExcludeMemberProposals(t *testing.T) {
 	proposerMemberKey := caminoPreFundedKeys[0]
 	fundsKey := caminoPreFundedKeys[0]
 	fundsAddr := caminoPreFundedKeys[0].Address()
-	fundsKeyAddrStr, err := address.FormatBech32(constants.NetworkIDToHRP[testNetworkID], fundsKey.Address().Bytes())
+	fundsKeyAddrStr, err := address.FormatBech32(constants.UnitTestHRP, fundsKey.Address().Bytes())
 	require.NoError(t, err)
 
 	defaultConfig := defaultCaminoConfig(true)
@@ -1148,7 +1147,8 @@ func TestExcludeMemberProposals(t *testing.T) {
 			if tt.moreExlcude {
 				excludeMemberProposalTx := buildExcludeMemberProposalTx(t, vm, fundsKey, proposalBondAmount, fee,
 					consortiumAdminKey, memberToExcludeAddr, proposalStartTime, proposalStartTime.Add(time.Duration(dac.ExcludeMemberProposalMinDuration)*time.Second), true)
-				require.ErrorIs(vm.Builder.AddUnverifiedTx(excludeMemberProposalTx), txexecutor.ErrInvalidProposal)
+				err = vm.Builder.AddUnverifiedTx(excludeMemberProposalTx)
+				require.ErrorIs(err, txexecutor.ErrInvalidProposal)
 				height, err = vm.GetCurrentHeight(context.Background())
 				require.NoError(err)
 				require.Equal(expectedHeight, height)
