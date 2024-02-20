@@ -78,8 +78,7 @@ func TestRemoveDeferredValidator(t *testing.T) {
 
 	utxo := generateTestUTXO(ids.GenerateTestID(), avaxAssetID, defaultBalance, *outputOwners, ids.Empty, ids.Empty)
 	vm.state.AddUTXO(utxo)
-	err = vm.state.Commit()
-	require.NoError(err)
+	require.NoError(vm.state.Commit())
 
 	// Set consortium member
 	tx, err := vm.txBuilder.NewAddressStateTx(
@@ -140,13 +139,11 @@ func TestRemoveDeferredValidator(t *testing.T) {
 	require.NoError(err)
 	vm.state.PutCurrentValidator(staker)
 	vm.state.AddTx(addValidatorTx, status.Committed)
-	err = vm.state.Commit()
-	require.NoError(err)
+	require.NoError(vm.state.Commit())
 
 	utxo = generateTestUTXO(ids.GenerateTestID(), avaxAssetID, defaultBalance, *outputOwners, ids.Empty, ids.Empty)
 	vm.state.AddUTXO(utxo)
-	err = vm.state.Commit()
-	require.NoError(err)
+	require.NoError(vm.state.Commit())
 
 	// Defer the validator
 	tx, err = vm.txBuilder.NewAddressStateTx(
@@ -263,8 +260,7 @@ func TestRemoveReactivatedValidator(t *testing.T) {
 
 	utxo := generateTestUTXO(ids.GenerateTestID(), avaxAssetID, defaultBalance, *outputOwners, ids.Empty, ids.Empty)
 	vm.state.AddUTXO(utxo)
-	err = vm.state.Commit()
-	require.NoError(err)
+	require.NoError(vm.state.Commit())
 
 	// Set consortium member
 	tx, err := vm.txBuilder.NewAddressStateTx(
@@ -326,13 +322,11 @@ func TestRemoveReactivatedValidator(t *testing.T) {
 	require.NoError(err)
 	vm.state.PutCurrentValidator(staker)
 	vm.state.AddTx(addValidatorTx, status.Committed)
-	err = vm.state.Commit()
-	require.NoError(err)
+	require.NoError(vm.state.Commit())
 
 	utxo = generateTestUTXO(ids.GenerateTestID(), avaxAssetID, defaultBalance, *outputOwners, ids.Empty, ids.Empty)
 	vm.state.AddUTXO(utxo)
-	err = vm.state.Commit()
-	require.NoError(err)
+	require.NoError(vm.state.Commit())
 
 	// Defer the validator
 	tx, err = vm.txBuilder.NewAddressStateTx(

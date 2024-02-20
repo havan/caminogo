@@ -45,8 +45,7 @@ func TestUpgrade(codec GeneralCodec, t testing.TB) {
 	manager := NewDefaultManager()
 	require := require.New(t)
 
-	err := manager.RegisterCodec(0, codec)
-	require.NoError(err)
+	require.NoError(manager.RegisterCodec(0, codec))
 
 	bytes, err := manager.Marshal(0, &input)
 	require.NoError(err)

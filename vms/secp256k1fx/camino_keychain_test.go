@@ -6,12 +6,13 @@ package secp256k1fx
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/ava-labs/avalanchego/database"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
 	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/ava-labs/avalanchego/vms/components/multisig"
-	"github.com/stretchr/testify/require"
 )
 
 type TestGetter struct {

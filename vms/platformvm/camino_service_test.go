@@ -8,6 +8,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/btcsuite/btcd/btcutil/bech32"
+	"github.com/stretchr/testify/require"
+
 	json_api "github.com/ava-labs/avalanchego/api"
 	"github.com/ava-labs/avalanchego/api/keystore"
 	"github.com/ava-labs/avalanchego/database/manager"
@@ -23,8 +26,6 @@ import (
 	"github.com/ava-labs/avalanchego/vms/platformvm/deposit"
 	"github.com/ava-labs/avalanchego/vms/platformvm/locked"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
-	"github.com/btcsuite/btcd/btcutil/bech32"
-	"github.com/stretchr/testify/require"
 )
 
 // Test method GetBalance in CaminoService
@@ -130,8 +131,7 @@ func TestGetCaminoBalance(t *testing.T) {
 				}
 				utxo := generateTestUTXO(ids.GenerateTestID(), avaxAssetID, tt.deposited, outputOwners, ids.GenerateTestID(), ids.Empty)
 				service.vm.state.AddUTXO(utxo)
-				err := service.vm.state.Commit()
-				require.NoError(t, err)
+				require.NoError(t, service.vm.state.Commit())
 			}
 
 			if tt.bonded != 0 {
@@ -142,8 +142,7 @@ func TestGetCaminoBalance(t *testing.T) {
 				}
 				utxo := generateTestUTXO(ids.GenerateTestID(), avaxAssetID, tt.bonded, outputOwners, ids.Empty, ids.GenerateTestID())
 				service.vm.state.AddUTXO(utxo)
-				err := service.vm.state.Commit()
-				require.NoError(t, err)
+				require.NoError(t, service.vm.state.Commit())
 			}
 
 			if tt.depositedBonded != 0 {
@@ -154,8 +153,7 @@ func TestGetCaminoBalance(t *testing.T) {
 				}
 				utxo := generateTestUTXO(ids.GenerateTestID(), avaxAssetID, tt.depositedBonded, outputOwners, ids.GenerateTestID(), ids.GenerateTestID())
 				service.vm.state.AddUTXO(utxo)
-				err := service.vm.state.Commit()
-				require.NoError(t, err)
+				require.NoError(t, service.vm.state.Commit())
 			}
 
 			err := service.GetBalance(nil, &request, &responseWrapper)
@@ -425,7 +423,6 @@ func TestSpend(t *testing.T) {
 
 	spendReply := SpendReply{}
 
-	err = service.Spend(nil, &spendArgs, &spendReply)
-	require.NoError(t, err)
+	require.NoError(t, service.Spend(nil, &spendArgs, &spendReply))
 	require.Equal(t, "0x00000000000100000000000000000000000100000001fceda8f90fcb5d30614b99d79fc4baa2930776262dcf0a4e", spendReply.Owners)
 }

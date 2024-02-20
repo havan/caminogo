@@ -9,9 +9,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
-	"github.com/stretchr/testify/require"
 )
 
 func TestPAddressConversion(t *testing.T) {

@@ -7,11 +7,12 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ava-labs/avalanchego/cache"
 	"github.com/ava-labs/avalanchego/database"
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/require"
 )
 
 func TestGetShortIDLink(t *testing.T) {

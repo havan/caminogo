@@ -10,11 +10,12 @@ import (
 	"path"
 	"strings"
 
+	"github.com/decred/dcrd/dcrec/secp256k1/v4"
+
 	"github.com/ava-labs/avalanchego/network/peer"
 	"github.com/ava-labs/avalanchego/staking"
 	"github.com/ava-labs/avalanchego/utils/cb58"
 	utilsSecp256k1 "github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
-	"github.com/decred/dcrd/dcrec/secp256k1/v4"
 )
 
 var (

@@ -7,8 +7,9 @@ package dac
 import (
 	reflect "reflect"
 
-	ids "github.com/ava-labs/avalanchego/ids"
 	gomock "github.com/golang/mock/gomock"
+
+	ids "github.com/ava-labs/avalanchego/ids"
 )
 
 // MockBondTxIDsGetter is a mock of BondTxIDsGetter interface.

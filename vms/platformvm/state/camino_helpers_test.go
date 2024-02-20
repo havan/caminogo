@@ -7,6 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ava-labs/avalanchego/database/memdb"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/snow"
@@ -21,9 +25,6 @@ import (
 	"github.com/ava-labs/avalanchego/vms/platformvm/reward"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
-	"github.com/golang/mock/gomock"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/stretchr/testify/require"
 )
 
 func generateBaseTx(assetID ids.ID, amount uint64, outputOwners secp256k1fx.OutputOwners, depositTxID, bondTxID ids.ID) *txs.BaseTx {

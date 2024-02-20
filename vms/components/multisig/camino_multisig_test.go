@@ -6,10 +6,11 @@ package multisig
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/hashing"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
-	"github.com/stretchr/testify/require"
 )
 
 func TestVerify(t *testing.T) {
@@ -20,7 +21,7 @@ func TestVerify(t *testing.T) {
 	}{
 		"MemoSizeShouldBeLowerThanMaxMemoSize": {
 			alias: Alias{
-				Owners: &avax.TestVerifiable{},
+				Owners: &avax.TestState{},
 				Memo:   make([]byte, avax.MaxMemoSize+1),
 				ID:     hashing.ComputeHash160Array(ids.Empty[:]),
 			},

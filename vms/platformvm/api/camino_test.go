@@ -6,6 +6,8 @@ package api
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/formatting"
@@ -19,7 +21,6 @@ import (
 	"github.com/ava-labs/avalanchego/vms/platformvm/locked"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
-	"github.com/stretchr/testify/require"
 )
 
 func TestBuildCaminoGenesis(t *testing.T) {

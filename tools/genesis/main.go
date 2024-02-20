@@ -12,12 +12,13 @@ import (
 	"os"
 	"time"
 
+	"github.com/xuri/excelize/v2"
+
 	"github.com/ava-labs/avalanchego/genesis"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/tools/genesis/workbook"
 	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
-	"github.com/xuri/excelize/v2"
 )
 
 func main() {

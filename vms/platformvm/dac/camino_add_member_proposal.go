@@ -8,9 +8,10 @@ import (
 	"fmt"
 	"time"
 
+	"golang.org/x/exp/slices"
+
 	"github.com/ava-labs/avalanchego/ids"
 	as "github.com/ava-labs/avalanchego/vms/platformvm/addrstate"
-	"golang.org/x/exp/slices"
 )
 
 const AddMemberProposalDuration = uint64(time.Hour * 24 * 30 * 2 / time.Second) // 2 month

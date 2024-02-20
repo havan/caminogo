@@ -8,9 +8,10 @@ import (
 	"fmt"
 	"time"
 
+	"golang.org/x/exp/slices"
+
 	"github.com/ava-labs/avalanchego/ids"
 	as "github.com/ava-labs/avalanchego/vms/platformvm/addrstate"
-	"golang.org/x/exp/slices"
 )
 
 const (

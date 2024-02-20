@@ -15,11 +15,11 @@ func TestSampleBootstrappers(t *testing.T) {
 	require := require.New(t)
 
 	for networkID, networkName := range constants.NetworkIDToNetworkName {
-		length := 10
+		length := 2
 		bootstrappers := SampleBootstrappers(networkID, length)
 		t.Logf("%s bootstrappers: %+v", networkName, bootstrappers)
 
-		if networkID == constants.MainnetID || networkID == constants.FujiID {
+		if networkID == constants.CaminoID || networkID == constants.ColumbusID {
 			require.Len(bootstrappers, length)
 		}
 	}

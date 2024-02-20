@@ -10,10 +10,11 @@ import (
 	"math/big"
 	"time"
 
+	"golang.org/x/exp/slices"
+
 	"github.com/ava-labs/avalanchego/ids"
 	as "github.com/ava-labs/avalanchego/vms/platformvm/addrstate"
 	"github.com/ava-labs/avalanchego/vms/types"
-	"golang.org/x/exp/slices"
 )
 
 const (

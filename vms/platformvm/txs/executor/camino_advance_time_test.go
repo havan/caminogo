@@ -201,9 +201,7 @@ func TestDeferredStakers(t *testing.T) {
 			env := newCaminoEnvironment( /*postBanff*/ true, true, caminoGenesisConf)
 			env.ctx.Lock.Lock()
 			defer func() {
-				if err := shutdownCaminoEnvironment(env); err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(shutdownCaminoEnvironment(env))
 			}()
 
 			dummyHeight := uint64(1)

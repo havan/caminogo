@@ -4,9 +4,10 @@
 package metrics
 
 import (
+	"github.com/prometheus/client_golang/prometheus"
+
 	"github.com/ava-labs/avalanchego/utils/wrappers"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 var _ txs.Visitor = (*caminoTxMetrics)(nil)

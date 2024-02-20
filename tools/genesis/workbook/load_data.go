@@ -8,11 +8,12 @@ import (
 	"log"
 	"sort"
 
+	"github.com/xuri/excelize/v2"
+	"golang.org/x/exp/maps"
+
 	"github.com/ava-labs/avalanchego/genesis"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/set"
-	"github.com/xuri/excelize/v2"
-	"golang.org/x/exp/maps"
 )
 
 type TabName string

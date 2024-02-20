@@ -28,10 +28,11 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/decred/dcrd/dcrec/secp256k1/v4"
+
 	utilsSecp256k1 "github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
 	"github.com/ava-labs/avalanchego/utils/perms"
 	"github.com/ava-labs/avalanchego/utils/set"
-	"github.com/decred/dcrd/dcrec/secp256k1/v4"
 )
 
 var errDuplicateExtension = errors.New("duplicate certificate extension")
