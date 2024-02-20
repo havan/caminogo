@@ -42,6 +42,7 @@ import (
 const (
 	testNetworkID                = 10 // To be used in tests
 	defaultCaminoValidatorWeight = 2 * units.KiloAvax
+	trackChecksum                = false
 )
 
 var (
@@ -166,6 +167,7 @@ func defaultState(
 		metrics.Noop,
 		rewards,
 		&utils.Atomic[bool]{},
+		trackChecksum,
 	)
 	if err != nil {
 		panic(err)

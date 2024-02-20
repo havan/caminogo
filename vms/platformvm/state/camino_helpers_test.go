@@ -72,6 +72,7 @@ func newEmptyState(t *testing.T) *state {
 			SupplyCap:          720 * units.MegaAvax,
 		}),
 		&utils.Atomic[bool]{},
+		trackChecksum,
 	)
 	require.NoError(t, err)
 	require.NotNil(t, newState)

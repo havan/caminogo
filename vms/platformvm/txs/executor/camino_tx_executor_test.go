@@ -444,7 +444,7 @@ func TestCaminoStandardTxExecutorAddSubnetValidatorTx(t *testing.T) {
 				}
 			},
 			preExecute:  func(t *testing.T, tx *txs.Tx) {},
-			expectedErr: ErrValidatorSubset,
+			expectedErr: ErrPeriodMismatch,
 		},
 		"Validator not in pending or current validator set": {
 			generateArgs: func() args {
@@ -474,7 +474,7 @@ func TestCaminoStandardTxExecutorAddSubnetValidatorTx(t *testing.T) {
 				}
 			},
 			preExecute:  func(t *testing.T, tx *txs.Tx) {},
-			expectedErr: ErrValidatorSubset,
+			expectedErr: ErrPeriodMismatch,
 		},
 		"Validator in pending set but stops after primary network": {
 			generateArgs: func() args {
@@ -489,7 +489,7 @@ func TestCaminoStandardTxExecutorAddSubnetValidatorTx(t *testing.T) {
 				}
 			},
 			preExecute:  func(t *testing.T, tx *txs.Tx) {},
-			expectedErr: ErrValidatorSubset,
+			expectedErr: ErrPeriodMismatch,
 		},
 		"Happy path validator in pending set": {
 			generateArgs: func() args {

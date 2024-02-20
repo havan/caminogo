@@ -60,6 +60,7 @@ const (
 	defaultCaminoBalance         = 100 * defaultCaminoValidatorWeight
 	defaultTxFee                 = uint64(100)
 	localStakingPath             = "../../../../staking/local/"
+	trackChecksum                = false
 )
 
 var (
@@ -347,6 +348,7 @@ func defaultCaminoState(
 		metrics.Noop,
 		rewards,
 		&utils.Atomic[bool]{},
+		trackChecksum,
 	)
 	if err != nil {
 		panic(err)

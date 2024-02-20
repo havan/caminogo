@@ -65,7 +65,7 @@ func TestCompatibility(t *testing.T) {
 				Patch: 0,
 			},
 			time:        minCompatableTime,
-			expectedErr: errDifferentMajor,
+			expectedErr: errIncompatible,
 		},
 		{
 			peer: &Application{

@@ -48,7 +48,7 @@ var (
 	_, caminoPreFundedNodeIDs = nodeid.LoadLocalCaminoNodeKeysAndIDs(localStakingPath)
 )
 
-func newCaminoVM(genesisConfig api.Camino, genesisUTXOs []api.UTXO, startTime *time.Time) *VM {
+func newCaminoVM(t *testing.T, genesisConfig api.Camino, genesisUTXOs []api.UTXO, startTime *time.Time) *VM {
 	vm := &VM{Config: defaultCaminoConfig(true)}
 
 	baseDBManager := manager.NewMemDB(version.Semantic1_0_0)
@@ -61,7 +61,7 @@ func newCaminoVM(genesisConfig api.Camino, genesisUTXOs []api.UTXO, startTime *t
 	}
 	vm.clock.Set(*startTime)
 	msgChan := make(chan common.Message, 1)
-	ctx := defaultContext()
+	ctx := defaultContext(t)
 
 	m := atomic.NewMemory(atomicDB)
 	msm := &mutableSharedMemory{

@@ -28,9 +28,7 @@ func TestRewardUTXOSerializeC(t *testing.T) {
 		c.RegisterType(&secp256k1fx.Credential{}),
 		manager.RegisterCodec(codecVersion, c),
 	)
-	if errs.Errored() {
-		t.Fatal(errs.Err)
-	}
+	require.False(t, errs.Errored())
 
 	expected := []byte{
 		// Codec version
