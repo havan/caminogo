@@ -51,7 +51,7 @@ var errTest = errors.New("non-nil error")
 
 func TestStandardTxExecutorAddValidatorTxEmptyID(t *testing.T) {
 	require := require.New(t)
-	env := newEnvironment(false /*=postBanff*/, false /*=postCortina*/)
+	env := newEnvironment(t, false /*=postBanff*/, false /*=postCortina*/)
 	env.ctx.Lock.Lock()
 	defer func() {
 		require.NoError(shutdownEnvironment(env))
@@ -171,7 +171,7 @@ func TestStandardTxExecutorAddDelegator(t *testing.T) {
 		require.NoError(t, target.state.Commit())
 	}
 
-	dummyH := newEnvironment(false /*=postBanff*/, false /*=postCortina*/)
+	dummyH := newEnvironment(t, false /*=postBanff*/, false /*=postCortina*/)
 	currentTimestamp := dummyH.state.GetTimestamp()
 
 	type test struct {
@@ -199,8 +199,8 @@ func TestStandardTxExecutorAddDelegator(t *testing.T) {
 			feeKeys:              []*secp256k1.PrivateKey{preFundedKeys[0]},
 			setup:                nil,
 			AP3Time:              defaultGenesisTime,
-			expectedExecutionErr: ErrOverDelegated,
-			expectedMempoolErr:   ErrOverDelegated,
+			expectedExecutionErr: ErrPeriodMismatch,
+			expectedMempoolErr:   ErrPeriodMismatch,
 		},
 		{
 			description:          fmt.Sprintf("delegator should not be added more than (%s) in the future", MaxFutureStartTime),
@@ -238,8 +238,8 @@ func TestStandardTxExecutorAddDelegator(t *testing.T) {
 			feeKeys:              []*secp256k1.PrivateKey{preFundedKeys[0]},
 			setup:                addMinStakeValidator,
 			AP3Time:              defaultGenesisTime,
-			expectedExecutionErr: ErrOverDelegated,
-			expectedMempoolErr:   ErrOverDelegated,
+			expectedExecutionErr: ErrPeriodMismatch,
+			expectedMempoolErr:   ErrPeriodMismatch,
 		},
 		{
 			description:          "delegator stops before validator",
@@ -251,8 +251,8 @@ func TestStandardTxExecutorAddDelegator(t *testing.T) {
 			feeKeys:              []*secp256k1.PrivateKey{preFundedKeys[0]},
 			setup:                addMinStakeValidator,
 			AP3Time:              defaultGenesisTime,
-			expectedExecutionErr: ErrOverDelegated,
-			expectedMempoolErr:   ErrOverDelegated,
+			expectedExecutionErr: ErrPeriodMismatch,
+			expectedMempoolErr:   ErrPeriodMismatch,
 		},
 		{
 			description:          "valid",
@@ -336,7 +336,7 @@ func TestStandardTxExecutorAddDelegator(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.description, func(t *testing.T) {
 			require := require.New(t)
-			freshTH := newEnvironment(false /*=postBanff*/, false /*=postCortina*/)
+			freshTH := newEnvironment(t, false /*=postBanff*/, false /*=postCortina*/)
 			freshTH.config.ApricotPhase3Time = tt.AP3Time
 			defer func() {
 				require.NoError(shutdownEnvironment(freshTH))
@@ -384,7 +384,7 @@ func TestStandardTxExecutorAddDelegator(t *testing.T) {
 
 func TestStandardTxExecutorAddSubnetValidator(t *testing.T) {
 	require := require.New(t)
-	env := newEnvironment(false /*=postBanff*/, false /*=postCortina*/)
+	env := newEnvironment(t, false /*=postBanff*/, false /*=postCortina*/)
 	env.ctx.Lock.Lock()
 	defer func() {
 		require.NoError(shutdownEnvironment(env))
@@ -418,7 +418,7 @@ func TestStandardTxExecutorAddSubnetValidator(t *testing.T) {
 			Tx:      tx,
 		}
 		err = tx.Unsigned.Visit(&executor)
-		require.ErrorIs(err, ErrValidatorSubset)
+		require.ErrorIs(err, ErrPeriodMismatch)
 	}
 
 	{
@@ -533,7 +533,7 @@ func TestStandardTxExecutorAddSubnetValidator(t *testing.T) {
 			Tx:      tx,
 		}
 		err = tx.Unsigned.Visit(&executor)
-		require.ErrorIs(err, ErrValidatorSubset)
+		require.ErrorIs(err, ErrPeriodMismatch)
 	}
 
 	{
@@ -559,7 +559,7 @@ func TestStandardTxExecutorAddSubnetValidator(t *testing.T) {
 			Tx:      tx,
 		}
 		err = tx.Unsigned.Visit(&executor)
-		require.ErrorIs(err, ErrValidatorSubset)
+		require.ErrorIs(err, ErrPeriodMismatch)
 	}
 
 	{
@@ -812,7 +812,7 @@ func TestStandardTxExecutorAddSubnetValidator(t *testing.T) {
 
 func TestStandardTxExecutorAddValidator(t *testing.T) {
 	require := require.New(t)
-	env := newEnvironment(false /*=postBanff*/, false /*=postCortina*/)
+	env := newEnvironment(t, false /*=postBanff*/, false /*=postCortina*/)
 	env.ctx.Lock.Lock()
 	defer func() {
 		require.NoError(shutdownEnvironment(env))

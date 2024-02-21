@@ -110,9 +110,7 @@ func TestGetCaminoBalance(t *testing.T) {
 			service := defaultCaminoService(t, tt.camino, tt.genesisUTXOs)
 			service.vm.ctx.Lock.Lock()
 			defer func() {
-				if err := service.vm.Shutdown(context.TODO()); err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, service.vm.Shutdown(context.TODO()))
 				service.vm.ctx.Lock.Unlock()
 			}()
 
@@ -182,14 +180,12 @@ func TestGetCaminoBalance(t *testing.T) {
 }
 
 func defaultCaminoService(t *testing.T, camino api.Camino, utxos []api.UTXO) *CaminoService {
-	vm := newCaminoVM(camino, utxos, nil)
+	vm := newCaminoVM(t, camino, utxos, nil)
 
 	vm.ctx.Lock.Lock()
 	defer vm.ctx.Lock.Unlock()
 	ks := keystore.New(logging.NoLog{}, manager.NewMemDB(version.Semantic1_0_0))
-	if err := ks.CreateUser(testUsername, testPassword); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, ks.CreateUser(testUsername, testPassword))
 	vm.ctx.Keystore = ks.NewBlockchainKeyStore(vm.ctx.ChainID)
 	return &CaminoService{
 		Service: Service{

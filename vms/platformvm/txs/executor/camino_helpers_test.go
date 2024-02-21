@@ -222,6 +222,7 @@ func defaultCaminoState(
 		metrics.Noop,
 		rewards,
 		&utils.Atomic[bool]{},
+		trackChecksum,
 	)
 	if err != nil {
 		panic(err)

@@ -18,6 +18,8 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/network/peer"
 	"github.com/ava-labs/avalanchego/staking"
@@ -35,9 +37,7 @@ func getTLS(t *testing.T, index int) (ids.NodeID, *tls.Certificate, *tls.Config)
 
 	for len(tlsCerts) <= index {
 		cert, err := staking.NewTLSCert()
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 		tlsConfig := peer.TLSConfig(*cert, nil)
 
 		tlsCerts = append(tlsCerts, cert)
@@ -46,9 +46,7 @@ func getTLS(t *testing.T, index int) (ids.NodeID, *tls.Certificate, *tls.Config)
 
 	cert := tlsCerts[index]
 	nodeID, err := peer.CertToID(cert.Leaf)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return nodeID, cert, tlsConfigs[index]
 }

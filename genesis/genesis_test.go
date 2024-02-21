@@ -179,10 +179,8 @@ func TestValidateConfig(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			require := require.New(t)
-
 			err := validateConfig(test.networkID, test.config, genesisStakingCfg)
-			require.ErrorIs(err, test.expectedErr)
+			require.ErrorIs(t, err, test.expectedErr)
 		})
 	}
 }
@@ -245,9 +243,9 @@ func TestGenesisFromFile(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			// test loading of genesis from file
-
 			require := require.New(t)
+
+			// test loading of genesis from file
 			var customFile string
 			if len(test.customConfig) > 0 {
 				customFile = filepath.Join(t.TempDir(), "config.json")
@@ -323,9 +321,9 @@ func TestGenesisFromFlag(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			// test loading of genesis content from flag/env-var
-
 			require := require.New(t)
+
+			// test loading of genesis content from flag/env-var
 			var genBytes []byte
 			if len(test.customConfig) == 0 {
 				// try loading a default config
