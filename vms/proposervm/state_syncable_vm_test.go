@@ -115,6 +115,9 @@ func TestStateSyncEnabled(t *testing.T) {
 	require := require.New(t)
 
 	innerVM, vm := helperBuildStateSyncTestObjects(t)
+	defer func() {
+		require.NoError(vm.Shutdown(context.Background()))
+	}()
 
 	// ProposerVM State Sync disabled if innerVM State sync is disabled
 	vm.hIndexer.MarkRepaired(true)
@@ -138,6 +141,9 @@ func TestStateSyncGetOngoingSyncStateSummary(t *testing.T) {
 	require := require.New(t)
 
 	innerVM, vm := helperBuildStateSyncTestObjects(t)
+	defer func() {
+		require.NoError(vm.Shutdown(context.Background()))
+	}()
 
 	innerSummary := &block.TestStateSummary{
 		IDV:     ids.ID{'s', 'u', 'm', 'm', 'a', 'r', 'y', 'I', 'D'},
@@ -221,6 +227,9 @@ func TestStateSyncGetLastStateSummary(t *testing.T) {
 	require := require.New(t)
 
 	innerVM, vm := helperBuildStateSyncTestObjects(t)
+	defer func() {
+		require.NoError(vm.Shutdown(context.Background()))
+	}()
 
 	innerSummary := &block.TestStateSummary{
 		IDV:     ids.ID{'s', 'u', 'm', 'm', 'a', 'r', 'y', 'I', 'D'},
@@ -304,6 +313,9 @@ func TestStateSyncGetStateSummary(t *testing.T) {
 	require := require.New(t)
 
 	innerVM, vm := helperBuildStateSyncTestObjects(t)
+	defer func() {
+		require.NoError(vm.Shutdown(context.Background()))
+	}()
 	reqHeight := uint64(1969)
 
 	innerSummary := &block.TestStateSummary{
@@ -389,6 +401,9 @@ func TestStateSyncGetStateSummary(t *testing.T) {
 func TestParseStateSummary(t *testing.T) {
 	require := require.New(t)
 	innerVM, vm := helperBuildStateSyncTestObjects(t)
+	defer func() {
+		require.NoError(vm.Shutdown(context.Background()))
+	}()
 	reqHeight := uint64(1969)
 
 	innerSummary := &block.TestStateSummary{
@@ -466,6 +481,9 @@ func TestStateSummaryAccept(t *testing.T) {
 	require := require.New(t)
 
 	innerVM, vm := helperBuildStateSyncTestObjects(t)
+	defer func() {
+		require.NoError(vm.Shutdown(context.Background()))
+	}()
 	reqHeight := uint64(1969)
 
 	innerSummary := &block.TestStateSummary{
@@ -537,6 +555,9 @@ func TestStateSummaryAcceptOlderBlock(t *testing.T) {
 	require := require.New(t)
 
 	innerVM, vm := helperBuildStateSyncTestObjects(t)
+	defer func() {
+		require.NoError(vm.Shutdown(context.Background()))
+	}()
 	reqHeight := uint64(1969)
 
 	innerSummary := &block.TestStateSummary{
@@ -605,6 +626,10 @@ func TestNoStateSummariesServedWhileRepairingHeightIndex(t *testing.T) {
 
 	// Note: by default proVM is built such that heightIndex will be considered complete
 	coreVM, _, proVM, _, _ := initTestProposerVM(t, time.Time{}, 0) // enable ProBlks
+	defer func() {
+		require.NoError(proVM.Shutdown(context.Background()))
+	}()
+
 	require.NoError(proVM.VerifyHeightIndex(context.Background()))
 
 	// let coreVM be always ready to serve summaries

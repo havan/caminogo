@@ -121,7 +121,7 @@ var _ = e2e.DescribePChain("[Workflow]", func() {
 
 			ginkgo.By("issue add validator tx", func() {
 				ctx, cancel := context.WithTimeout(context.Background(), e2e.DefaultConfirmTxTimeout)
-				addValidatorTxID, err := pWallet.IssueAddValidatorTx(
+				addValidatorTx, err := pWallet.IssueAddValidatorTx(
 					vdr,
 					rewardOwner,
 					shares,
@@ -131,14 +131,14 @@ var _ = e2e.DescribePChain("[Workflow]", func() {
 				gomega.Expect(err).Should(gomega.BeNil())
 
 				ctx, cancel = context.WithTimeout(context.Background(), e2e.DefaultConfirmTxTimeout)
-				txStatus, err := pChainClient.GetTxStatus(ctx, addValidatorTxID)
+				txStatus, err := pChainClient.GetTxStatus(ctx, addValidatorTx.ID())
 				cancel()
 				gomega.Expect(txStatus.Status, err).To(gomega.Equal(status.Committed))
 			})
 
 			ginkgo.By("issue add delegator tx", func() {
 				ctx, cancel := context.WithTimeout(context.Background(), e2e.DefaultConfirmTxTimeout)
-				addDelegatorTxID, err := pWallet.IssueAddDelegatorTx(
+				addDelegatorTx, err := pWallet.IssueAddDelegatorTx(
 					vdr,
 					rewardOwner,
 					common.WithContext(ctx),
@@ -147,7 +147,7 @@ var _ = e2e.DescribePChain("[Workflow]", func() {
 				gomega.Expect(err).Should(gomega.BeNil())
 
 				ctx, cancel = context.WithTimeout(context.Background(), e2e.DefaultConfirmTxTimeout)
-				txStatus, err := pChainClient.GetTxStatus(ctx, addDelegatorTxID)
+				txStatus, err := pChainClient.GetTxStatus(ctx, addDelegatorTx.ID())
 				cancel()
 				gomega.Expect(txStatus.Status, err).To(gomega.Equal(status.Committed))
 			})
@@ -176,7 +176,7 @@ var _ = e2e.DescribePChain("[Workflow]", func() {
 
 			ginkgo.By("export avax from P to X chain", func() {
 				ctx, cancel := context.WithTimeout(context.Background(), e2e.DefaultConfirmTxTimeout)
-				exportTxID, err := pWallet.IssueExportTx(
+				exportTx, err := pWallet.IssueExportTx(
 					xWallet.BlockchainID(),
 					[]*avax.TransferableOutput{
 						{
@@ -192,7 +192,7 @@ var _ = e2e.DescribePChain("[Workflow]", func() {
 				gomega.Expect(err).Should(gomega.BeNil())
 
 				ctx, cancel = context.WithTimeout(context.Background(), e2e.DefaultConfirmTxTimeout)
-				txStatus, err := pChainClient.GetTxStatus(ctx, exportTxID)
+				txStatus, err := pChainClient.GetTxStatus(ctx, exportTx.ID())
 				cancel()
 				gomega.Expect(txStatus.Status, err).To(gomega.Equal(status.Committed))
 			})
@@ -213,7 +213,7 @@ var _ = e2e.DescribePChain("[Workflow]", func() {
 
 			ginkgo.By("import avax from P into X chain", func() {
 				ctx, cancel := context.WithTimeout(context.Background(), e2e.DefaultConfirmTxTimeout)
-				importTxID, err := xWallet.IssueImportTx(
+				importTx, err := xWallet.IssueImportTx(
 					constants.PlatformChainID,
 					&outputOwner,
 					common.WithContext(ctx),
@@ -222,7 +222,7 @@ var _ = e2e.DescribePChain("[Workflow]", func() {
 				gomega.Expect(err).Should(gomega.BeNil(), "is context.DeadlineExceeded: %v", errors.Is(err, context.DeadlineExceeded))
 
 				ctx, cancel = context.WithTimeout(context.Background(), e2e.DefaultConfirmTxTimeout)
-				txStatus, err := xChainClient.GetTxStatus(ctx, importTxID)
+				txStatus, err := xChainClient.GetTxStatus(ctx, importTx.ID())
 				cancel()
 				gomega.Expect(txStatus, err).To(gomega.Equal(choices.Accepted))
 			})
