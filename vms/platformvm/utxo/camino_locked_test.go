@@ -9,6 +9,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ava-labs/avalanchego/database"
 	"github.com/ava-labs/avalanchego/database/versiondb"
 	"github.com/ava-labs/avalanchego/ids"
@@ -25,8 +28,6 @@ import (
 	"github.com/ava-labs/avalanchego/vms/platformvm/state"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
-	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/require"
 
 	db_manager "github.com/ava-labs/avalanchego/database/manager"
 )
@@ -161,12 +162,8 @@ func TestLock(t *testing.T) {
 	defer ctrl.Finish()
 
 	fx := &secp256k1fx.Fx{}
-
-	err := fx.InitializeVM(&secp256k1fx.TestVM{})
-	require.NoError(t, err)
-
-	err = fx.Bootstrapped()
-	require.NoError(t, err)
+	require.NoError(t, fx.InitializeVM(&secp256k1fx.TestVM{}))
+	require.NoError(t, fx.Bootstrapped())
 
 	config := defaultConfig()
 	ctx := snow.DefaultContextTest()

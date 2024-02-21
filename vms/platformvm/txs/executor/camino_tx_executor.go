@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"golang.org/x/exp/slices"
+
 	"github.com/ava-labs/avalanchego/chains/atomic"
 	"github.com/ava-labs/avalanchego/database"
 	"github.com/ava-labs/avalanchego/ids"
@@ -27,7 +29,6 @@ import (
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs/executor/dac"
 	"github.com/ava-labs/avalanchego/vms/platformvm/utxo"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
-	"golang.org/x/exp/slices"
 
 	deposits "github.com/ava-labs/avalanchego/vms/platformvm/deposit"
 )
@@ -423,7 +424,7 @@ func (e *CaminoStandardTxExecutor) wrapAtomicElementsForMultisig(tx *txs.ExportT
 		}
 
 		// wrap utxo with alias
-		aliases := make([]verify.State, len(aliasInfs))
+		aliases := make([]verify.Verifiable, len(aliasInfs))
 		for i, inf := range aliasInfs {
 			ali, ok := inf.(*multisig.AliasWithNonce)
 			if !ok {

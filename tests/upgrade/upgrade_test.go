@@ -26,6 +26,7 @@ import (
 	"github.com/onsi/gomega"
 
 	runner_sdk "github.com/ava-labs/avalanche-network-runner-sdk"
+
 	"github.com/ava-labs/avalanchego/tests"
 )
 

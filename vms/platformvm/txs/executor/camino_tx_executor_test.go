@@ -47,8 +47,7 @@ func TestCaminoEnv(t *testing.T) {
 	env := newCaminoEnvironment( /*postBanff*/ false, true, caminoGenesisConf)
 	env.ctx.Lock.Lock()
 	defer func() {
-		err := shutdownCaminoEnvironment(env)
-		require.NoError(t, err)
+		require.NoError(t, shutdownCaminoEnvironment(env))
 	}()
 	env.config.BanffTime = env.state.GetTimestamp()
 }
@@ -61,9 +60,7 @@ func TestCaminoStandardTxExecutorAddValidatorTx(t *testing.T) {
 	env := newCaminoEnvironment( /*postBanff*/ true, false, caminoGenesisConf)
 	env.ctx.Lock.Lock()
 	defer func() {
-		if err := shutdownCaminoEnvironment(env); err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, shutdownCaminoEnvironment(env))
 	}()
 
 	env.config.BanffTime = env.state.GetTimestamp()
@@ -347,9 +344,7 @@ func TestCaminoStandardTxExecutorAddSubnetValidatorTx(t *testing.T) {
 	env := newCaminoEnvironment( /*postBanff*/ true, true, caminoGenesisConf)
 	env.ctx.Lock.Lock()
 	defer func() {
-		if err := shutdownCaminoEnvironment(env); err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, shutdownCaminoEnvironment(env))
 	}()
 	env.config.BanffTime = env.state.GetTimestamp()
 	nodeKey, nodeID := caminoPreFundedNodeKeys[0], caminoPreFundedNodeIDs[0]
@@ -382,8 +377,7 @@ func TestCaminoStandardTxExecutorAddSubnetValidatorTx(t *testing.T) {
 	env.state.AddTx(addDSTx, status.Committed)
 	dummyHeight := uint64(1)
 	env.state.SetHeight(dummyHeight)
-	err = env.state.Commit()
-	require.NoError(t, err)
+	require.NoError(t, env.state.Commit())
 
 	// Add `caminoPreFundedNodeIDs[1]` as subnet validator
 	subnetTx, err := env.txBuilder.NewAddSubnetValidatorTx(
@@ -406,8 +400,7 @@ func TestCaminoStandardTxExecutorAddSubnetValidatorTx(t *testing.T) {
 	env.state.AddTx(subnetTx, status.Committed)
 	env.state.SetHeight(dummyHeight)
 
-	err = env.state.Commit()
-	require.NoError(t, err)
+	require.NoError(t, env.state.Commit())
 
 	type args struct {
 		weight     uint64
@@ -623,9 +616,7 @@ func TestCaminoStandardTxExecutorAddValidatorTxBody(t *testing.T) {
 	env := newCaminoEnvironment( /*postBanff*/ true, false, caminoGenesisConf)
 	env.ctx.Lock.Lock()
 	defer func() {
-		if err := shutdownCaminoEnvironment(env); err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, shutdownCaminoEnvironment(env))
 	}()
 
 	_, nodeID := nodeid.GenerateCaminoNodeKeyAndID()
@@ -905,8 +896,7 @@ func TestCaminoLockedInsOrLockedOuts(t *testing.T) {
 			env := newCaminoEnvironment( /*postBanff*/ true, false, tt.caminoConfig)
 			env.ctx.Lock.Lock()
 			defer func() {
-				err := shutdownCaminoEnvironment(env)
-				require.NoError(t, err)
+				require.NoError(t, shutdownCaminoEnvironment(env))
 			}()
 			env.config.BanffTime = env.state.GetTimestamp()
 
@@ -933,8 +923,7 @@ func TestCaminoLockedInsOrLockedOuts(t *testing.T) {
 			env := newCaminoEnvironment( /*postBanff*/ true, false, tt.caminoConfig)
 			env.ctx.Lock.Lock()
 			defer func() {
-				err := shutdownCaminoEnvironment(env)
-				require.NoError(t, err)
+				require.NoError(t, shutdownCaminoEnvironment(env))
 			}()
 			env.config.BanffTime = env.state.GetTimestamp()
 
@@ -961,8 +950,7 @@ func TestCaminoLockedInsOrLockedOuts(t *testing.T) {
 			env := newCaminoEnvironment( /*postBanff*/ true, false, tt.caminoConfig)
 			env.ctx.Lock.Lock()
 			defer func() {
-				err := shutdownCaminoEnvironment(env)
-				require.NoError(t, err)
+				require.NoError(t, shutdownCaminoEnvironment(env))
 			}()
 			env.config.BanffTime = env.state.GetTimestamp()
 
@@ -988,8 +976,7 @@ func TestCaminoLockedInsOrLockedOuts(t *testing.T) {
 			env := newCaminoEnvironment( /*postBanff*/ true, false, tt.caminoConfig)
 			env.ctx.Lock.Lock()
 			defer func() {
-				err := shutdownCaminoEnvironment(env)
-				require.NoError(t, err)
+				require.NoError(t, shutdownCaminoEnvironment(env))
 			}()
 			env.config.BanffTime = env.state.GetTimestamp()
 
@@ -1014,8 +1001,7 @@ func TestCaminoLockedInsOrLockedOuts(t *testing.T) {
 			env := newCaminoEnvironment( /*postBanff*/ true, false, tt.caminoConfig)
 			env.ctx.Lock.Lock()
 			defer func() {
-				err := shutdownCaminoEnvironment(env)
-				require.NoError(t, err)
+				require.NoError(t, shutdownCaminoEnvironment(env))
 			}()
 			env.config.BanffTime = env.state.GetTimestamp()
 
@@ -1039,8 +1025,7 @@ func TestCaminoLockedInsOrLockedOuts(t *testing.T) {
 			env := newCaminoEnvironment( /*postBanff*/ true, false, tt.caminoConfig)
 			env.ctx.Lock.Lock()
 			defer func() {
-				err := shutdownCaminoEnvironment(env)
-				require.NoError(t, err)
+				require.NoError(t, shutdownCaminoEnvironment(env))
 			}()
 			env.config.BanffTime = env.state.GetTimestamp()
 
@@ -1066,8 +1051,7 @@ func TestCaminoLockedInsOrLockedOuts(t *testing.T) {
 			env := newCaminoEnvironment( /*postBanff*/ true, false, tt.caminoConfig)
 			env.ctx.Lock.Lock()
 			defer func() {
-				err := shutdownCaminoEnvironment(env)
-				require.NoError(t, err)
+				require.NoError(t, shutdownCaminoEnvironment(env))
 			}()
 			env.config.BanffTime = env.state.GetTimestamp()
 
@@ -1100,8 +1084,7 @@ func TestCaminoLockedInsOrLockedOuts(t *testing.T) {
 			env := newCaminoEnvironment( /*postBanff*/ true, false, tt.caminoConfig)
 			env.ctx.Lock.Lock()
 			defer func() {
-				err := shutdownCaminoEnvironment(env)
-				require.NoError(t, err)
+				require.NoError(t, shutdownCaminoEnvironment(env))
 			}()
 			env.config.BanffTime = env.state.GetTimestamp()
 
@@ -1236,9 +1219,7 @@ func TestCaminoAddSubnetValidatorTxNodeSig(t *testing.T) {
 			env := newCaminoEnvironment( /*postBanff*/ true, true, tt.caminoConfig)
 			env.ctx.Lock.Lock()
 			defer func() {
-				if err := shutdownCaminoEnvironment(env); err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, shutdownCaminoEnvironment(env))
 			}()
 
 			env.config.BanffTime = env.state.GetTimestamp()
@@ -1511,16 +1492,14 @@ func TestCaminoRewardValidatorTx(t *testing.T) {
 			txExecutor, tx := execute(t, tt)
 			require.NoError(t, txExecutor.OnAbortState.Apply(env.state))
 			env.state.SetHeight(uint64(1))
-			err = env.state.Commit()
-			require.NoError(t, err)
+			require.NoError(t, env.state.Commit())
 			assertBalance(t, tt, tx)
 		})
 		t.Run(name+" On commit", func(t *testing.T) {
 			txExecutor, tx := execute(t, tt)
 			require.NoError(t, txExecutor.OnCommitState.Apply(env.state))
 			env.state.SetHeight(uint64(1))
-			err = env.state.Commit()
-			require.NoError(t, err)
+			require.NoError(t, env.state.Commit())
 			assertBalance(t, tt, tx)
 		})
 	}
@@ -1544,8 +1523,7 @@ func TestCaminoRewardValidatorTx(t *testing.T) {
 		txExecutor, tx := execute(t, happyPathTest)
 		require.NoError(t, txExecutor.OnCommitState.Apply(env.state))
 		env.state.SetHeight(uint64(1))
-		err = env.state.Commit()
-		require.NoError(t, err)
+		require.NoError(t, env.state.Commit())
 		assertBalance(t, happyPathTest, tx)
 		assertNextStaker(t)
 	})
@@ -1566,15 +1544,13 @@ func TestCaminoRewardValidatorTx(t *testing.T) {
 		txExecutor, tx := execute(t, happyPathTest)
 		require.NoError(t, txExecutor.OnAbortState.Apply(env.state))
 		env.state.SetHeight(uint64(1))
-		err = env.state.Commit()
-		require.NoError(t, err)
+		require.NoError(t, env.state.Commit())
 		assertBalance(t, happyPathTest, tx)
 		assertNextStaker(t)
 	})
 
 	// Shut down the environment
-	err = shutdownCaminoEnvironment(env)
-	require.NoError(t, err)
+	require.NoError(t, shutdownCaminoEnvironment(env))
 }
 
 // TODO @evlekht rewrite test, removal test cases not setting initial state for target, and by this not actually testing removal
@@ -1592,8 +1568,7 @@ func TestAddAddressStateTxExecutor(t *testing.T) {
 	env := newCaminoEnvironment( /*postBanff*/ true, false, caminoGenesisConf)
 	env.ctx.Lock.Lock()
 	defer func() {
-		err := shutdownCaminoEnvironment(env)
-		require.NoError(t, err)
+		require.NoError(t, shutdownCaminoEnvironment(env))
 	}()
 
 	utxos, err := avax.GetAllUTXOs(env.state, set.Set[ids.ShortID]{
@@ -5052,9 +5027,7 @@ func TestCaminoStandardTxExecutorAddressStateTxSuspendValidator(t *testing.T) {
 			env := newCaminoEnvironment( /*postBanff*/ true, false, caminoGenesisConf)
 			env.ctx.Lock.Lock()
 			defer func() {
-				if err := shutdownCaminoEnvironment(env); err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, shutdownCaminoEnvironment(env))
 			}()
 
 			env.config.BanffTime = env.state.GetTimestamp()
@@ -5136,9 +5109,7 @@ func TestCaminoStandardTxExecutorExportTxMultisig(t *testing.T) {
 	env := newCaminoEnvironment( /*postBanff*/ true, false, caminoGenesisConf)
 	env.ctx.Lock.Lock()
 	defer func() {
-		if err := shutdownCaminoEnvironment(env); err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, shutdownCaminoEnvironment(env))
 	}()
 
 	type test struct {
@@ -5208,7 +5179,7 @@ func TestCaminoStandardTxExecutorExportTxMultisig(t *testing.T) {
 
 			var (
 				utxo    avax.UTXO
-				aliases []verify.State
+				aliases []verify.Verifiable
 			)
 
 			isMultisig := len(tt.expectedMsigAddrs) > 0
@@ -5311,8 +5282,7 @@ func TestCaminoCrossExport(t *testing.T) {
 			}
 			env.ctx.Lock.Lock()
 			defer func() {
-				err := shutdownCaminoEnvironment(env)
-				require.NoError(t, err)
+				require.NoError(t, shutdownCaminoEnvironment(env))
 			}()
 			env.config.BanffTime = env.state.GetTimestamp()
 

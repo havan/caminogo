@@ -4,10 +4,11 @@
 package config
 
 import (
-	"github.com/ava-labs/avalanchego/genesis"
-	"github.com/ava-labs/avalanchego/vms/platformvm/caminoconfig"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+
+	"github.com/ava-labs/avalanchego/genesis"
+	"github.com/ava-labs/avalanchego/vms/platformvm/caminoconfig"
 )
 
 const (

@@ -6,9 +6,10 @@ package info
 import (
 	"testing"
 
-	"github.com/ava-labs/avalanchego/utils/logging"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ava-labs/avalanchego/utils/logging"
 )
 
 func TestGetGenesisBytes(t *testing.T) {
@@ -22,7 +23,6 @@ func TestGetGenesisBytes(t *testing.T) {
 	service.GenesisBytes = []byte("some random bytes")
 
 	reply := GetGenesisBytesReply{}
-	err := service.GetGenesisBytes(nil, nil, &reply)
-	require.NoError(t, err)
+	require.NoError(t, service.GetGenesisBytes(nil, nil, &reply))
 	require.Equal(t, GetGenesisBytesReply{GenesisBytes: service.GenesisBytes}, reply)
 }

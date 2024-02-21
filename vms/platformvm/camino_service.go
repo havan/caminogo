@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"go.uber.org/zap"
+
 	"github.com/ava-labs/avalanchego/api"
 	"github.com/ava-labs/avalanchego/database"
 	"github.com/ava-labs/avalanchego/ids"
@@ -27,7 +29,6 @@ import (
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/ava-labs/avalanchego/vms/types"
-	"go.uber.org/zap"
 
 	utilsjson "github.com/ava-labs/avalanchego/utils/json"
 	platformapi "github.com/ava-labs/avalanchego/vms/platformvm/api"

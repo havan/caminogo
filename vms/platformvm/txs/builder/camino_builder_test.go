@@ -18,6 +18,7 @@ import (
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	as "github.com/ava-labs/avalanchego/vms/platformvm/addrstate"
 	"github.com/ava-labs/avalanchego/vms/platformvm/api"
+	"github.com/ava-labs/avalanchego/vms/platformvm/fx"
 	"github.com/ava-labs/avalanchego/vms/platformvm/state"
 	"github.com/ava-labs/avalanchego/vms/platformvm/treasury"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
@@ -34,8 +35,7 @@ func TestCaminoEnv(t *testing.T) {
 	env := newCaminoEnvironment( /*postBanff*/ false, caminoGenesisConf)
 	env.ctx.Lock.Lock()
 	defer func() {
-		err := shutdownCaminoEnvironment(env)
-		require.NoError(t, err)
+		require.NoError(t, shutdownCaminoEnvironment(env))
 	}()
 	env.config.BanffTime = env.state.GetTimestamp()
 }
@@ -49,9 +49,7 @@ func TestCaminoBuilderTxAddressState(t *testing.T) {
 	env := newCaminoEnvironment(true, caminoConfig)
 	env.ctx.Lock.Lock()
 	defer func() {
-		if err := shutdownCaminoEnvironment(env); err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, shutdownCaminoEnvironment(env))
 	}()
 
 	tests := map[string]struct {
@@ -151,9 +149,7 @@ func TestCaminoBuilderNewAddSubnetValidatorTxNodeSig(t *testing.T) {
 			env := newCaminoEnvironment(true, tt.caminoConfig)
 			env.ctx.Lock.Lock()
 			defer func() {
-				if err := shutdownCaminoEnvironment(env); err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, shutdownCaminoEnvironment(env))
 			}()
 
 			_, err := env.txBuilder.NewAddSubnetValidatorTx(
@@ -228,9 +224,7 @@ func TestUnlockDepositTx(t *testing.T) {
 			env := newCaminoEnvironment( /*postBanff*/ true, caminoGenesisConf)
 			env.ctx.Lock.Lock()
 			defer func() {
-				if err = shutdownCaminoEnvironment(env); err != nil {
-					t.Fatal(err)
-				}
+				require.NoError(t, shutdownCaminoEnvironment(env))
 			}()
 
 			env.config.BanffTime = env.state.GetTimestamp()
@@ -241,16 +235,14 @@ func TestUnlockDepositTx(t *testing.T) {
 			// Add a deposit to state
 			deposit.DepositOfferID = genesisOffers[0].ID
 			env.state.AddDeposit(depositTxID, deposit)
-			err = env.state.Commit()
-			require.NoError(t, err)
+			require.NoError(t, env.state.Commit())
 			env.clk.Set(depositExpiredTime)
 
 			// Add utxos to state
 			for _, utxo := range tt.utxos {
 				env.state.AddUTXO(utxo)
 			}
-			err = env.state.Commit()
-			require.NoError(t, err)
+			require.NoError(t, env.state.Commit())
 
 			tx, err := env.txBuilder.NewUnlockDepositTx(
 				[]ids.ID{depositTxID},
@@ -652,7 +644,8 @@ func TestNewClaimTx(t *testing.T) {
 				// fee
 				expectLock(s, map[ids.ShortID][]*avax.UTXO{feeAddr: {feeUTXO}})
 				// deposits
-				s.EXPECT().GetDeposit(depositTxID1).Return(&deposits.Deposit{RewardOwner: &avax.TransferableOutput{}}, nil)
+
+				s.EXPECT().GetDeposit(depositTxID1).Return(&deposits.Deposit{RewardOwner: fx.NewMockOwner(ctrl)}, nil)
 				return s
 			},
 			args: args{

@@ -6,9 +6,10 @@ package genesis
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/constants"
-	"github.com/stretchr/testify/require"
 )
 
 func TestGenesisChainData(t *testing.T) {

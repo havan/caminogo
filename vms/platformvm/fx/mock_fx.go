@@ -227,6 +227,8 @@ func (mr *MockFxMockRecorder) IsNestedMultisig(arg0, arg1 interface{}) *gomock.C
 
 // MockOwner is a mock of Owner interface.
 type MockOwner struct {
+	verify.IsNotState
+
 	ctrl     *gomock.Controller
 	recorder *MockOwnerMockRecorder
 }
