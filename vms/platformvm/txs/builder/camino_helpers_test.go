@@ -339,16 +339,17 @@ func defaultCaminoState(
 	caminoGenesisConf api.Camino,
 ) state.State {
 	genesisBytes := buildCaminoGenesisTest(ctx, caminoGenesisConf)
+	execCfg, _ := config.GetExecutionConfig(nil)
 	state, err := state.New(
 		db,
 		genesisBytes,
 		prometheus.NewRegistry(),
 		cfg,
+		execCfg,
 		ctx,
 		metrics.Noop,
 		rewards,
 		&utils.Atomic[bool]{},
-		trackChecksum,
 	)
 	if err != nil {
 		panic(err)
@@ -475,15 +476,9 @@ func buildCaminoGenesisTest(ctx *snow.Context, caminoGenesisConf api.Camino) []b
 
 func shutdownCaminoEnvironment(env *caminoEnvironment) error {
 	if env.isBootstrapped.Get() {
-		primaryValidatorSet, exist := env.config.Validators.Get(constants.PrimaryNetworkID)
-		if !exist {
-			return errors.New("no default subnet validators")
-		}
-		primaryValidators := primaryValidatorSet.List()
-
-		validatorIDs := make([]ids.NodeID, len(primaryValidators))
-		for i, vdr := range primaryValidators {
-			validatorIDs[i] = vdr.NodeID
+		validatorIDs, err := validators.NodeIDs(env.config.Validators, constants.PrimaryNetworkID)
+		if err != nil {
+			return err
 		}
 
 		if err := env.uptimes.StopTracking(validatorIDs, constants.PrimaryNetworkID); err != nil {

@@ -57,12 +57,14 @@ func generateBaseTx(assetID ids.ID, amount uint64, outputOwners secp256k1fx.Outp
 func newEmptyState(t *testing.T) *state {
 	vdrs := validators.NewManager()
 	_ = vdrs.Add(constants.PrimaryNetworkID, validators.NewSet())
-	newState, err := new(
+	execCfg, _ := config.GetExecutionConfig(nil)
+	newState, err := newState(
 		memdb.New(),
 		metrics.Noop,
 		&config.Config{
 			Validators: vdrs,
 		},
+		execCfg,
 		&snow.Context{},
 		prometheus.NewRegistry(),
 		reward.NewCalculator(reward.Config{
@@ -72,7 +74,6 @@ func newEmptyState(t *testing.T) *state {
 			SupplyCap:          720 * units.MegaAvax,
 		}),
 		&utils.Atomic[bool]{},
-		trackChecksum,
 	)
 	require.NoError(t, err)
 	require.NotNil(t, newState)

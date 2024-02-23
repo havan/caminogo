@@ -488,7 +488,7 @@ func (s *Service) GetUTXOs(_ *http.Request, args *api.GetUTXOsArgs, response *ap
 	for i, utxo := range utxos {
 		if args.Encoding == formatting.JSON {
 			utxo.Out.InitCtx(s.vm.ctx)
-			bytes, err := json_encoder.Marshal(utxo)
+			bytes, err := stdjson.Marshal(utxo)
 			if err != nil {
 				return fmt.Errorf("couldn't marshal UTXO %q: %w", utxo.InputID(), err)
 			}

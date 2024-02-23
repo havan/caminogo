@@ -15,7 +15,6 @@ import (
 	database "github.com/ava-labs/avalanchego/database"
 	ids "github.com/ava-labs/avalanchego/ids"
 	validators "github.com/ava-labs/avalanchego/snow/validators"
-	bls "github.com/ava-labs/avalanchego/utils/crypto/bls"
 	set "github.com/ava-labs/avalanchego/utils/set"
 	avax "github.com/ava-labs/avalanchego/vms/components/avax"
 	multisig "github.com/ava-labs/avalanchego/vms/components/multisig"
