@@ -18,8 +18,6 @@ import (
 	"errors"
 	"fmt"
 
-	stdjson "encoding/json"
-
 	"github.com/gorilla/rpc/v2"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -102,10 +100,6 @@ type VM struct {
 	manager   blockexecutor.Manager
 }
 
-type Config struct {
-	ChecksumsEnabled bool `json:"checksums-enabled"`
-}
-
 // Initialize this blockchain.
 // [vm.ChainManager] and [vm.vdrMgr] must be set before this function is called.
 func (vm *VM) Initialize(
@@ -121,15 +115,11 @@ func (vm *VM) Initialize(
 ) error {
 	chainCtx.Log.Verbo("initializing platform chain")
 
-	platformConfig := Config{}
-	if len(configBytes) > 0 {
-		if err := stdjson.Unmarshal(configBytes, &platformConfig); err != nil {
-			return err
-		}
-		chainCtx.Log.Info("VM config initialized",
-			zap.Reflect("config", platformConfig),
-		)
+	execConfig, err := config.GetExecutionConfig(configBytes)
+	if err != nil {
+		return err
 	}
+	chainCtx.Log.Info("using VM execution config", zap.Reflect("config", execConfig))
 
 	registerer := prometheus.NewRegistry()
 	if err := chainCtx.Metrics.Register(registerer); err != nil {
@@ -137,7 +127,6 @@ func (vm *VM) Initialize(
 	}
 
 	// Initialize metrics as soon as possible
-	var err error
 	vm.metrics, err = metrics.New("", registerer)
 	if err != nil {
 		return fmt.Errorf("failed to initialize metrics: %w", err)
@@ -153,16 +142,17 @@ func (vm *VM) Initialize(
 	}
 
 	rewards := reward.NewCalculator(vm.RewardConfig)
+
 	vm.state, err = state.New(
 		vm.dbManager.Current().Database,
 		genesisBytes,
 		registerer,
 		&vm.Config,
+		execConfig,
 		vm.ctx,
 		vm.metrics,
 		rewards,
 		&vm.bootstrapped,
-		platformConfig.ChecksumsEnabled,
 	)
 	if err != nil {
 		return err
