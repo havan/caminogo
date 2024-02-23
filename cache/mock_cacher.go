@@ -60,6 +60,20 @@ func (mr *MockCacherMockRecorder[K, V]) Flush() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Flush", reflect.TypeOf((*MockCacher[K, V])(nil).Flush))
 }
 
+// Len mocks base method.
+func (m *MockCacher[K, V]) Len() int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Len")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Len indicates an expected call of Len.
+func (mr *MockCacherMockRecorder[K, V]) Len() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Len", reflect.TypeOf((*MockCacher[K, V])(nil).Len))
+}
+
 // Get mocks base method.
 func (m *MockCacher[K, V]) Get(arg0 K) (V, bool) {
 	m.ctrl.T.Helper()

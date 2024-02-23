@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/utils/set"
 )
 
 // Const variables to be exported
@@ -97,6 +98,10 @@ var (
 		KopernikusHRP: KopernikusID,
 		UnitTestHRP:   UnitTestID,
 		LocalHRP:      LocalID,
+	}
+	ProductionNetworkIDs = set.Set[uint32]{
+		MainnetID: struct{}{},
+		FujiID:    struct{}{},
 	}
 
 	ValidNetworkPrefix = "network-"
