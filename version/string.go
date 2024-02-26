@@ -27,7 +27,7 @@ func init() {
 	args := []interface{}{
 		GitVersion,
 		GitCommit,
-		CurrentApp,
+		Current,
 		CurrentDatabase,
 		RPCChainVMProtocol,
 	}

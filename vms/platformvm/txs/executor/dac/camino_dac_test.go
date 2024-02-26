@@ -127,8 +127,6 @@ func TestProposalVerifierBaseFeeProposal(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
 			fx := defaultFx(true)
 
 			utx := tt.utx()
@@ -139,7 +137,7 @@ func TestProposalVerifierBaseFeeProposal(t *testing.T) {
 
 			proposal, err := utx.Proposal()
 			require.NoError(t, err)
-			err = proposal.VerifyWith(NewProposalVerifier(tt.state(ctrl, utx), fx, tx, utx, tt.isAdminProposal))
+			err = proposal.VerifyWith(NewProposalVerifier(tt.state(gomock.NewController(t), utx), fx, tx, utx, tt.isAdminProposal))
 			require.ErrorIs(t, err, tt.expectedErr)
 		})
 	}
@@ -168,10 +166,8 @@ func TestProposalExecutorBaseFeeProposal(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
 			fx := defaultFx(true)
-			err := tt.proposal.ExecuteWith(NewProposalExecutor(tt.state(ctrl), fx))
+			err := tt.proposal.ExecuteWith(NewProposalExecutor(tt.state(gomock.NewController(t)), fx))
 			require.ErrorIs(t, err, tt.expectedErr)
 		})
 	}
@@ -302,8 +298,6 @@ func TestProposalVerifierAddMemberProposal(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
 			fx := defaultFx(true)
 
 			utx := tt.utx()
@@ -314,7 +308,7 @@ func TestProposalVerifierAddMemberProposal(t *testing.T) {
 
 			proposal, err := utx.Proposal()
 			require.NoError(t, err)
-			err = proposal.VerifyWith(NewProposalVerifier(tt.state(ctrl, utx), fx, tx, utx, tt.isAdminProposal))
+			err = proposal.VerifyWith(NewProposalVerifier(tt.state(gomock.NewController(t), utx), fx, tx, utx, tt.isAdminProposal))
 			require.ErrorIs(t, err, tt.expectedErr)
 		})
 	}
@@ -347,10 +341,8 @@ func TestProposalExecutorAddMemberProposal(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
 			fx := defaultFx(true)
-			err := tt.proposal.ExecuteWith(NewProposalExecutor(tt.state(ctrl), fx))
+			err := tt.proposal.ExecuteWith(NewProposalExecutor(tt.state(gomock.NewController(t)), fx))
 			require.ErrorIs(t, err, tt.expectedErr)
 		})
 	}
@@ -559,8 +551,6 @@ func TestProposalVerifierExcludeMemberProposal(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
 			fx := defaultFx(true)
 
 			utx := tt.utx()
@@ -571,7 +561,7 @@ func TestProposalVerifierExcludeMemberProposal(t *testing.T) {
 
 			proposal, err := utx.Proposal()
 			require.NoError(t, err)
-			err = proposal.VerifyWith(NewProposalVerifier(tt.state(ctrl, utx), fx, tx, utx, tt.isAdminProposal))
+			err = proposal.VerifyWith(NewProposalVerifier(tt.state(gomock.NewController(t), utx), fx, tx, utx, tt.isAdminProposal))
 			require.ErrorIs(t, err, tt.expectedErr)
 		})
 	}
@@ -689,10 +679,8 @@ func TestProposalExecutorExcludeMemberProposal(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
 			fx := defaultFx(true)
-			err := tt.proposal.ExecuteWith(NewProposalExecutor(tt.state(ctrl), fx))
+			err := tt.proposal.ExecuteWith(NewProposalExecutor(tt.state(gomock.NewController(t)), fx))
 			require.ErrorIs(t, err, tt.expectedErr)
 		})
 	}
@@ -775,9 +763,7 @@ func TestProposalBondTxIDsGetterExcludeMemberProposal(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-			bondTxIDs, err := tt.proposal.GetBondTxIDsWith(&proposalBondTxIDsGetter{tt.state(ctrl, tt.proposal)})
+			bondTxIDs, err := tt.proposal.GetBondTxIDsWith(&proposalBondTxIDsGetter{tt.state(gomock.NewController(t), tt.proposal)})
 			require.ErrorIs(t, err, tt.expectedErr)
 			require.Equal(t, tt.expectedBondTxIDs, bondTxIDs)
 		})
@@ -812,10 +798,8 @@ func TestGetBondTxIDs(t *testing.T) {
 	}
 
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 
 	state := state.NewMockDiff(ctrl)
-
 	state.EXPECT().GetProposal(earlyFinishedSuccessfulProposalWithAdditionalBondID).Return(earlyFinishedSuccessfulProposalWithAdditionalBond, nil)
 	state.EXPECT().GetProposal(earlyFinishedSuccessfulProposalID).Return(earlyFinishedSuccessfulProposal, nil)
 	state.EXPECT().GetProposal(expiredSuccessfulProposalWithAdditionalBondID).Return(expiredSuccessfulProposalWithAdditionalBond, nil)
@@ -940,8 +924,6 @@ func TestProposalVerifierFeeDistributionProposal(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
 			fx := defaultFx(true)
 
 			utx := tt.utx()
@@ -952,7 +934,7 @@ func TestProposalVerifierFeeDistributionProposal(t *testing.T) {
 
 			proposal, err := utx.Proposal()
 			require.NoError(t, err)
-			err = proposal.VerifyWith(NewProposalVerifier(tt.state(ctrl, utx), fx, tx, utx, tt.isAdminProposal))
+			err = proposal.VerifyWith(NewProposalVerifier(tt.state(gomock.NewController(t), utx), fx, tx, utx, tt.isAdminProposal))
 			require.ErrorIs(t, err, tt.expectedErr)
 		})
 	}
@@ -981,10 +963,8 @@ func TestProposalExecutorFeeDistributionProposal(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
 			fx := defaultFx(true)
-			err := tt.proposal.ExecuteWith(NewProposalExecutor(tt.state(ctrl), fx))
+			err := tt.proposal.ExecuteWith(NewProposalExecutor(tt.state(gomock.NewController(t)), fx))
 			require.ErrorIs(t, err, tt.expectedErr)
 		})
 	}

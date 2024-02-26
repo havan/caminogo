@@ -21,9 +21,13 @@ import (
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs/mempool"
 )
 
+// Overriding axax block builder methods with caminoBuilder methods
+// must be done with consideration, that network uses reference to avax builder,
+// not to camino builder. So it will actually call avax builder methods.
+
 type caminoBuilder struct {
 	builder
-	txBuilder txBuilder.CaminoBuilder
+	caminoTxBuilder txBuilder.CaminoBuilder
 }
 
 func CaminoNew(
@@ -42,7 +46,7 @@ func CaminoNew(
 			toEngine:          toEngine,
 			txBuilder:         txBuilder,
 		},
-		txBuilder: txBuilder,
+		caminoTxBuilder: txBuilder,
 	}
 
 	builder.timer = timer.NewTimer(builder.setNextBuildBlockTime)
@@ -51,7 +55,7 @@ func CaminoNew(
 		txExecutorBackend.Ctx,
 		builder,
 		appSender,
-		builder.txBuilder,
+		builder.caminoTxBuilder,
 	)
 
 	go txExecutorBackend.Ctx.Log.RecoverAndPanic(builder.timer.Dispatch)

@@ -17,6 +17,7 @@ import (
 	"github.com/ava-labs/avalanchego/config"
 	"github.com/ava-labs/avalanchego/genesis"
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/network/peer"
 	"github.com/ava-labs/avalanchego/staking"
 	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/crypto/bls"
@@ -273,7 +274,12 @@ func (nc *NodeConfig) EnsureNodeID() error {
 	if err != nil {
 		return fmt.Errorf("failed to ensure node ID: failed to load tls cert: %w", err)
 	}
-	nc.NodeID = ids.NodeIDFromCert(tlsCert.Leaf)
+
+	nodeID, err := peer.CertToID(tlsCert.Leaf)
+	if err != nil {
+		return fmt.Errorf("failed to recover nodeID from tls cert: %w", err)
+	}
+	nc.NodeID = nodeID
 
 	return nil
 }

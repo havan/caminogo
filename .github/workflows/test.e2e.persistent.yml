@@ -1,13 +1,12 @@
 name: Test e2e with persistent network
 
 on:
-  push:
-    tags:
-      - "*"
-    branches:
-      - master
-      - dev
   pull_request:
+    tags-ignore: ["*"]
+    branches: [chain4travel, dev]
+  push:
+    branches: [chain4travel, dev]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -18,14 +17,15 @@ jobs:
     steps:
       - name: Git checkout
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: '~1.19.12'
-          check-latest: true
-      - name: Build the avalanchego binary
+          go-version: '1.19'
+      - name: Build the caminogo binaries
         shell: bash
-        run: ./scripts/build.sh -r
+        run: ./scripts/build.sh
       - name: Run e2e tests with persistent network
         shell: bash
-        run: ./scripts/tests.e2e.persistent.sh ./build/avalanchego
+        run: scripts/tests.e2e.persistent.sh ./build/caminogo

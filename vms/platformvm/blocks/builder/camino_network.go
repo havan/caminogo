@@ -34,7 +34,7 @@ func NewCaminoNetwork(
 	return &caminoNetwork{
 		network: network{
 			ctx:        ctx,
-			blkBuilder: blkBuilder,
+			blkBuilder: &blkBuilder.builder,
 			appSender:  appSender,
 			recentTxs:  &cache.LRU[ids.ID, struct{}]{Size: recentCacheSize},
 		},

@@ -3034,8 +3034,6 @@ func TestCaminoStandardTxExecutorDepositTx(t *testing.T) {
 	for name, tt := range tests {
 		for phaseIndex, phase := range phases {
 			t.Run(fmt.Sprintf("%s, %s", phase.name, name), func(t *testing.T) {
-				ctrl := gomock.NewController(t)
-				defer ctrl.Finish()
 				env := newCaminoEnvironmentWithMocks(tt.caminoGenesisConf, nil)
 				defer func() { require.NoError(t, shutdownCaminoEnvironment(env)) }() //nolint:lint
 
@@ -3058,7 +3056,7 @@ func TestCaminoStandardTxExecutorDepositTx(t *testing.T) {
 				err = tx.Unsigned.Visit(&CaminoStandardTxExecutor{
 					StandardTxExecutor{
 						Backend: &env.backend,
-						State:   tt.state(t, ctrl, utx, tx.ID(), env.config, phaseIndex),
+						State:   tt.state(t, gomock.NewController(t), utx, tx.ID(), env.config, phaseIndex),
 						Tx:      tx,
 					},
 				})
@@ -3401,8 +3399,6 @@ func TestCaminoStandardTxExecutorUnlockDepositTx(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			require := require.New(t)
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
 			env := newCaminoEnvironmentWithMocks(caminoGenesisConf, nil)
 			defer func() { require.NoError(shutdownCaminoEnvironment(env)) }() //nolint:lint
 
@@ -3414,7 +3410,7 @@ func TestCaminoStandardTxExecutorUnlockDepositTx(t *testing.T) {
 			err = tx.Unsigned.Visit(&CaminoStandardTxExecutor{
 				StandardTxExecutor{
 					Backend: &env.backend,
-					State:   tt.state(t, ctrl, tt.utx, tx.ID()),
+					State:   tt.state(t, gomock.NewController(t), tt.utx, tx.ID()),
 					Tx:      tx,
 				},
 			})
@@ -4264,8 +4260,6 @@ func TestCaminoStandardTxExecutorClaimTx(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			require := require.New(t)
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
 			env := newCaminoEnvironmentWithMocks(caminoGenesisConf, nil)
 			defer func() { require.NoError(shutdownCaminoEnvironment(env)) }() //nolint:lint
 
@@ -4281,7 +4275,7 @@ func TestCaminoStandardTxExecutorClaimTx(t *testing.T) {
 			err = tx.Unsigned.Visit(&CaminoStandardTxExecutor{
 				StandardTxExecutor{
 					Backend: &env.backend,
-					State:   tt.state(t, ctrl, tt.utx, tx.ID()),
+					State:   tt.state(t, gomock.NewController(t), tt.utx, tx.ID()),
 					Tx:      tx,
 				},
 			})
@@ -4581,8 +4575,6 @@ func TestCaminoStandardTxExecutorRegisterNodeTx(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
 			env := newCaminoEnvironmentWithMocks(caminoGenesisConf, nil)
 			defer func() { require.NoError(t, shutdownCaminoEnvironment(env)) }() //nolint:lint
 
@@ -4595,7 +4587,7 @@ func TestCaminoStandardTxExecutorRegisterNodeTx(t *testing.T) {
 			err = tx.Unsigned.Visit(&CaminoStandardTxExecutor{
 				StandardTxExecutor{
 					Backend: &env.backend,
-					State:   tt.state(t, ctrl, utx),
+					State:   tt.state(t, gomock.NewController(t), utx),
 					Tx:      tx,
 				},
 			})
@@ -4867,9 +4859,8 @@ func TestCaminoStandardTxExecutorRewardsImportTx(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			require := require.New(t)
-
 			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+
 			env := newCaminoEnvironmentWithMocks(caminoGenesisConf, tt.sharedMemory(t, ctrl, tt.utxos))
 			defer func() { require.NoError(shutdownCaminoEnvironment(env)) }() //nolint:lint
 
@@ -4909,6 +4900,7 @@ func TestCaminoStandardTxExecutorRewardsImportTx(t *testing.T) {
 func TestCaminoStandardTxExecutorAddressStateTxSuspendValidator(t *testing.T) {
 	// finding first staker to remove
 	env := newCaminoEnvironment( /*postBanff*/ true, false, api.Camino{LockModeBondDeposit: true})
+	env.ctx.Lock.Lock()
 	stakerIterator, err := env.state.GetCurrentStakerIterator()
 	require.NoError(t, err)
 	require.True(t, stakerIterator.Next())
@@ -5520,8 +5512,6 @@ func TestCaminoStandardTxExecutorMultisigAliasTx(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			require := require.New(t)
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
 			env := newCaminoEnvironmentWithMocks(caminoGenesisConf, nil)
 
 			defer func() { require.NoError(shutdownCaminoEnvironment(env)) }() //nolint:lint
@@ -5534,7 +5524,7 @@ func TestCaminoStandardTxExecutorMultisigAliasTx(t *testing.T) {
 			err = tx.Unsigned.Visit(&CaminoStandardTxExecutor{
 				StandardTxExecutor{
 					Backend: &env.backend,
-					State:   tt.state(t, ctrl, tt.utx, tx.ID()),
+					State:   tt.state(t, gomock.NewController(t), tt.utx, tx.ID()),
 					Tx:      tx,
 				},
 			})
@@ -5792,8 +5782,6 @@ func TestCaminoStandardTxExecutorAddDepositOfferTx(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
 			env := newCaminoEnvironmentWithMocks(caminoGenesisConf, nil)
 			defer func() { require.NoError(t, shutdownCaminoEnvironment(env)) }()
 
@@ -5806,7 +5794,7 @@ func TestCaminoStandardTxExecutorAddDepositOfferTx(t *testing.T) {
 			err = tx.Unsigned.Visit(&CaminoStandardTxExecutor{
 				StandardTxExecutor{
 					Backend: &env.backend,
-					State:   tt.state(t, ctrl, utx, tx.ID(), env.config),
+					State:   tt.state(t, gomock.NewController(t), utx, tx.ID(), env.config),
 					Tx:      tx,
 				},
 			})
@@ -6214,8 +6202,6 @@ func TestCaminoStandardTxExecutorAddProposalTx(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
 			env := newCaminoEnvironmentWithMocks(caminoGenesisConf, nil)
 			defer func() { require.NoError(t, shutdownCaminoEnvironment(env)) }()
 
@@ -6231,7 +6217,7 @@ func TestCaminoStandardTxExecutorAddProposalTx(t *testing.T) {
 			err = tx.Unsigned.Visit(&CaminoStandardTxExecutor{
 				StandardTxExecutor{
 					Backend: &env.backend,
-					State:   tt.state(t, ctrl, utx, tx.ID(), env.config),
+					State:   tt.state(t, gomock.NewController(t), utx, tx.ID(), env.config),
 					Tx:      tx,
 				},
 			})
@@ -6629,8 +6615,6 @@ func TestCaminoStandardTxExecutorAddVoteTx(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
 			env := newCaminoEnvironmentWithMocks(caminoGenesisConf, nil)
 			defer func() { require.NoError(t, shutdownCaminoEnvironment(env)) }()
 
@@ -6645,7 +6629,7 @@ func TestCaminoStandardTxExecutorAddVoteTx(t *testing.T) {
 			err = tx.Unsigned.Visit(&CaminoStandardTxExecutor{
 				StandardTxExecutor{
 					Backend: &env.backend,
-					State:   tt.state(t, ctrl, utx, env.config),
+					State:   tt.state(t, gomock.NewController(t), utx, env.config),
 					Tx:      tx,
 				},
 			})
@@ -7669,8 +7653,6 @@ func TestCaminoStandardTxExecutorFinishProposalsTx(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
 			env := newCaminoEnvironmentWithMocks(caminoGenesisConf, nil)
 			defer func() { require.NoError(t, shutdownCaminoEnvironment(env)) }()
 
@@ -7685,7 +7667,7 @@ func TestCaminoStandardTxExecutorFinishProposalsTx(t *testing.T) {
 			err = tx.Unsigned.Visit(&CaminoStandardTxExecutor{
 				StandardTxExecutor{
 					Backend: &env.backend,
-					State:   tt.state(t, ctrl, utx, tx.ID(), env.config),
+					State:   tt.state(t, gomock.NewController(t), utx, tx.ID(), env.config),
 					Tx:      tx,
 				},
 			})

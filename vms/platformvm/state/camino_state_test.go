@@ -6,7 +6,6 @@ package state
 import (
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ava-labs/avalanchego/ids"
@@ -204,9 +203,6 @@ func TestLockedUTXOs(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-
 			lockTxIDs := set.Set[ids.ID]{}
 			addresses := set.Set[ids.ShortID]{}
 			for _, lockTxID := range tt.lockTxIDs {

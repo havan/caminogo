@@ -11,21 +11,21 @@ set -o pipefail
 
 # e.g.,
 # ./scripts/build.sh
-# ./scripts/tests.e2e.persistent_network.sh ./build/avalanchego
+# ./scripts/tests.e2e.persistent_network.sh ./build/caminogo
 if ! [[ "$0" =~ scripts/tests.e2e.persistent.sh ]]; then
   echo "must be run from repository root"
   exit 255
 fi
 
-AVALANCHEGO_PATH="${1-${AVALANCHEGO_PATH:-}}"
-if [[ -z "${AVALANCHEGO_PATH}" ]]; then
-  echo "Missing AVALANCHEGO_PATH argument!"
-  echo "Usage: ${0} [AVALANCHEGO_PATH]" >>/dev/stderr
+CAMINOGO_PATH="${1-${CAMINOGO_PATH:-}}"
+if [[ -z "${CAMINOGO_PATH}" ]]; then
+  echo "Missing CAMINOGO_PATH argument!"
+  echo "Usage: ${0} [CAMINOGO_PATH]" >>/dev/stderr
   exit 255
 fi
 # Ensure an absolute path to avoid dependency on the working directory
 # of script execution.
-export AVALANCHEGO_PATH="$(realpath ${AVALANCHEGO_PATH})"
+export CAMINOGO_PATH="$(realpath ${CAMINOGO_PATH})"
 
 # Create a temporary directory to store persistent network
 ROOT_DIR="$(mktemp -d -t e2e-testnet.XXXXX)"

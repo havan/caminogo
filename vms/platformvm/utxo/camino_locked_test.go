@@ -158,9 +158,6 @@ func TestUnlockUTXOs(t *testing.T) {
 }
 
 func TestLock(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
 	fx := &secp256k1fx.Fx{}
 	require.NoError(t, fx.InitializeVM(&secp256k1fx.TestVM{}))
 	require.NoError(t, fx.Bootstrapped())
@@ -432,7 +429,7 @@ func TestLock(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			require := require.New(t)
 
-			state := state.NewMockState(ctrl)
+			state := state.NewMockState(gomock.NewController(t))
 			utxoIDs := []ids.ID{}
 			var want want
 			var expectedSigners [][]*secp256k1.PrivateKey
@@ -897,8 +894,6 @@ func TestVerifyLockUTXOs(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
 			testHandler := defaultCaminoHandler(t)
 
 			var ins []*avax.TransferableInput
@@ -907,7 +902,7 @@ func TestVerifyLockUTXOs(t *testing.T) {
 			}
 
 			err := testHandler.VerifyLockUTXOs(
-				tt.state(ctrl),
+				tt.state(gomock.NewController(t)),
 				tx,
 				tt.utxos,
 				ins,
@@ -1513,10 +1508,8 @@ func TestVerifyUnlockDepositedUTXOs(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
 			err := defaultCaminoHandler(t).VerifyUnlockDepositedUTXOs(
-				tt.handlerState(ctrl),
+				tt.handlerState(gomock.NewController(t)),
 				tt.args.tx,
 				tt.args.utxos,
 				tt.args.ins,

@@ -721,11 +721,9 @@ func TestNewClaimTx(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			require := require.New(t)
-			ctrl := gomock.NewController(t)
-			b, db := newCaminoBuilder(true, tt.state(ctrl))
+			b, db := newCaminoBuilder(true, tt.state(gomock.NewController(t)))
 			defer func() {
 				require.NoError(db.Close())
-				ctrl.Finish()
 			}()
 
 			tx, err := b.NewClaimTx(
@@ -835,7 +833,6 @@ func TestNewRewardsImportTx(t *testing.T) {
 			b, db := newCaminoBuilderWithMocks(true, tt.state(ctrl), tt.sharedMemory(ctrl, tt.utxos))
 			defer func() {
 				require.NoError(db.Close())
-				ctrl.Finish()
 			}()
 			b.clk.Set(blockTime)
 
