@@ -2182,7 +2182,6 @@ func TestRejectedOptionHeightNotIndexed(t *testing.T) {
 func TestVMInnerBlkCache(t *testing.T) {
 	require := require.New(t)
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 
 	// Create a VM
 	innerVM := mocks.NewMockChainVM(ctrl)
@@ -2408,7 +2407,6 @@ type blockWithVerifyContext struct {
 func TestVM_VerifyBlockWithContext(t *testing.T) {
 	require := require.New(t)
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 
 	// Create a VM
 	innerVM := mocks.NewMockChainVM(ctrl)

@@ -13,18 +13,31 @@
 
 package version
 
-import "fmt"
+import (
+	"fmt"
+	"runtime"
+	"strings"
+)
 
 // String is displayed when CLI arg --version is used
 var String string
 
 func init() {
-	format := "caminogo: %s, commit: %s\ncompat: %s [database: %s]\n"
+	format := "caminogo: %s, commit: %s\ncompat: %s [database: %s, rpcchainvm=%d"
 	args := []interface{}{
 		GitVersion,
 		GitCommit,
 		Current,
 		CurrentDatabase,
+		RPCChainVMProtocol,
 	}
+
+	// add golang version
+	goVersion := runtime.Version()
+	goVersionNumber := strings.TrimPrefix(goVersion, "go")
+	format += ", go=%s"
+	args = append(args, goVersionNumber)
+
+	format += "]\n"
 	String = fmt.Sprintf(format, args...)
 }

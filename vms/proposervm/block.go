@@ -200,6 +200,11 @@ func (p *postForkCommonComponents) buildChild(
 	// is at least the parent's P-Chain height
 	pChainHeight, err := p.vm.optimalPChainHeight(ctx, parentPChainHeight)
 	if err != nil {
+		p.vm.ctx.Log.Error("unexpected build block failure",
+			zap.String("reason", "failed to calculate optimal P-chain height"),
+			zap.Stringer("parentID", parentID),
+			zap.Error(err),
+		)
 		return nil, err
 	}
 
@@ -209,6 +214,11 @@ func (p *postForkCommonComponents) buildChild(
 		proposerID := p.vm.ctx.NodeID
 		minDelay, err := p.vm.Windower.Delay(ctx, parentHeight+1, parentPChainHeight, proposerID)
 		if err != nil {
+			p.vm.ctx.Log.Error("unexpected build block failure",
+				zap.String("reason", "failed to calculate required timestamp delay"),
+				zap.Stringer("parentID", parentID),
+				zap.Error(err),
+			)
 			return nil, err
 		}
 
@@ -265,6 +275,12 @@ func (p *postForkCommonComponents) buildChild(
 		)
 	}
 	if err != nil {
+		p.vm.ctx.Log.Error("unexpected build block failure",
+			zap.String("reason", "failed to generate proposervm block header"),
+			zap.Stringer("parentID", parentID),
+			zap.Stringer("blkID", innerBlock.ID()),
+			zap.Error(err),
+		)
 		return nil, err
 	}
 

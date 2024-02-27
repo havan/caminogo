@@ -211,8 +211,6 @@ func TestVerifyMultisigCredentials(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			fx := defaultFx(t)
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
 
 			cred := &Credential{Sigs: make([][secp256k1.SignatureLen]byte, len(tt.signers))}
 			for i, key := range tt.signers {
@@ -221,7 +219,7 @@ func TestVerifyMultisigCredentials(t *testing.T) {
 				copy(cred.Sigs[i][:], sig)
 			}
 
-			err := fx.verifyMultisigCredentials(tx.Bytes(), tt.in, cred, tt.owners, tt.msig(ctrl))
+			err := fx.verifyMultisigCredentials(tx.Bytes(), tt.in, cred, tt.owners, tt.msig(gomock.NewController(t)))
 			require.ErrorIs(t, err, tt.expectedError)
 		})
 	}
@@ -305,10 +303,7 @@ func TestCollectMultisigAliases(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-
-			aliases, err := collectMultisigAliases(tt.owners, tt.msig(ctrl))
+			aliases, err := collectMultisigAliases(tt.owners, tt.msig(gomock.NewController(t)))
 			require.ErrorIs(t, err, tt.expectedError)
 			require.Equal(t, len(aliases), tt.expectedAliases)
 		})

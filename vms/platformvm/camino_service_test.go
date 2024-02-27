@@ -289,6 +289,8 @@ func TestCaminoService_GetAllDepositOffers(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			tt.fields.Service.vm.ctx.Lock.Lock()
+			defer tt.fields.Service.vm.ctx.Lock.Unlock()
 			tt.prepare(tt.fields.Service)
 			err := tt.fields.Service.GetAllDepositOffers(nil, tt.args.depositOffersArgs, tt.args.response)
 			require.ErrorIs(t, err, tt.wantErr)
@@ -332,6 +334,8 @@ func TestGetKeystoreKeys(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			s.vm.ctx.Lock.Lock()
+			defer s.vm.ctx.Lock.Unlock()
 			keys, err := s.getKeystoreKeys(&userPass, &tt.from)
 			require.ErrorIs(t, err, tt.expectedError)
 
@@ -373,6 +377,8 @@ func TestGetFakeKeys(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			s.vm.ctx.Lock.Lock()
+			defer s.vm.ctx.Lock.Unlock()
 			keys, err := s.getFakeKeys(&tt.from)
 			require.ErrorIs(t, err, tt.expectedError)
 
@@ -419,6 +425,8 @@ func TestSpend(t *testing.T) {
 
 	spendReply := SpendReply{}
 
+	service.vm.ctx.Lock.Lock()
+	defer service.vm.ctx.Lock.Unlock()
 	require.NoError(t, service.Spend(nil, &spendArgs, &spendReply))
 	require.Equal(t, "0x00000000000100000000000000000000000100000001fceda8f90fcb5d30614b99d79fc4baa2930776262dcf0a4e", spendReply.Owners)
 }

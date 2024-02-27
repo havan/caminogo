@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 
@@ -167,8 +166,6 @@ func getExpectedSupply(
 
 func TestSyncGenesis(t *testing.T) {
 	require := require.New(t)
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 	s, _ := newInitializedState(require)
 	baseDBManager := db_manager.NewMemDB(version.Semantic1_0_0)
 	baseDB := versiondb.New(baseDBManager.Current().Database)

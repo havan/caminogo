@@ -13,10 +13,8 @@ import (
 )
 
 func TestGetGenesisBytes(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	mockLog := logging.NewMockLogger(ctrl)
+	mockLog := logging.NewMockLogger(gomock.NewController(t))
 	service := Info{log: mockLog}
-	defer ctrl.Finish()
 
 	mockLog.EXPECT().Debug(gomock.Any()).Times(1)
 

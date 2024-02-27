@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"go.uber.org/zap"
 	"golang.org/x/exp/slices"
 
 	"github.com/ava-labs/avalanchego/chains/atomic"
@@ -283,6 +284,15 @@ func (e *CaminoStandardTxExecutor) AddValidatorTx(tx *txs.AddValidatorTx) error 
 	avax.Consume(e.State, tx.Ins)
 	if err := utxo.ProduceLocked(e.State, txID, tx.Outs, locked.StateBonded); err != nil {
 		return err
+	}
+
+	if e.Config.PartialSyncPrimaryNetwork && tx.Validator.NodeID == e.Ctx.NodeID {
+		e.Ctx.Log.Warn("verified transaction that would cause this node to become unhealthy",
+			zap.String("reason", "primary network is not being fully synced"),
+			zap.Stringer("txID", txID),
+			zap.String("txType", "addValidator"),
+			zap.Stringer("nodeID", tx.Validator.NodeID),
+		)
 	}
 
 	return nil

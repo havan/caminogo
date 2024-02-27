@@ -122,10 +122,8 @@ func TestGetNextStakerToRewardWithTwoIterations(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			require := require.New(t)
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
 
-			state := tt.stateF(ctrl)
+			state := tt.stateF(gomock.NewController(t))
 			txID, shouldReward, err := getNextStakerToReward(tt.timestamp, state)
 			if tt.expectedErr != nil {
 				require.Equal(tt.expectedErr, err)

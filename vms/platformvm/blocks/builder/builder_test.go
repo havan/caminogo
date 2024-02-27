@@ -291,7 +291,6 @@ func TestGetNextStakerToReward(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			require := require.New(t)
 			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
 
 			mockState := tt.stateF(ctrl).(*state.MockChain)
 			deferredStakerIter := state.NewMockStakerIterator(ctrl)
@@ -674,7 +673,6 @@ func TestBuildBlock(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			require := require.New(t)
 			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
 
 			parentState := tt.parentStateF(ctrl).(*state.MockChain)
 			deferredStakerIter := state.NewMockStakerIterator(ctrl)

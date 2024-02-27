@@ -651,6 +651,7 @@ func newCaminoEnvironmentWithMocks(
 	uptimes := uptime.NewManager(defaultState)
 	utxoHandler := utxo.NewCaminoHandler(ctx, clk, fx, true)
 
+	ctx.Lock.Lock()
 	return &caminoEnvironment{
 		isBootstrapped: &isBootstrapped,
 		config:         &vmConfig,

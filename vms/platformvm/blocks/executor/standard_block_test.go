@@ -40,7 +40,6 @@ import (
 func TestApricotStandardBlockTimeVerification(t *testing.T) {
 	require := require.New(t)
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 
 	env := newEnvironment(t, ctrl)
 	defer func() {
@@ -97,7 +96,6 @@ func TestApricotStandardBlockTimeVerification(t *testing.T) {
 func TestBanffStandardBlockTimeVerification(t *testing.T) {
 	require := require.New(t)
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 
 	env := newEnvironment(t, ctrl)
 	defer func() {

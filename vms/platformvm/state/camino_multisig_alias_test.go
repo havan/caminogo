@@ -183,9 +183,7 @@ func TestGetMultisigAlias(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-			caminoState := tt.caminoState(ctrl)
+			caminoState := tt.caminoState(gomock.NewController(t))
 			multisigAlias, err := caminoState.GetMultisigAlias(tt.multisigAliasID)
 			require.ErrorIs(t, err, tt.expectedErr)
 			require.Equal(t, tt.expectedMultisigAlias, multisigAlias)
@@ -224,9 +222,7 @@ func TestSetMultisigAlias(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-			caminoState := tt.caminoState(ctrl)
+			caminoState := tt.caminoState(gomock.NewController(t))
 			caminoState.SetMultisigAlias(tt.multisigAlias)
 			require.Equal(t, tt.expectedCaminoState(caminoState), caminoState)
 		})
@@ -318,9 +314,7 @@ func TestWriteMultisigAliases(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-			actualCaminoState := tt.caminoState(ctrl)
+			actualCaminoState := tt.caminoState(gomock.NewController(t))
 			err := actualCaminoState.writeMultisigAliases()
 			require.ErrorIs(t, err, tt.expectedErr)
 			require.Equal(t, tt.expectedCaminoState(actualCaminoState), actualCaminoState)
