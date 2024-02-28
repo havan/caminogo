@@ -9,11 +9,12 @@ package common
 
 import (
 	context "context"
+	reflect "reflect"
+
 	ids "github.com/ava-labs/avalanchego/ids"
 	snow "github.com/ava-labs/avalanchego/snow"
 	set "github.com/ava-labs/avalanchego/utils/set"
-	gomock "github.com/golang/mock/gomock"
-	reflect "reflect"
+	gomock "go.uber.org/mock/gomock"
 )
 
 // MockSender is a mock of Sender interface.

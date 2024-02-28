@@ -122,13 +122,13 @@ To regenerate the protobuf go code, run `scripts/protobuf_codegen.sh` from the r
 
 This should only be necessary when upgrading protobuf versions or modifying .proto definition files.
 
-To use this script, you must have [buf](https://docs.buf.build/installation) (v1.23.1), protoc-gen-go (v1.28.0) and protoc-gen-go-grpc (v1.2.0) installed.
+To use this script, you must have [buf](https://docs.buf.build/installation) (v1.26.1), protoc-gen-go (v1.30.0) and protoc-gen-go-grpc (v1.3.0) installed.
 
 To install the buf dependencies:
 
 ```sh
-go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.0
-go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
+go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.30.0
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.3.0
 ```
 
 If you have not already, you may need to add `$GOPATH/bin` to your `$PATH`:
@@ -157,7 +157,7 @@ docker run -t -i -v $(pwd):/opt/chain4travel -w/opt/chain4travel chain4travel:pr
 
 ### Running mock codegen
 
-To regenerate the [gomock](https://github.com/golang/mock) code, run `scripts/mock.gen.sh` from the root of the repo.
+To regenerate the [gomock](https://github.com/uber-go/mock) code, run `scripts/mock.gen.sh` from the root of the repo.
 
 This should only be necessary when modifying exported interfaces or after modifying `scripts/mock.mockgen.txt`.
 

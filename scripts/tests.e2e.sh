@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-set -e
-set -o nounset
-set -o pipefail
+
+set -euo pipefail
 
 # e.g.,
 # ./scripts/build.sh
@@ -11,36 +10,12 @@ if ! [[ "$0" =~ scripts/tests.e2e.sh ]]; then
   exit 255
 fi
 
-echo "Run caminogo e2e tests..."
-
-CAMINOGO_PATH="${1-}"
-if [[ -z "${CAMINOGO_PATH}" ]]; then
-  echo "Missing CAMINOGO_PATH argument!"
-  echo "Usage: ${0} [CAMINOGO_PATH]" >> /dev/stderr
-  exit 255
-fi
-
-CAMINO_NETWORK_RUNNER_PATH="${2-}"
-if [[ -z "${CAMINO_NETWORK_RUNNER_PATH}" ]]; then
-  echo "Missing CAMINO_NETWORK_RUNNER_PATH argument!"
-  echo "Usage: ${0} [CAMINOGO_PATH] [CAMINO_NETWORK_RUNNER_PATH]" >> /dev/stderr
-  exit 255
-fi
-
-cp $CAMINO_NETWORK_RUNNER_PATH /tmp/camino-network-runner
-
-# Set the CGO flags to use the portable version of BLST
-#
-# We use "export" here instead of just setting a bash variable because we need
-# to pass this flag to all child processes spawned by the shell.
-export CGO_CFLAGS="-O -D__BLST_PORTABLE__"
-
-# While CGO_ENABLED doesn't need to be explicitly set, it produces a much more
-# clear error due to the default value change in go1.20.
-export CGO_ENABLED=1
-
-GOPATH="$(go env GOPATH)"
-PATH="${GOPATH}/bin:${PATH}"
+#################################
+# Sourcing constants.sh ensures that the necessary CGO flags are set to
+# build the portable version of BLST. Without this, ginkgo may fail to
+# build the test binary if run on a host (e.g. github worker) that lacks
+# the instructions to build non-portable BLST.
+source ./scripts/constants.sh
 
 #################################
 echo "building e2e.test"
@@ -50,36 +25,29 @@ ACK_GINKGO_RC=true ginkgo build ./tests/e2e
 #./tests/e2e/e2e.test --help
 
 #################################
-# run "camino-network-runner" server
-echo "launch camino-network-runner in the background"
-/tmp/camino-network-runner \
-server \
---log-level debug \
---port=":12342" \
---disable-grpc-gateway 2> /dev/null &
-PID=${!}
+E2E_USE_PERSISTENT_NETWORK="${E2E_USE_PERSISTENT_NETWORK:-}"
+TESTNETCTL_NETWORK_DIR="${TESTNETCTL_NETWORK_DIR:-}"
+if [[ -n "${E2E_USE_PERSISTENT_NETWORK}" && -n "${TESTNETCTL_NETWORK_DIR}" ]]; then
+  echo "running e2e tests against a persistent network configured at ${TESTNETCTL_NETWORK_DIR}"
+  E2E_ARGS="--use-persistent-network"
+else
+  CAMINOGO_PATH="${1-${CAMINOGO_PATH:-}}"
+  if [[ -z "${CAMINOGO_PATH}" ]]; then
+    echo "Missing CAMINOGO_PATH argument!"
+    echo "Usage: ${0} [CAMINOGO_PATH]" >>/dev/stderr
+    exit 255
+  fi
+  echo "running e2e tests against an ephemeral local cluster deployed with ${CAMINOGO_PATH}"
+  CAMINOGO_PATH="$(realpath ${CAMINOGO_PATH})"
+  E2E_ARGS="--avalanchego-path=${CAMINOGO_PATH}"
+fi
 
 #################################
-# By default, it runs all e2e test cases!
-# Use "--ginkgo.skip" to skip tests.
-# Use "--ginkgo.focus" to select tests.
-#
-# to run only ping tests:
-# --ginkgo.focus "\[Local\] \[Ping\]"
-#
-# to skip all "Local" tests
-# --ginkgo.skip "\[Local\]"
-echo "running e2e tests against the local cluster with ${CAMINOGO_PATH}"
-./tests/e2e/e2e.test \
---ginkgo.v \
---log-level debug \
---network-runner-grpc-endpoint="0.0.0.0:12342" \
---network-runner-camino-node-path=${CAMINOGO_PATH} \
---network-runner-camino-log-level="WARN" \
---test-keys-file=tests/test.insecure.secp256k1.keys \
+# - Execute in parallel (-p) with the ginkgo cli to minimize execution time.
+#   The test binary by itself isn't capable of running specs in parallel.
+# - Execute in random order to identify unwanted dependency
+ginkgo -p -v --randomize-all ./tests/e2e/e2e.test -- ${E2E_ARGS} \
 && EXIT_CODE=$? || EXIT_CODE=$?
-
-kill ${PID}
 
 if [[ ${EXIT_CODE} -gt 0 ]]; then
   echo "FAILURE with exit code ${EXIT_CODE}"

@@ -41,7 +41,7 @@ func testBlockState(a *require.Assertions, bs BlockState) {
 	tlsCert, err := staking.NewTLSCert()
 	a.NoError(err)
 
-	cert := tlsCert.Leaf
+	cert := staking.CertificateFromX509(tlsCert.Leaf)
 	key := tlsCert.PrivateKey.(crypto.Signer)
 
 	nodeIDBytes, err := secp256k1.RecoverSecp256PublicKey(cert)

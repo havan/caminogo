@@ -2,8 +2,6 @@
 #
 # Use lower_case variables in the scripts and UPPER_CASE variables for override
 # Use the constants.sh for env overrides
-# Use the versions.sh to specify versions
-#
 
 # Set the PATHS
 GOPATH="$(go env GOPATH)"
@@ -21,6 +19,7 @@ plugin_dir="$build_dir/plugins"
 camino_node_dockerhub_repo=${DOCKER_REPO:-"c4tplatform"}"/camino-node"
 
 # Current branch
+# TODO: fix "fatal: No names found, cannot describe anything" in github CI
 current_branch=$(git symbolic-ref -q --short HEAD || git describe --tags || echo unknown)
 
 # caminogo and caminoethvm git tag and sha

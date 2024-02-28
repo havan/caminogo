@@ -17,14 +17,14 @@ import (
 	"bytes"
 	"context"
 	"crypto"
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+
+	"go.uber.org/mock/gomock"
 
 	"github.com/ava-labs/avalanchego/database/manager"
 	"github.com/ava-labs/avalanchego/ids"
@@ -47,20 +47,19 @@ import (
 )
 
 var (
-	_ block.ChainVM              = (*fullVM)(nil)
-	_ block.HeightIndexedChainVM = (*fullVM)(nil)
-	_ block.StateSyncableVM      = (*fullVM)(nil)
+	_ block.ChainVM         = (*fullVM)(nil)
+	_ block.StateSyncableVM = (*fullVM)(nil)
 )
 
 type fullVM struct {
 	*block.TestVM
-	*block.TestHeightIndexedVM
 	*block.TestStateSyncableVM
 }
 
 var (
-	pTestCert   *tls.Certificate
 	pTestNodeID ids.NodeID
+	pTestSigner crypto.Signer
+	pTestCert   *staking.Certificate
 
 	genesisUnixTimestamp int64 = 1000
 	genesisTimestamp           = time.Unix(genesisUnixTimestamp, 0)
@@ -75,12 +74,13 @@ var (
 )
 
 func init() {
-	var err error
-	pTestCert, err = staking.NewTLSCert()
+	tlsCert, err := staking.NewTLSCert()
 	if err != nil {
 		panic(err)
 	}
-	nodeIDBytes, err := secp256k1.RecoverSecp256PublicKey(pTestCert.Leaf)
+	pTestSigner = tlsCert.PrivateKey.(crypto.Signer)
+	pTestCert = staking.CertificateFromX509(tlsCert.Leaf)
+	nodeIDBytes, err := secp256k1.RecoverSecp256PublicKey(tlsCert.Leaf)
 	if err != nil {
 		panic(err)
 	}
@@ -120,9 +120,6 @@ func initTestProposerVM(
 				T: t,
 			},
 		},
-		TestHeightIndexedVM: &block.TestHeightIndexedVM{
-			T: t,
-		},
 		TestStateSyncableVM: &block.TestStateSyncableVM{
 			T: t,
 		},
@@ -159,8 +156,8 @@ func initTestProposerVM(
 		proBlkStartTime,
 		minPChainHeight,
 		DefaultMinBlockDelay,
-		pTestCert.PrivateKey.(crypto.Signer),
-		pTestCert.Leaf,
+		pTestSigner,
+		pTestCert,
 	)
 
 	valState := &validators.TestState{
@@ -195,7 +192,7 @@ func initTestProposerVM(
 
 	ctx := snow.DefaultContextTest()
 	ctx.ChainID = ids.ID{1}
-	ctx.NodeID = ids.NodeIDFromCert(pTestCert.Leaf)
+	ctx.NodeID = ids.NodeIDFromCert(pTestCert)
 	ctx.ValidatorState = valState
 
 	dummyDBManager := manager.NewMemDB(version.Semantic1_0_0)
@@ -900,8 +897,8 @@ func TestExpiredBuildBlock(t *testing.T) {
 		time.Time{},
 		0,
 		DefaultMinBlockDelay,
-		pTestCert.PrivateKey.(crypto.Signer),
-		pTestCert.Leaf,
+		pTestSigner,
+		pTestCert,
 	)
 
 	valState := &validators.TestState{
@@ -923,7 +920,7 @@ func TestExpiredBuildBlock(t *testing.T) {
 	}
 
 	ctx := snow.DefaultContextTest()
-	ctx.NodeID = ids.NodeIDFromCert(pTestCert.Leaf)
+	ctx.NodeID = ids.NodeIDFromCert(pTestCert)
 	ctx.ValidatorState = valState
 
 	dbManager := manager.NewMemDB(version.Semantic1_0_0)
@@ -942,6 +939,9 @@ func TestExpiredBuildBlock(t *testing.T) {
 		_ common.AppSender,
 	) error {
 		toScheduler = toEngineChan
+		return nil
+	}
+	coreVM.VerifyHeightIndexF = func(context.Context) error {
 		return nil
 	}
 
@@ -1212,7 +1212,7 @@ func TestInnerVMRollback(t *testing.T) {
 	}
 
 	ctx := snow.DefaultContextTest()
-	ctx.NodeID = ids.NodeIDFromCert(pTestCert.Leaf)
+	ctx.NodeID = ids.NodeIDFromCert(pTestCert)
 	ctx.ValidatorState = valState
 
 	coreVM.InitializeF = func(
@@ -1228,6 +1228,9 @@ func TestInnerVMRollback(t *testing.T) {
 	) error {
 		return nil
 	}
+	coreVM.VerifyHeightIndexF = func(context.Context) error {
+		return nil
+	}
 
 	dbManager := manager.NewMemDB(version.Semantic1_0_0)
 
@@ -1236,8 +1239,8 @@ func TestInnerVMRollback(t *testing.T) {
 		time.Time{},
 		0,
 		DefaultMinBlockDelay,
-		pTestCert.PrivateKey.(crypto.Signer),
-		pTestCert.Leaf,
+		pTestSigner,
+		pTestCert,
 	)
 
 	require.NoError(proVM.Initialize(
@@ -1253,7 +1256,6 @@ func TestInnerVMRollback(t *testing.T) {
 	))
 
 	require.NoError(proVM.SetState(context.Background(), snow.NormalOp))
-
 	require.NoError(proVM.SetPreference(context.Background(), coreGenBlk.IDV))
 
 	coreBlk := &snowman.TestBlock{
@@ -1303,9 +1305,7 @@ func TestInnerVMRollback(t *testing.T) {
 	require.Equal(choices.Processing, parsedBlock.Status())
 
 	require.NoError(parsedBlock.Verify(context.Background()))
-
 	require.NoError(proVM.SetPreference(context.Background(), parsedBlock.ID()))
-
 	require.NoError(parsedBlock.Accept(context.Background()))
 
 	fetchedBlock, err := proVM.GetBlock(context.Background(), parsedBlock.ID())
@@ -1316,13 +1316,17 @@ func TestInnerVMRollback(t *testing.T) {
 	// Restart the node and have the inner VM rollback state.
 	require.NoError(proVM.Shutdown(context.Background()))
 	coreBlk.StatusV = choices.Processing
+	coreVM.VerifyHeightIndexF = func(ctx context.Context) error {
+		return nil
+	}
+
 	proVM = New(
 		coreVM,
 		time.Time{},
 		0,
 		DefaultMinBlockDelay,
-		pTestCert.PrivateKey.(crypto.Signer),
-		pTestCert.Leaf,
+		pTestSigner,
+		pTestCert,
 	)
 
 	require.NoError(proVM.Initialize(
@@ -1766,26 +1770,18 @@ func TestRejectedHeightNotIndexed(t *testing.T) {
 	coreHeights := []ids.ID{coreGenBlk.ID()}
 
 	initialState := []byte("genesis state")
-	coreVM := &struct {
-		block.TestVM
-		block.TestHeightIndexedVM
-	}{
-		TestVM: block.TestVM{
-			TestVM: common.TestVM{
-				T: t,
-			},
-		},
-		TestHeightIndexedVM: block.TestHeightIndexedVM{
+	coreVM := &block.TestVM{
+		TestVM: common.TestVM{
 			T: t,
-			VerifyHeightIndexF: func(context.Context) error {
-				return nil
-			},
-			GetBlockIDAtHeightF: func(_ context.Context, height uint64) (ids.ID, error) {
-				if height >= uint64(len(coreHeights)) {
-					return ids.ID{}, errTooHigh
-				}
-				return coreHeights[height], nil
-			},
+		},
+		VerifyHeightIndexF: func(context.Context) error {
+			return nil
+		},
+		GetBlockIDAtHeightF: func(_ context.Context, height uint64) (ids.ID, error) {
+			if height >= uint64(len(coreHeights)) {
+				return ids.ID{}, errTooHigh
+			}
+			return coreHeights[height], nil
 		},
 	}
 
@@ -1820,8 +1816,8 @@ func TestRejectedHeightNotIndexed(t *testing.T) {
 		time.Time{},
 		0,
 		DefaultMinBlockDelay,
-		pTestCert.PrivateKey.(crypto.Signer),
-		pTestCert.Leaf,
+		pTestSigner,
+		pTestCert,
 	)
 
 	valState := &validators.TestState{
@@ -1855,7 +1851,7 @@ func TestRejectedHeightNotIndexed(t *testing.T) {
 	}
 
 	ctx := snow.DefaultContextTest()
-	ctx.NodeID = ids.NodeIDFromCert(pTestCert.Leaf)
+	ctx.NodeID = ids.NodeIDFromCert(pTestCert)
 	ctx.ValidatorState = valState
 
 	dummyDBManager := manager.NewMemDB(version.Semantic1_0_0)
@@ -1977,26 +1973,18 @@ func TestRejectedOptionHeightNotIndexed(t *testing.T) {
 	coreHeights := []ids.ID{coreGenBlk.ID()}
 
 	initialState := []byte("genesis state")
-	coreVM := &struct {
-		block.TestVM
-		block.TestHeightIndexedVM
-	}{
-		TestVM: block.TestVM{
-			TestVM: common.TestVM{
-				T: t,
-			},
-		},
-		TestHeightIndexedVM: block.TestHeightIndexedVM{
+	coreVM := &block.TestVM{
+		TestVM: common.TestVM{
 			T: t,
-			VerifyHeightIndexF: func(context.Context) error {
-				return nil
-			},
-			GetBlockIDAtHeightF: func(_ context.Context, height uint64) (ids.ID, error) {
-				if height >= uint64(len(coreHeights)) {
-					return ids.ID{}, errTooHigh
-				}
-				return coreHeights[height], nil
-			},
+		},
+		VerifyHeightIndexF: func(context.Context) error {
+			return nil
+		},
+		GetBlockIDAtHeightF: func(_ context.Context, height uint64) (ids.ID, error) {
+			if height >= uint64(len(coreHeights)) {
+				return ids.ID{}, errTooHigh
+			}
+			return coreHeights[height], nil
 		},
 	}
 
@@ -2031,8 +2019,8 @@ func TestRejectedOptionHeightNotIndexed(t *testing.T) {
 		time.Time{},
 		0,
 		DefaultMinBlockDelay,
-		pTestCert.PrivateKey.(crypto.Signer),
-		pTestCert.Leaf,
+		pTestSigner,
+		pTestCert,
 	)
 
 	valState := &validators.TestState{
@@ -2066,7 +2054,7 @@ func TestRejectedOptionHeightNotIndexed(t *testing.T) {
 	}
 
 	ctx := snow.DefaultContextTest()
-	ctx.NodeID = ids.NodeIDFromCert(pTestCert.Leaf)
+	ctx.NodeID = ids.NodeIDFromCert(pTestCert)
 	ctx.ValidatorState = valState
 
 	dummyDBManager := manager.NewMemDB(version.Semantic1_0_0)
@@ -2190,8 +2178,8 @@ func TestVMInnerBlkCache(t *testing.T) {
 		time.Time{}, // fork is active
 		0,           // minimum P-Chain height
 		DefaultMinBlockDelay,
-		pTestCert.PrivateKey.(crypto.Signer),
-		pTestCert.Leaf,
+		pTestSigner,
+		pTestCert,
 	)
 
 	dummyDBManager := manager.NewMemDB(version.Semantic1_0_0)
@@ -2209,10 +2197,18 @@ func TestVMInnerBlkCache(t *testing.T) {
 		gomock.Any(),
 		gomock.Any(),
 	).Return(nil)
+	innerVM.EXPECT().VerifyHeightIndex(gomock.Any()).Return(nil)
 	innerVM.EXPECT().Shutdown(gomock.Any()).Return(nil)
 
+	{
+		innerBlk := snowman.NewMockBlock(ctrl)
+		innerBlkID := ids.GenerateTestID()
+		innerVM.EXPECT().LastAccepted(gomock.Any()).Return(innerBlkID, nil)
+		innerVM.EXPECT().GetBlock(gomock.Any(), innerBlkID).Return(innerBlk, nil)
+	}
+
 	ctx := snow.DefaultContextTest()
-	ctx.NodeID = ids.NodeIDFromCert(pTestCert.Leaf)
+	ctx.NodeID = ids.NodeIDFromCert(pTestCert)
 
 	require.NoError(vm.Initialize(
 		context.Background(),
@@ -2415,8 +2411,8 @@ func TestVM_VerifyBlockWithContext(t *testing.T) {
 		time.Time{}, // fork is active
 		0,           // minimum P-Chain height
 		DefaultMinBlockDelay,
-		pTestCert.PrivateKey.(crypto.Signer),
-		pTestCert.Leaf,
+		pTestSigner,
+		pTestCert,
 	)
 
 	dummyDBManager := manager.NewMemDB(version.Semantic1_0_0)
@@ -2434,10 +2430,18 @@ func TestVM_VerifyBlockWithContext(t *testing.T) {
 		gomock.Any(),
 		gomock.Any(),
 	).Return(nil)
+	innerVM.EXPECT().VerifyHeightIndex(gomock.Any()).Return(nil)
 	innerVM.EXPECT().Shutdown(gomock.Any()).Return(nil)
 
+	{
+		innerBlk := snowman.NewMockBlock(ctrl)
+		innerBlkID := ids.GenerateTestID()
+		innerVM.EXPECT().LastAccepted(gomock.Any()).Return(innerBlkID, nil)
+		innerVM.EXPECT().GetBlock(gomock.Any(), innerBlkID).Return(innerBlk, nil)
+	}
+
 	snowCtx := snow.DefaultContextTest()
-	snowCtx.NodeID = ids.NodeIDFromCert(pTestCert.Leaf)
+	snowCtx.NodeID = ids.NodeIDFromCert(pTestCert)
 
 	require.NoError(vm.Initialize(
 		context.Background(),
