@@ -1022,3 +1022,72 @@ func (s *CaminoService) GetUpgradePhases(_ *http.Request, _ *struct{}, response 
 	}
 	return nil
 }
+
+type GetSharedMemoryArgs struct {
+	TraidAddr string `json:"traidAddr"`
+	ChainID   ids.ID `json:"chainID"`
+}
+
+type GetSharedMemoryReply struct {
+	Timestamp utilsjson.Uint64            `json:"timestamp"`
+	Count     utilsjson.Uint64            `json:"count"`
+	Values    []GetSharedMemoryReplyValue `json:"values"`
+}
+
+type GetSharedMemoryReplyValue struct {
+	EncodedBytes string `json:"encodedBytes"`
+	UTXO         any    `json:"utxo"`
+	// UTXO         string `json:"utxo"`
+}
+
+func (s *CaminoService) GetSharedMemory(_ *http.Request, args *GetSharedMemoryArgs, response *GetSharedMemoryReply) error {
+	s.vm.ctx.Log.Debug("Platform: GetSharedMemory called")
+
+	const MaxPageSize = 1024
+
+	traidAddr, err := avax.ParseServiceAddress(s.addrManager, args.TraidAddr)
+	if err != nil {
+		return err
+	}
+
+	now := s.vm.clock.Unix()
+
+	shmValues, _, _, err := s.vm.ctx.SharedMemory.Indexed(
+		args.ChainID,
+		[][]byte{traidAddr[:]},
+		ids.ShortEmpty[:], ids.Empty[:], MaxPageSize,
+	)
+	if err != nil {
+		return err
+	}
+
+	response.Timestamp = utilsjson.Uint64(now)
+	response.Count = utilsjson.Uint64(len(shmValues))
+
+	for _, shmValueBytes := range shmValues {
+		value := GetSharedMemoryReplyValue{}
+
+		value.EncodedBytes, err = formatting.Encode(formatting.Hex, shmValueBytes)
+		if err != nil {
+			return err
+		}
+
+		utxo := &avax.TimedUTXO{}
+		if _, err := txs.Codec.Unmarshal(shmValueBytes, utxo); err == nil {
+			value.UTXO = utxo
+			utxo.Out.InitCtx(s.vm.ctx)
+			// value.UTXO = "something"
+		} else {
+			utxo := &avax.UTXO{}
+			if _, err := txs.Codec.Unmarshal(shmValueBytes, utxo); err != nil {
+				value.UTXO = fmt.Sprintf("unmarshal error: %v", err)
+			}
+			utxo.Out.InitCtx(s.vm.ctx)
+			value.UTXO = utxo
+		}
+
+		response.Values = append(response.Values, value)
+	}
+
+	return nil
+}
