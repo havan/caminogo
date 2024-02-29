@@ -1017,7 +1017,7 @@ type ipAuth struct {
 func (n *network) authenticateIPs(ips []*ips.ClaimedIPPort) ([]*ipAuth, error) {
 	ipAuths := make([]*ipAuth, len(ips))
 	for i, ip := range ips {
-		nodeID, err := peer.CertToID(ip.Cert)
+		nodeID, err := peer.StakingCertToID(ip.Cert)
 		if err != nil {
 			n.peerConfig.Log.Debug("failed to create nodeID from certificate: %s",
 				zap.Stringer("nodeID", nodeID),

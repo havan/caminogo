@@ -110,3 +110,11 @@ func CertToID(cert *x509.Certificate) (ids.NodeID, error) {
 	}
 	return ids.ToNodeID(pubKeyBytes)
 }
+
+func StakingCertToID(cert *staking.Certificate) (ids.NodeID, error) {
+	tlsCert, err := x509.ParseCertificate(cert.Raw)
+	if err != nil {
+		return ids.EmptyNodeID, err
+	}
+	return CertToID(tlsCert)
+}

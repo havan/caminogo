@@ -14,6 +14,7 @@
 package block
 
 import (
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"time"
@@ -102,18 +103,15 @@ func (b *statelessBlock) initialize(bytes []byte) error {
 		return nil
 	}
 
-	cert, err := staking.ParseCertificate(b.StatelessBlock.Certificate)
+	tlsCert, err := x509.ParseCertificate(b.StatelessBlock.Certificate)
 	if err != nil {
 		return fmt.Errorf("%w: %s", errInvalidCertificate, err)
 	}
 
-	if err := staking.VerifyCertificate(cert); err != nil {
-		return err
-	}
-
+	cert := staking.CertificateFromX509(tlsCert)
 	b.cert = cert
 
-	nodeIDBytes, err := secp256k1.RecoverSecp256PublicKey(cert)
+	nodeIDBytes, err := secp256k1.RecoverSecp256PublicKey(tlsCert)
 	if err != nil {
 		return err
 	}

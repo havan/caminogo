@@ -3,8 +3,7 @@
 # Use lower_case variables in the scripts and UPPER_CASE variables for override
 # Use the constants.sh for env overrides
 
-# Set the PATHS
-GOPATH="$(go env GOPATH)"
+CAMINOGO_PATH=$( cd "$( dirname "${BASH_SOURCE[0]}" )"; cd .. && pwd )
 
 # Where CaminoGo binary goes
 build_dir="$CAMINOGO_PATH/build"

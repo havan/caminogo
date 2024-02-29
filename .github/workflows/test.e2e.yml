@@ -28,4 +28,4 @@ jobs:
         run: ./scripts/build.sh
       - name: Run e2e tests
         shell: bash
-        run: scripts/tests.e2e.sh ./build/caminogo ./tools/camino-network-runner/bin/camino-network-runner
+        run: scripts/tests.e2e.sh ./build/caminogo

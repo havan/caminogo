@@ -10,7 +10,7 @@ package cache
 import (
 	reflect "reflect"
 
-	gomock "github.com/golang/mock/gomock"
+	gomock "go.uber.org/mock/gomock"
 )
 
 // MockCacher is a mock of Cacher interface.
