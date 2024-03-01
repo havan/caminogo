@@ -967,7 +967,7 @@ func getAliases(v *viper.Viper, name string, contentKey string, fileKey string) 
 
 	aliasMap := make(map[ids.ID][]string)
 	if err := json.Unmarshal(fileBytes, &aliasMap); err != nil {
-		return nil, fmt.Errorf("%w on %s: %s", errUnmarshalling, name, err)
+		return nil, fmt.Errorf("%w on %s: %w", errUnmarshalling, name, err)
 	}
 	return aliasMap, nil
 }
@@ -1163,7 +1163,7 @@ func getSubnetConfigsFromDir(v *viper.Viper, subnetIDs []ids.ID) (map[ids.ID]sub
 
 		config := getDefaultSubnetConfig(v)
 		if err := json.Unmarshal(file, &config); err != nil {
-			return nil, fmt.Errorf("%w: %s", errUnmarshalling, err)
+			return nil, fmt.Errorf("%w: %w", errUnmarshalling, err)
 		}
 
 		if err := config.Valid(); err != nil {
@@ -1178,10 +1178,11 @@ func getSubnetConfigsFromDir(v *viper.Viper, subnetIDs []ids.ID) (map[ids.ID]sub
 
 func getDefaultSubnetConfig(v *viper.Viper) subnets.Config {
 	return subnets.Config{
-		ConsensusParameters:   getConsensusConfig(v),
-		ValidatorOnly:         false,
-		GossipConfig:          getGossipConfig(v),
-		ProposerMinBlockDelay: proposervm.DefaultMinBlockDelay,
+		ConsensusParameters:         getConsensusConfig(v),
+		ValidatorOnly:               false,
+		GossipConfig:                getGossipConfig(v),
+		ProposerMinBlockDelay:       proposervm.DefaultMinBlockDelay,
+		ProposerNumHistoricalBlocks: proposervm.DefaultNumHistoricalBlocks,
 	}
 }
 

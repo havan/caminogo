@@ -105,7 +105,7 @@ func (b *statelessBlock) initialize(bytes []byte) error {
 
 	tlsCert, err := x509.ParseCertificate(b.StatelessBlock.Certificate)
 	if err != nil {
-		return fmt.Errorf("%w: %s", errInvalidCertificate, err)
+		return fmt.Errorf("%w: %w", errInvalidCertificate, err)
 	}
 
 	cert := staking.CertificateFromX509(tlsCert)

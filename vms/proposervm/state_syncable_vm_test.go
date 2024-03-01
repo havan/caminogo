@@ -86,6 +86,7 @@ func helperBuildStateSyncTestObjects(t *testing.T) (*fullVM, *VM) {
 		time.Time{},
 		0,
 		DefaultMinBlockDelay,
+		DefaultNumHistoricalBlocks,
 		pTestSigner,
 		pTestCert,
 	)
