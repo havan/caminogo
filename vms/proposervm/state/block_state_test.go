@@ -41,10 +41,10 @@ func testBlockState(a *require.Assertions, bs BlockState) {
 	tlsCert, err := staking.NewTLSCert()
 	a.NoError(err)
 
-	cert := tlsCert.Leaf
+	cert := staking.CertificateFromX509(tlsCert.Leaf)
 	key := tlsCert.PrivateKey.(crypto.Signer)
 
-	nodeIDBytes, err := secp256k1.RecoverSecp256PublicKey(cert)
+	nodeIDBytes, err := secp256k1.RecoverSecp256PublicKey(tlsCert.Leaf)
 	a.NoError(err)
 	nodeID, err := ids.ToNodeID(nodeIDBytes)
 	a.NoError(err)
@@ -133,11 +133,11 @@ func initCommonTestData(a *require.Assertions) (database.Database, BlockState, b
 	chainID := ids.ID{4}
 
 	tlsCert, _ := staking.NewTLSCert()
+	cert := staking.CertificateFromX509(tlsCert.Leaf)
 
-	cert := tlsCert.Leaf
 	key := tlsCert.PrivateKey.(crypto.Signer)
 
-	nodeIDBytes, err := secp256k1.RecoverSecp256PublicKey(cert)
+	nodeIDBytes, err := secp256k1.RecoverSecp256PublicKey(tlsCert.Leaf)
 	a.NoError(err)
 	nodeID, err := ids.ToNodeID(nodeIDBytes)
 	a.NoError(err)

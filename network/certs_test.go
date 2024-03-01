@@ -44,9 +44,9 @@ func getTLS(t *testing.T, index int) (ids.NodeID, *tls.Certificate, *tls.Config)
 		tlsConfigs = append(tlsConfigs, tlsConfig)
 	}
 
-	cert := tlsCerts[index]
-	nodeID, err := peer.CertToID(cert.Leaf)
+	tlsCert := tlsCerts[index]
+	nodeID, err := peer.CertToID(tlsCert.Leaf)
 	require.NoError(t, err)
 
-	return nodeID, cert, tlsConfigs[index]
+	return nodeID, tlsCert, tlsConfigs[index]
 }

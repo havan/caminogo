@@ -64,7 +64,6 @@ import (
 
 var (
 	_ block.ChainVM              = (*VM)(nil)
-	_ block.HeightIndexedChainVM = (*VM)(nil)
 	_ secp256k1fx.VM             = (*VM)(nil)
 	_ validators.State           = (*VM)(nil)
 	_ validators.SubnetConnector = (*VM)(nil)

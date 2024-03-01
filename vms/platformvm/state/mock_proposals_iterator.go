@@ -12,7 +12,7 @@ import (
 
 	ids "github.com/ava-labs/avalanchego/ids"
 	dac "github.com/ava-labs/avalanchego/vms/platformvm/dac"
-	gomock "github.com/golang/mock/gomock"
+	gomock "go.uber.org/mock/gomock"
 )
 
 // MockProposalsIterator is a mock of ProposalsIterator interface.
@@ -38,19 +38,18 @@ func (m *MockProposalsIterator) EXPECT() *MockProposalsIteratorMockRecorder {
 	return m.recorder
 }
 
-// Value mocks base method.
-func (m *MockProposalsIterator) Value() (dac.ProposalState, error) {
+// Error mocks base method.
+func (m *MockProposalsIterator) Error() error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Value")
-	ret0, _ := ret[0].(dac.ProposalState)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "Error")
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
-// Value indicates an expected call of Value.
-func (mr *MockProposalsIteratorMockRecorder) Value() *gomock.Call {
+// Error indicates an expected call of Error.
+func (mr *MockProposalsIteratorMockRecorder) Error() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Value", reflect.TypeOf((*MockProposalsIterator)(nil).Value))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Error", reflect.TypeOf((*MockProposalsIterator)(nil).Error))
 }
 
 // Next mocks base method.
@@ -67,20 +66,6 @@ func (mr *MockProposalsIteratorMockRecorder) Next() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockProposalsIterator)(nil).Next))
 }
 
-// Error mocks base method.
-func (m *MockProposalsIterator) Error() error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Error")
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Error indicates an expected call of Error.
-func (mr *MockProposalsIteratorMockRecorder) Error() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Error", reflect.TypeOf((*MockProposalsIterator)(nil).Error))
-}
-
 // Release mocks base method.
 func (m *MockProposalsIterator) Release() {
 	m.ctrl.T.Helper()
@@ -91,6 +76,21 @@ func (m *MockProposalsIterator) Release() {
 func (mr *MockProposalsIteratorMockRecorder) Release() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Release", reflect.TypeOf((*MockProposalsIterator)(nil).Release))
+}
+
+// Value mocks base method.
+func (m *MockProposalsIterator) Value() (dac.ProposalState, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Value")
+	ret0, _ := ret[0].(dac.ProposalState)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Value indicates an expected call of Value.
+func (mr *MockProposalsIteratorMockRecorder) Value() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Value", reflect.TypeOf((*MockProposalsIterator)(nil).Value))
 }
 
 // key mocks base method.

@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	gomock "github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	gomock "go.uber.org/mock/gomock"
 
 	"github.com/ava-labs/avalanchego/chains/atomic"
 	"github.com/ava-labs/avalanchego/database"

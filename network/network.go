@@ -293,8 +293,8 @@ func NewNetwork(
 		inboundConnUpgradeThrottler: throttling.NewInboundConnUpgradeThrottler(log, config.ThrottlerConfig.InboundConnUpgradeThrottlerConfig),
 		listener:                    listener,
 		dialer:                      dialer,
-		serverUpgrader:              peer.NewTLSServerUpgrader(config.TLSConfig),
-		clientUpgrader:              peer.NewTLSClientUpgrader(config.TLSConfig),
+		serverUpgrader:              peer.NewTLSServerUpgrader(config.TLSConfig, metrics.tlsConnRejected),
+		clientUpgrader:              peer.NewTLSClientUpgrader(config.TLSConfig, metrics.tlsConnRejected),
 
 		onCloseCtx:       onCloseCtx,
 		onCloseCtxCancel: cancel,
@@ -1017,7 +1017,7 @@ type ipAuth struct {
 func (n *network) authenticateIPs(ips []*ips.ClaimedIPPort) ([]*ipAuth, error) {
 	ipAuths := make([]*ipAuth, len(ips))
 	for i, ip := range ips {
-		nodeID, err := peer.CertToID(ip.Cert)
+		nodeID, err := peer.StakingCertToID(ip.Cert)
 		if err != nil {
 			n.peerConfig.Log.Debug("failed to create nodeID from certificate: %s",
 				zap.Stringer("nodeID", nodeID),

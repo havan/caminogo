@@ -16,7 +16,6 @@ package peer
 import (
 	"context"
 	"crypto"
-	"crypto/x509"
 	"net"
 	"testing"
 	"time"
@@ -51,7 +50,7 @@ type testPeer struct {
 type rawTestPeer struct {
 	config         *Config
 	conn           net.Conn
-	cert           *x509.Certificate
+	cert           *staking.Certificate
 	nodeID         ids.NodeID
 	inboundMsgChan <-chan message.InboundMessage
 }
@@ -79,9 +78,11 @@ func makeRawTestPeers(t *testing.T, trackedSubnets set.Set[ids.ID]) (*rawTestPee
 
 	tlsCert0, err := staking.NewTLSCert()
 	require.NoError(err)
+	cert0 := staking.CertificateFromX509(tlsCert0.Leaf)
 
 	tlsCert1, err := staking.NewTLSCert()
 	require.NoError(err)
+	cert1 := staking.CertificateFromX509(tlsCert1.Leaf)
 
 	nodeID0, err := CertToID(tlsCert0.Leaf)
 	require.NoError(err)
@@ -146,14 +147,14 @@ func makeRawTestPeers(t *testing.T, trackedSubnets set.Set[ids.ID]) (*rawTestPee
 	peer0 := &rawTestPeer{
 		config:         &peerConfig0,
 		conn:           conn0,
-		cert:           tlsCert0.Leaf,
+		cert:           cert0,
 		nodeID:         nodeID0,
 		inboundMsgChan: inboundMsgChan0,
 	}
 	peer1 := &rawTestPeer{
 		config:         &peerConfig1,
 		conn:           conn1,
-		cert:           tlsCert1.Leaf,
+		cert:           cert1,
 		nodeID:         nodeID1,
 		inboundMsgChan: inboundMsgChan1,
 	}

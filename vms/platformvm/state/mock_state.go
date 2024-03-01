@@ -28,7 +28,7 @@ import (
 	locked "github.com/ava-labs/avalanchego/vms/platformvm/locked"
 	status "github.com/ava-labs/avalanchego/vms/platformvm/status"
 	txs "github.com/ava-labs/avalanchego/vms/platformvm/txs"
-	gomock "github.com/golang/mock/gomock"
+	gomock "go.uber.org/mock/gomock"
 )
 
 // MockState is a mock of State interface.

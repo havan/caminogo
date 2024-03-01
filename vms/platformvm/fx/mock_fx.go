@@ -13,7 +13,7 @@ import (
 	snow "github.com/ava-labs/avalanchego/snow"
 	verify "github.com/ava-labs/avalanchego/vms/components/verify"
 	secp256k1fx "github.com/ava-labs/avalanchego/vms/secp256k1fx"
-	gomock "github.com/golang/mock/gomock"
+	gomock "go.uber.org/mock/gomock"
 )
 
 // MockFx is a mock of Fx interface.

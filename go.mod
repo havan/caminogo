@@ -2,7 +2,6 @@ module github.com/ava-labs/avalanchego
 
 // Changes to the minimum golang version must also be replicated in
 // scripts/build_camino.sh
-// scripts/local.Dockerfile
 // Dockerfile
 // README.md
 // go.mod (here, only major.minor can be specified)
@@ -13,13 +12,12 @@ require (
 	github.com/Microsoft/go-winio v0.5.2
 	github.com/NYTimes/gziphandler v1.1.1
 	github.com/ava-labs/avalanche-network-runner-sdk v0.3.0
-	github.com/ava-labs/coreth v0.12.5-rc.1
+	github.com/ava-labs/coreth v0.12.5-rc.3
 	github.com/ava-labs/ledger-avalanche/go v0.0.0-20230105152938-00a24d05a8c7
 	github.com/btcsuite/btcd/btcutil v1.1.3
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0
 	github.com/ethereum/go-ethereum v1.12.0
 	github.com/golang-jwt/jwt/v4 v4.3.0
-	github.com/golang/mock v1.6.0
 	github.com/google/btree v1.1.2
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/rpc v1.2.0
@@ -56,6 +54,7 @@ require (
 	go.opentelemetry.io/otel/sdk v1.11.0
 	go.opentelemetry.io/otel/trace v1.11.0
 	go.uber.org/goleak v1.2.1
+	go.uber.org/mock v0.2.0
 	go.uber.org/zap v1.24.0
 	golang.org/x/crypto v0.12.0
 	golang.org/x/exp v0.0.0-20230206171751-46f607a40771
@@ -158,4 +157,4 @@ require (
 
 replace github.com/ava-labs/avalanche-ledger-go => github.com/chain4travel/camino-ledger-go v0.0.13-c4t
 
-replace github.com/ava-labs/coreth => github.com/chain4travel/caminoethvm v1.1.7-rc0
+replace github.com/ava-labs/coreth => github.com/chain4travel/caminoethvm v1.1.9-rc0
