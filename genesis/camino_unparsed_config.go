@@ -40,11 +40,11 @@ func (uc UnparsedCamino) Parse(startTime uint64) (*Camino, error) {
 
 	_, _, avaxAddrBytes, err := address.Parse(uc.InitialAdmin)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", errCannotParseInitialAdmin, err)
+		return nil, fmt.Errorf("%w: %w", errCannotParseInitialAdmin, err)
 	}
 	avaxAddr, err := ids.ToShortID(avaxAddrBytes)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", errCannotParseInitialAdmin, err)
+		return nil, fmt.Errorf("%w: %w", errCannotParseInitialAdmin, err)
 	}
 	c.InitialAdmin = avaxAddr
 
@@ -95,21 +95,21 @@ func (ua UnparsedCaminoAllocation) Parse() (CaminoAllocation, error) {
 
 	ethAddrBytes, err := hex.DecodeString(ua.ETHAddr[2:])
 	if err != nil {
-		return a, fmt.Errorf("%w: %s", errInvalidETHAddress, err)
+		return a, fmt.Errorf("%w: %w", errInvalidETHAddress, err)
 	}
 	ethAddr, err := ids.ToShortID(ethAddrBytes)
 	if err != nil {
-		return a, fmt.Errorf("%w: %s", errInvalidETHAddress, err)
+		return a, fmt.Errorf("%w: %w", errInvalidETHAddress, err)
 	}
 	a.ETHAddr = ethAddr
 
 	_, _, avaxAddrBytes, err := address.Parse(ua.AVAXAddr)
 	if err != nil {
-		return a, fmt.Errorf("%w: %s", errInvalidAVAXAddress, err)
+		return a, fmt.Errorf("%w: %w", errInvalidAVAXAddress, err)
 	}
 	avaxAddr, err := ids.ToShortID(avaxAddrBytes)
 	if err != nil {
-		return a, fmt.Errorf("%w: %s", errInvalidAVAXAddress, err)
+		return a, fmt.Errorf("%w: %w", errInvalidAVAXAddress, err)
 	}
 	a.AVAXAddr = avaxAddr
 
@@ -148,7 +148,7 @@ func (ua UnparsedPlatformAllocation) Parse() (PlatformAllocation, error) {
 	if ua.NodeID != "" {
 		parsedNodeID, err := ids.NodeIDFromString(ua.NodeID)
 		if err != nil {
-			return a, fmt.Errorf("%w: %s", errInvalidNodeID, err)
+			return a, fmt.Errorf("%w: %w", errInvalidNodeID, err)
 		}
 		nodeID = parsedNodeID
 	}

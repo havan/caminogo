@@ -67,11 +67,11 @@ func (p *FeeDistributionProposal) Verify() error {
 	for _, option := range p.Options {
 		sum, err := math.Add64(option[0], option[1])
 		if err != nil {
-			return fmt.Errorf("%w: %s", errWrongFeeDistribution, err)
+			return fmt.Errorf("%w: %w", errWrongFeeDistribution, err)
 		}
 		sum, err = math.Add64(sum, option[2])
 		if err != nil {
-			return fmt.Errorf("%w: %s", errWrongFeeDistribution, err)
+			return fmt.Errorf("%w: %w", errWrongFeeDistribution, err)
 		}
 		if sum != FractionDenominator {
 			return errWrongFeeDistribution

@@ -70,7 +70,7 @@ func (msig *MultiSigRow) FromRow(_ int, msigRow []string) error {
 	if !keyRead && len(msigRow[pChainAddress]) > 0 {
 		_, _, addrBytes, err := address.Parse(strings.TrimSpace(msigRow[pChainAddress]))
 		if err != nil {
-			return fmt.Errorf("could not parse address %s for ctrl group %s - err: %s", msigRow[pChainAddress], msig.ControlGroup, err)
+			return fmt.Errorf("could not parse address %s for ctrl group %s - err: %w", msigRow[pChainAddress], msig.ControlGroup, err)
 		}
 		addr, _ = ids.ToShortID(addrBytes)
 	}

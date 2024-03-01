@@ -59,11 +59,11 @@ func (tx *AddDepositOfferTx) SyntacticVerify(ctx *snow.Context) error {
 	}
 
 	if err := tx.DepositOffer.Verify(); err != nil {
-		return fmt.Errorf("%w: %s", errBadDepositOffer, err)
+		return fmt.Errorf("%w: %w", errBadDepositOffer, err)
 	}
 
 	if err := tx.DepositOfferCreatorAuth.Verify(); err != nil {
-		return fmt.Errorf("%w: %s", errBadDepositOfferCreatorAuth, err)
+		return fmt.Errorf("%w: %w", errBadDepositOfferCreatorAuth, err)
 	}
 
 	if err := locked.VerifyNoLocks(tx.Ins, tx.Outs); err != nil {
