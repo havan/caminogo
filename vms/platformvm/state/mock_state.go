@@ -21,7 +21,7 @@ import (
 	avax "github.com/ava-labs/avalanchego/vms/components/avax"
 	multisig "github.com/ava-labs/avalanchego/vms/components/multisig"
 	addrstate "github.com/ava-labs/avalanchego/vms/platformvm/addrstate"
-	blocks "github.com/ava-labs/avalanchego/vms/platformvm/blocks"
+	block "github.com/ava-labs/avalanchego/vms/platformvm/block"
 	fx "github.com/ava-labs/avalanchego/vms/platformvm/fx"
 	config "github.com/ava-labs/avalanchego/vms/platformvm/config"
 	dac "github.com/ava-labs/avalanchego/vms/platformvm/dac"
@@ -104,7 +104,7 @@ func (mr *MockStateMockRecorder) AddRewardUTXO(arg0, arg1 interface{}) *gomock.C
 }
 
 // AddStatelessBlock mocks base method.
-func (m *MockState) AddStatelessBlock(arg0 blocks.Block) {
+func (m *MockState) AddStatelessBlock(arg0 block.Block) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "AddStatelessBlock", arg0)
 }
@@ -844,10 +844,10 @@ func (mr *MockStateMockRecorder) GetStartTime(arg0, arg1 interface{}) *gomock.Ca
 }
 
 // GetStatelessBlock mocks base method.
-func (m *MockState) GetStatelessBlock(arg0 ids.ID) (blocks.Block, error) {
+func (m *MockState) GetStatelessBlock(arg0 ids.ID) (block.Block, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetStatelessBlock", arg0)
-	ret0, _ := ret[0].(blocks.Block)
+	ret0, _ := ret[0].(block.Block)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

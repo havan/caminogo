@@ -302,7 +302,7 @@ utxoFor:
 			continue utxoFor
 		}
 
-		response.UTXOIDs = append(response.UTXOIDs, &utxo.UTXOID)
+		response.UTXOIDs = append(response.UTXOIDs, &utxo.UTXOID) //nolint:gosec
 	}
 
 	balances := maps.Clone(lockedStakeables)

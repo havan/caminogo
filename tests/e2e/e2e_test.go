@@ -14,7 +14,6 @@
 package e2e_test
 
 import (
-	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -30,7 +29,6 @@ import (
 	"github.com/ava-labs/avalanchego/tests"
 	"github.com/ava-labs/avalanchego/tests/e2e"
 	"github.com/ava-labs/avalanchego/tests/fixture"
-	"github.com/ava-labs/avalanchego/tests/fixture/testnet"
 	"github.com/ava-labs/avalanchego/tests/fixture/testnet/local"
 
 	// ensure test packages are scanned by ginkgo
@@ -87,36 +85,13 @@ var _ = ginkgo.SynchronizedBeforeSuite(func() []byte {
 	// Load or create a test network
 	var network *local.LocalNetwork
 	if len(persistentNetworkDir) > 0 {
-		tests.Outf("{{yellow}}Using a pre-existing network configured at %s{{/}}\n", persistentNetworkDir)
+		tests.Outf("{{yellow}}Using a persistent network configured at %s{{/}}\n", persistentNetworkDir)
 
 		var err error
 		network, err = local.ReadNetwork(persistentNetworkDir)
 		require.NoError(err)
 	} else {
-		tests.Outf("{{magenta}}Starting network with %q{{/}}\n", avalancheGoExecPath)
-
-		ctx, cancel := context.WithTimeout(context.Background(), local.DefaultNetworkStartTimeout)
-		defer cancel()
-		var err error
-		network, err = local.StartNetwork(
-			ctx,
-			ginkgo.GinkgoWriter,
-			"", // Use the default path to ensure a predictable target for github's upload-artifact action
-			&local.LocalNetwork{
-				LocalConfig: local.LocalConfig{
-					ExecPath: avalancheGoExecPath,
-				},
-			},
-			testnet.DefaultNodeCount,
-			testnet.DefaultFundedKeyCount,
-		)
-		require.NoError(err)
-		ginkgo.DeferCleanup(func() {
-			tests.Outf("Shutting down network\n")
-			require.NoError(network.Stop())
-		})
-
-		tests.Outf("{{green}}Successfully started network{{/}}\n")
+		network = e2e.StartLocalNetwork(avalancheGoExecPath, e2e.DefaultNetworkDir)
 	}
 
 	uris := network.GetURIs()
