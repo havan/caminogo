@@ -77,7 +77,7 @@ func (tx *ClaimTx) SyntacticVerify(ctx *snow.Context) error {
 			return errNonUniqueClaimableID
 		}
 		if err := claimable.OwnerAuth.Verify(); err != nil {
-			return fmt.Errorf("%w (claimable[%d].OwnerAuth): %s", errBadClaimableAuth, i, err)
+			return fmt.Errorf("%w (claimable[%d].OwnerAuth): %w", errBadClaimableAuth, i, err)
 		}
 		uniqueIDs.Add(claimable.ID)
 	}

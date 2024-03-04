@@ -154,6 +154,10 @@ func (c *Config) IsBanffActivated(timestamp time.Time) bool {
 	return !timestamp.Before(c.BanffTime)
 }
 
+func (c *Config) IsCortinaActivated(timestamp time.Time) bool {
+	return !timestamp.Before(c.CortinaTime)
+}
+
 func (c *Config) IsAthensPhaseActivated(timestamp time.Time) bool {
 	return !timestamp.Before(c.AthensPhaseTime)
 }

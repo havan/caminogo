@@ -65,11 +65,11 @@ func (tx *AddProposalTx) SyntacticVerify(ctx *snow.Context) error {
 	}
 
 	if err := proposal.Verify(); err != nil {
-		return fmt.Errorf("%w: %s", errBadProposal, err)
+		return fmt.Errorf("%w: %w", errBadProposal, err)
 	}
 
 	if err := tx.ProposerAuth.Verify(); err != nil {
-		return fmt.Errorf("%w: %s", errBadProposerAuth, err)
+		return fmt.Errorf("%w: %w", errBadProposerAuth, err)
 	}
 
 	if err := locked.VerifyLockMode(tx.Ins, tx.Outs, true); err != nil {
@@ -81,7 +81,7 @@ func (tx *AddProposalTx) SyntacticVerify(ctx *snow.Context) error {
 		if lockedOut, ok := out.Out.(*locked.Out); ok && lockedOut.IsNewlyLockedWith(locked.StateBonded) {
 			newBondAmount, err := math.Add64(bondAmount, lockedOut.Amount())
 			if err != nil {
-				return fmt.Errorf("%w: %s", errTooBigBond, err)
+				return fmt.Errorf("%w: %w", errTooBigBond, err)
 			}
 			bondAmount = newBondAmount
 		}
@@ -101,7 +101,7 @@ func (tx *AddProposalTx) Proposal() (dac.Proposal, error) {
 	if tx.proposal == nil {
 		proposal := &ProposalWrapper{}
 		if _, err := Codec.Unmarshal(tx.ProposalPayload, proposal); err != nil {
-			return nil, fmt.Errorf("%w: %s", errBadProposal, err)
+			return nil, fmt.Errorf("%w: %w", errBadProposal, err)
 		}
 		tx.proposal = proposal.Proposal
 	}

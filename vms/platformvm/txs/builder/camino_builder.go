@@ -474,7 +474,7 @@ func (b *caminoBuilder) NewClaimTx(
 			b.state,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("%w: %s", errKeyMissing, err)
+			return nil, fmt.Errorf("%w: %w", errKeyMissing, err)
 		}
 
 		signers = append(signers, claimableSigners)

@@ -143,7 +143,7 @@ func (e *CaminoStandardTxExecutor) verifyNodeSignatureSig(nodeID ids.NodeID, sig
 			},
 		},
 	); err != nil {
-		return fmt.Errorf("%w: %s", errNodeSignatureMissing, err)
+		return fmt.Errorf("%w: %w", errNodeSignatureMissing, err)
 	}
 	return nil
 }
@@ -187,7 +187,7 @@ func (e *CaminoStandardTxExecutor) AddValidatorTx(tx *txs.AddValidatorTx) error 
 		state.ShortLinkKeyRegisterNode,
 	)
 	if err != nil {
-		return fmt.Errorf("%w: %s", errNodeNotRegistered, err)
+		return fmt.Errorf("%w: %w", errNodeNotRegistered, err)
 	}
 
 	if err := e.Backend.Fx.VerifyMultisigPermission(
@@ -200,7 +200,7 @@ func (e *CaminoStandardTxExecutor) AddValidatorTx(tx *txs.AddValidatorTx) error 
 		},
 		e.State,
 	); err != nil {
-		return fmt.Errorf("%w: %s", errSignatureMissing, err)
+		return fmt.Errorf("%w: %w", errSignatureMissing, err)
 	}
 
 	// verify validator
@@ -264,7 +264,7 @@ func (e *CaminoStandardTxExecutor) AddValidatorTx(tx *txs.AddValidatorTx) error 
 			e.Ctx.AVAXAssetID,
 			locked.StateBonded,
 		); err != nil {
-			return fmt.Errorf("%w: %s", ErrFlowCheckFailed, err)
+			return fmt.Errorf("%w: %w", ErrFlowCheckFailed, err)
 		}
 
 		// Make sure the tx doesn't start too far in the future. This is done last
@@ -723,7 +723,7 @@ func (e *CaminoStandardTxExecutor) DepositTx(tx *txs.DepositTx) error {
 			},
 			e.State,
 		); err != nil {
-			return fmt.Errorf("%w: %s", errOfferPermissionCredentialMismatch, err)
+			return fmt.Errorf("%w: %w", errOfferPermissionCredentialMismatch, err)
 		}
 
 		if err := e.Fx.VerifyMultisigPermission(
@@ -736,7 +736,7 @@ func (e *CaminoStandardTxExecutor) DepositTx(tx *txs.DepositTx) error {
 			},
 			e.State,
 		); err != nil {
-			return fmt.Errorf("%w: %s", errDepositCreatorCredentialMismatch, err)
+			return fmt.Errorf("%w: %w", errDepositCreatorCredentialMismatch, err)
 		}
 
 		baseTxCreds = e.Tx.Creds[:len(e.Tx.Creds)-2]
@@ -771,7 +771,7 @@ func (e *CaminoStandardTxExecutor) DepositTx(tx *txs.DepositTx) error {
 		e.Ctx.AVAXAssetID,
 		locked.StateDeposited,
 	); err != nil {
-		return fmt.Errorf("%w: %s", ErrFlowCheckFailed, err)
+		return fmt.Errorf("%w: %w", ErrFlowCheckFailed, err)
 	}
 
 	txID := e.Tx.ID()
@@ -903,7 +903,7 @@ func (e *CaminoStandardTxExecutor) UnlockDepositTx(tx *txs.UnlockDepositTx) erro
 		e.Ctx.AVAXAssetID,
 		!hasExpiredDeposits,
 	); err != nil {
-		return fmt.Errorf("%w: %s", ErrFlowCheckFailed, err)
+		return fmt.Errorf("%w: %w", ErrFlowCheckFailed, err)
 	}
 
 	for depositTxID, consumedDepositedAmount := range consumedDepositedAmounts {
@@ -1022,7 +1022,7 @@ func (e *CaminoStandardTxExecutor) ClaimTx(tx *txs.ClaimTx) error {
 
 			deposit, err := e.State.GetDeposit(txClaimable.ID)
 			if err != nil {
-				return fmt.Errorf("%w: %s", errDepositNotFound, err)
+				return fmt.Errorf("%w: %w", errDepositNotFound, err)
 			}
 
 			if err := e.Fx.VerifyMultisigPermission(
@@ -1032,7 +1032,7 @@ func (e *CaminoStandardTxExecutor) ClaimTx(tx *txs.ClaimTx) error {
 				deposit.RewardOwner,
 				e.State,
 			); err != nil {
-				return fmt.Errorf("%w: %s", errClaimableCredentialMismatch, err)
+				return fmt.Errorf("%w: %w", errClaimableCredentialMismatch, err)
 			}
 
 			// Checking claimed amount
@@ -1082,7 +1082,7 @@ func (e *CaminoStandardTxExecutor) ClaimTx(tx *txs.ClaimTx) error {
 				treasuryClaimable.Owner,
 				e.State,
 			); err != nil {
-				return fmt.Errorf("%w: %s", errClaimableCredentialMismatch, err)
+				return fmt.Errorf("%w: %w", errClaimableCredentialMismatch, err)
 			}
 
 			// Checking claimed amount
@@ -1151,7 +1151,7 @@ func (e *CaminoStandardTxExecutor) ClaimTx(tx *txs.ClaimTx) error {
 		e.Ctx.AVAXAssetID,
 		locked.StateUnlocked,
 	); err != nil {
-		return fmt.Errorf("%w: %s", ErrFlowCheckFailed, err)
+		return fmt.Errorf("%w: %w", ErrFlowCheckFailed, err)
 	}
 
 	avax.Consume(e.State, tx.Ins)
@@ -1208,7 +1208,7 @@ func (e *CaminoStandardTxExecutor) RegisterNodeTx(tx *txs.RegisterNodeTx) error 
 		},
 		e.State,
 	); err != nil {
-		return fmt.Errorf("%w: %s", errSignatureMissing, err)
+		return fmt.Errorf("%w: %w", errSignatureMissing, err)
 	}
 
 	// verify old nodeID ownership
@@ -1237,7 +1237,7 @@ func (e *CaminoStandardTxExecutor) RegisterNodeTx(tx *txs.RegisterNodeTx) error 
 				Addrs:     []ids.ShortID{ids.ShortID(tx.NewNodeID)},
 			},
 		); err != nil {
-			return fmt.Errorf("%w: %s", errNodeSignatureMissing, err)
+			return fmt.Errorf("%w: %w", errNodeSignatureMissing, err)
 		}
 	}
 
@@ -1508,7 +1508,7 @@ func (e *CaminoStandardTxExecutor) BaseTx(tx *txs.BaseTx) error {
 			e.Ctx.AVAXAssetID,
 			locked.StateUnlocked,
 		); err != nil {
-			return fmt.Errorf("%w: %s", ErrFlowCheckFailed, err)
+			return fmt.Errorf("%w: %w", ErrFlowCheckFailed, err)
 		}
 	}
 
@@ -1561,7 +1561,7 @@ func (e *CaminoStandardTxExecutor) MultisigAliasTx(tx *txs.MultisigAliasTx) erro
 			alias.Owners,
 			e.State,
 		); err != nil {
-			return fmt.Errorf("%w: %s", errAliasCredentialMismatch, err)
+			return fmt.Errorf("%w: %w", errAliasCredentialMismatch, err)
 		}
 
 		aliasID = alias.ID
@@ -1587,7 +1587,7 @@ func (e *CaminoStandardTxExecutor) MultisigAliasTx(tx *txs.MultisigAliasTx) erro
 		e.Ctx.AVAXAssetID,
 		locked.StateUnlocked,
 	); err != nil {
-		return fmt.Errorf("%w: %s", ErrFlowCheckFailed, err)
+		return fmt.Errorf("%w: %w", ErrFlowCheckFailed, err)
 	}
 
 	// update state
@@ -1641,7 +1641,7 @@ func (e *CaminoStandardTxExecutor) AddDepositOfferTx(tx *txs.AddDepositOfferTx) 
 		e.Ctx.AVAXAssetID,
 		locked.StateUnlocked,
 	); err != nil {
-		return fmt.Errorf("%w: %s", ErrFlowCheckFailed, err)
+		return fmt.Errorf("%w: %w", ErrFlowCheckFailed, err)
 	}
 
 	// check role
@@ -1665,7 +1665,7 @@ func (e *CaminoStandardTxExecutor) AddDepositOfferTx(tx *txs.AddDepositOfferTx) 
 		},
 		e.State,
 	); err != nil {
-		return fmt.Errorf("%w: %s", errOfferCreatorCredentialMismatch, err)
+		return fmt.Errorf("%w: %w", errOfferCreatorCredentialMismatch, err)
 	}
 
 	// validate offer
@@ -1773,11 +1773,11 @@ func (e *CaminoStandardTxExecutor) AddProposalTx(tx *txs.AddProposalTx) error {
 		},
 		e.State,
 	); err != nil {
-		return fmt.Errorf("%w: %s", errProposerCredentialMismatch, err)
+		return fmt.Errorf("%w: %w", errProposerCredentialMismatch, err)
 	}
 
 	if err := txProposal.VerifyWith(dac.NewProposalVerifier(e.State, e.Fx, e.Tx, tx, isAdminProposal)); err != nil {
-		return fmt.Errorf("%w: %s", ErrInvalidProposal, err)
+		return fmt.Errorf("%w: %w", ErrInvalidProposal, err)
 	}
 
 	// verify the flowcheck
@@ -1799,7 +1799,7 @@ func (e *CaminoStandardTxExecutor) AddProposalTx(tx *txs.AddProposalTx) error {
 		e.Ctx.AVAXAssetID,
 		lockState,
 	); err != nil {
-		return fmt.Errorf("%w: %s", ErrFlowCheckFailed, err)
+		return fmt.Errorf("%w: %w", ErrFlowCheckFailed, err)
 	}
 
 	// Get allowed voters and create proposalState
@@ -1914,7 +1914,7 @@ func (e *CaminoStandardTxExecutor) AddVoteTx(tx *txs.AddVoteTx) error {
 		},
 		e.State,
 	); err != nil {
-		return fmt.Errorf("%w: %s", errVoterCredentialMismatch, err)
+		return fmt.Errorf("%w: %w", errVoterCredentialMismatch, err)
 	}
 
 	// verify the flowcheck
@@ -1935,7 +1935,7 @@ func (e *CaminoStandardTxExecutor) AddVoteTx(tx *txs.AddVoteTx) error {
 		e.Ctx.AVAXAssetID,
 		locked.StateUnlocked,
 	); err != nil {
-		return fmt.Errorf("%w: %s", ErrFlowCheckFailed, err)
+		return fmt.Errorf("%w: %w", ErrFlowCheckFailed, err)
 	}
 
 	// update state
@@ -2189,7 +2189,7 @@ func (e *CaminoStandardTxExecutor) AddressStateTx(tx *txs.AddressStateTx) error 
 			},
 			e.State,
 		); err != nil {
-			return fmt.Errorf("%w: %s", errSignatureMissing, err)
+			return fmt.Errorf("%w: %w", errSignatureMissing, err)
 		}
 		creds = e.Tx.Creds[:len(e.Tx.Creds)-1]
 
@@ -2203,7 +2203,7 @@ func (e *CaminoStandardTxExecutor) AddressStateTx(tx *txs.AddressStateTx) error 
 	} else {
 		addresses, err := e.Fx.RecoverAddresses(tx.Bytes(), e.Tx.Creds)
 		if err != nil {
-			return fmt.Errorf("%w: %s", errRecoverAddresses, err)
+			return fmt.Errorf("%w: %w", errRecoverAddresses, err)
 		}
 
 		if len(addresses) == 0 {

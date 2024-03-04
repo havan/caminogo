@@ -600,7 +600,7 @@ func (it *diffProposalsIterator) Error() error {
 	parentIteratorErr := it.parentIterator.Error()
 	switch {
 	case parentIteratorErr != nil && it.err != nil:
-		return fmt.Errorf("%w, %s", it.err, parentIteratorErr)
+		return fmt.Errorf("%w, %w", it.err, parentIteratorErr)
 	case parentIteratorErr == nil && it.err != nil:
 		return it.err
 	case parentIteratorErr != nil && it.err == nil:

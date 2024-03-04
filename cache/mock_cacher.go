@@ -102,7 +102,7 @@ func (mr *MockCacherMockRecorder[K, V]) Put(arg0, arg1 interface{}) *gomock.Call
 }
 
 // PortionFilled mocks base method.
-func (m *MockCacher[K, V]) PortionFilled()float64 {
+func (m *MockCacher[K, V]) PortionFilled() float64 {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PortionFilled")
 	ret0, _ := ret[0].(float64)

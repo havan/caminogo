@@ -408,25 +408,25 @@ func (s *CaminoService) Spend(_ *http.Request, args *SpendArgs, response *SpendR
 		uint64(args.AsOf),
 	)
 	if err != nil {
-		return fmt.Errorf("%w: %s", errCreateTransferables, err)
+		return fmt.Errorf("%w: %w", errCreateTransferables, err)
 	}
 
 	bytes, err := txs.Codec.Marshal(txs.Version, ins)
 	if err != nil {
-		return fmt.Errorf("%w: %s", errSerializeTransferables, err)
+		return fmt.Errorf("%w: %w", errSerializeTransferables, err)
 	}
 
 	if response.Ins, err = formatting.Encode(args.Encoding, bytes); err != nil {
-		return fmt.Errorf("%w: %s", errEncodeTransferables, err)
+		return fmt.Errorf("%w: %w", errEncodeTransferables, err)
 	}
 
 	bytes, err = txs.Codec.Marshal(txs.Version, outs)
 	if err != nil {
-		return fmt.Errorf("%w: %s", errSerializeTransferables, err)
+		return fmt.Errorf("%w: %w", errSerializeTransferables, err)
 	}
 
 	if response.Outs, err = formatting.Encode(args.Encoding, bytes); err != nil {
-		return fmt.Errorf("%w: %s", errEncodeTransferables, err)
+		return fmt.Errorf("%w: %w", errEncodeTransferables, err)
 	}
 
 	response.Signers = make([][]ids.ShortID, len(signers))
@@ -439,10 +439,10 @@ func (s *CaminoService) Spend(_ *http.Request, args *SpendArgs, response *SpendR
 
 	bytes, err = txs.Codec.Marshal(txs.Version, owners)
 	if err != nil {
-		return fmt.Errorf("%w: %s", errSerializeOwners, err)
+		return fmt.Errorf("%w: %w", errSerializeOwners, err)
 	}
 	if response.Owners, err = formatting.Encode(args.Encoding, bytes); err != nil {
-		return fmt.Errorf("%w: %s", errSerializeOwners, err)
+		return fmt.Errorf("%w: %w", errSerializeOwners, err)
 	}
 	return nil
 }

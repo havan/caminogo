@@ -55,12 +55,23 @@ jobs:
           fetch-depth: 0
       - name: update dependencies
         run: git submodule update --init --recursive
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.20.8'
+      
+      - name: build camino node
+        shell: bash
+        run: scripts/build.sh
+        
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
           go-version: '1.19'
       
-      - name: build camino node
+      - name: build cnr
+        working-directory: ./tools/camino-network-runner
         shell: bash
         run: scripts/build.sh
 

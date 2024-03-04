@@ -49,7 +49,7 @@ func (tx *MultisigAliasTx) SyntacticVerify(ctx *snow.Context) error {
 		return fmt.Errorf("failed to verify BaseTx: %w", err)
 	}
 	if err := verify.All(&tx.MultisigAlias, tx.Auth); err != nil {
-		return fmt.Errorf("%w: %s", errFailedToVerifyAliasOrAuth, err.Error())
+		return fmt.Errorf("%w: %w", errFailedToVerifyAliasOrAuth, err)
 	}
 
 	if err := locked.VerifyNoLocks(tx.Ins, tx.Outs); err != nil {

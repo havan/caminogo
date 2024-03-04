@@ -54,7 +54,10 @@ var _ = e2e.DescribeXChainSerial("[Virtuous Transfer Tx AVAX]", func() {
 			"virtuous-transfer-tx-avax",
 		),
 		func() {
-			rpcEps := e2e.Env.URIs
+			rpcEps := make([]string, len(e2e.Env.URIs))
+			for i, nodeURI := range e2e.Env.URIs {
+				rpcEps[i] = nodeURI.URI
+			}
 
 			// Waiting for ongoing blocks to have completed before starting this
 			// test avoids the case of a previous test having initiated block
@@ -78,7 +81,7 @@ var _ = e2e.DescribeXChainSerial("[Virtuous Transfer Tx AVAX]", func() {
 				metricBlksAccepted,
 			}
 
-			// Ensure the same set of 10 keys are used for all tests
+			// Ensure the same set of 10 keys is used for all tests
 			// by retrieving them outside of runFunc.
 			testKeys := e2e.Env.AllocateFundedKeys(10)
 
@@ -94,7 +97,7 @@ var _ = e2e.DescribeXChainSerial("[Virtuous Transfer Tx AVAX]", func() {
 				}
 
 				keychain := secp256k1fx.NewKeychain(testKeys...)
-				baseWallet := e2e.Env.NewWallet(keychain)
+				baseWallet := e2e.Env.NewWallet(keychain, e2e.Env.GetRandomNodeURI())
 				avaxAssetID := baseWallet.X().AVAXAssetID()
 
 				wallets := make([]primary.Wallet, len(testKeys))

@@ -396,7 +396,7 @@ func (it *proposalsIterator) Error() error {
 	dbIteratorErr := it.dbIterator.Error()
 	switch {
 	case dbIteratorErr != nil && it.err != nil:
-		return fmt.Errorf("%w, %s", it.err, dbIteratorErr)
+		return fmt.Errorf("%w, %w", it.err, dbIteratorErr)
 	case dbIteratorErr == nil && it.err != nil:
 		return it.err
 	case dbIteratorErr != nil && it.err == nil:

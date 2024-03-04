@@ -22,6 +22,7 @@ import (
 	multisig "github.com/ava-labs/avalanchego/vms/components/multisig"
 	addrstate "github.com/ava-labs/avalanchego/vms/platformvm/addrstate"
 	blocks "github.com/ava-labs/avalanchego/vms/platformvm/blocks"
+	fx "github.com/ava-labs/avalanchego/vms/platformvm/fx"
 	config "github.com/ava-labs/avalanchego/vms/platformvm/config"
 	dac "github.com/ava-labs/avalanchego/vms/platformvm/dac"
 	deposit "github.com/ava-labs/avalanchego/vms/platformvm/deposit"
@@ -855,6 +856,21 @@ func (m *MockState) GetStatelessBlock(arg0 ids.ID) (blocks.Block, error) {
 func (mr *MockStateMockRecorder) GetStatelessBlock(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatelessBlock", reflect.TypeOf((*MockState)(nil).GetStatelessBlock), arg0)
+}
+
+// GetSubnetOwner mocks base method.
+func (m *MockState) GetSubnetOwner(arg0 ids.ID) (fx.Owner, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSubnetOwner", arg0)
+	ret0, _ := ret[0].(fx.Owner)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSubnetOwner indicates an expected call of GetSubnetOwner.
+func (mr *MockStateMockRecorder) GetSubnetOwner(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSubnetOwner", reflect.TypeOf((*MockState)(nil).GetSubnetOwner), arg0)
 }
 
 // GetSubnetTransformation mocks base method.

@@ -56,11 +56,11 @@ func (tx *AddVoteTx) SyntacticVerify(ctx *snow.Context) error {
 	}
 
 	if err := vote.Verify(); err != nil {
-		return fmt.Errorf("%w: %s", errBadVote, err)
+		return fmt.Errorf("%w: %w", errBadVote, err)
 	}
 
 	if err := tx.VoterAuth.Verify(); err != nil {
-		return fmt.Errorf("%w: %s", errBadVoterAuth, err)
+		return fmt.Errorf("%w: %w", errBadVoterAuth, err)
 	}
 
 	if err := locked.VerifyNoLocks(tx.Ins, tx.Outs); err != nil {
@@ -80,7 +80,7 @@ func (tx *AddVoteTx) Vote() (dac.Vote, error) {
 	if tx.vote == nil {
 		vote := &VoteWrapper{}
 		if _, err := Codec.Unmarshal(tx.VotePayload, vote); err != nil {
-			return nil, fmt.Errorf("%w: %s", errBadVote, err)
+			return nil, fmt.Errorf("%w: %w", errBadVote, err)
 		}
 		tx.vote = vote.Vote
 	}

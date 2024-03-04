@@ -1144,7 +1144,7 @@ func (h *handler) VerifyUnlockDepositedUTXOs(
 
 		if verifyCreds {
 			if err := h.fx.VerifyMultisigTransfer(tx, in, creds[index], out, msigState); err != nil {
-				return fmt.Errorf("failed to verify transfer: %w: %s", errCantSpend, err)
+				return fmt.Errorf("failed to verify transfer: %w: %w", errCantSpend, err)
 			}
 		} else if innerOut, ok := out.(*secp256k1fx.TransferOutput); !ok || innerOut.Amt != consumedAmount {
 			return fmt.Errorf("failed to verify transfer: %w", errUTXOOutTypeOrAmtMismatch)
@@ -1349,7 +1349,7 @@ func getDepositUnlockableAmounts(
 	for depositTxID := range depositTxIDs {
 		deposit, err := chainState.GetDeposit(depositTxID)
 		if err != nil {
-			return nil, fmt.Errorf("%w: %s", errFailToGetDeposit, err)
+			return nil, fmt.Errorf("%w: %w", errFailToGetDeposit, err)
 		}
 
 		depositOffer, err := chainState.GetDepositOffer(deposit.DepositOfferID)
