@@ -12,8 +12,8 @@ import (
 	"github.com/ava-labs/avalanchego/snow/engine/common"
 	"github.com/ava-labs/avalanchego/utils/timer"
 	"github.com/ava-labs/avalanchego/utils/timer/mockable"
-	"github.com/ava-labs/avalanchego/vms/platformvm/blocks"
-	blockexecutor "github.com/ava-labs/avalanchego/vms/platformvm/blocks/executor"
+	"github.com/ava-labs/avalanchego/vms/platformvm/block"
+	blockexecutor "github.com/ava-labs/avalanchego/vms/platformvm/block/executor"
 	"github.com/ava-labs/avalanchego/vms/platformvm/state"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	txBuilder "github.com/ava-labs/avalanchego/vms/platformvm/txs/builder"
@@ -68,7 +68,7 @@ func caminoBuildBlock(
 	height uint64,
 	timestamp time.Time,
 	parentState state.Chain,
-) (blocks.Block, error) {
+) (block.Block, error) {
 	txBuilder, ok := builder.txBuilder.(txBuilder.CaminoBuilder)
 	if !ok {
 		// if its not caminoBuilder, than its not our camino-node
@@ -87,7 +87,7 @@ func caminoBuildBlock(
 			return nil, fmt.Errorf("could not build tx to unlock deposits: %w", err)
 		}
 
-		return blocks.NewBanffStandardBlock(
+		return block.NewBanffStandardBlock(
 			timestamp,
 			parentID,
 			height,
@@ -112,7 +112,7 @@ func caminoBuildBlock(
 
 		// FinishProposalsTx should never be in block with addVoteTx,
 		// because it can affect state of proposals.
-		return blocks.NewBanffStandardBlock(
+		return block.NewBanffStandardBlock(
 			timestamp,
 			parentID,
 			height,

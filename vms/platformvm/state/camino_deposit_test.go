@@ -16,7 +16,7 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/set"
 	"github.com/ava-labs/avalanchego/utils/timer/mockable"
-	"github.com/ava-labs/avalanchego/vms/platformvm/blocks"
+	"github.com/ava-labs/avalanchego/vms/platformvm/block"
 	"github.com/ava-labs/avalanchego/vms/platformvm/deposit"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 )
@@ -28,7 +28,7 @@ func TestGetDeposit(t *testing.T) {
 			Addrs: []ids.ShortID{{1}},
 		},
 	}
-	depositBytes, err := blocks.GenesisCodec.Marshal(blocks.Version, deposit1)
+	depositBytes, err := block.GenesisCodec.Marshal(block.Version, deposit1)
 	require.NoError(t, err)
 	testError := errors.New("test error")
 
@@ -608,9 +608,9 @@ func TestWriteDeposits(t *testing.T) {
 		},
 	}
 	depositEndtime := deposit2.EndTime()
-	deposit1Bytes, err := blocks.GenesisCodec.Marshal(blocks.Version, deposit1)
+	deposit1Bytes, err := block.GenesisCodec.Marshal(block.Version, deposit1)
 	require.NoError(t, err)
-	deposit2Bytes, err := blocks.GenesisCodec.Marshal(blocks.Version, deposit2)
+	deposit2Bytes, err := block.GenesisCodec.Marshal(block.Version, deposit2)
 	require.NoError(t, err)
 
 	tests := map[string]struct {

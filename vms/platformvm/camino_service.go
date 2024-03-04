@@ -134,7 +134,7 @@ utxoFor:
 			continue utxoFor
 		}
 
-		utxoIDs = append(utxoIDs, &utxo.UTXOID)
+		utxoIDs = append(utxoIDs, &utxo.UTXOID) //nolint:gosec
 	}
 
 	response.camino = GetBalanceResponseV2{balances, unlockedOutputs, bondedOutputs, depositedOutputs, depositedBondedOutputs, utxoIDs}

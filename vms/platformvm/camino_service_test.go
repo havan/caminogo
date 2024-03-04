@@ -336,7 +336,7 @@ func TestGetKeystoreKeys(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			s.vm.ctx.Lock.Lock()
 			defer s.vm.ctx.Lock.Unlock()
-			keys, err := s.getKeystoreKeys(&userPass, &tt.from)
+			keys, err := s.getKeystoreKeys(&userPass, &tt.from) //nolint:gosec
 			require.ErrorIs(t, err, tt.expectedError)
 
 			for index, key := range keys {
@@ -379,7 +379,7 @@ func TestGetFakeKeys(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			s.vm.ctx.Lock.Lock()
 			defer s.vm.ctx.Lock.Unlock()
-			keys, err := s.getFakeKeys(&tt.from)
+			keys, err := s.getFakeKeys(&tt.from) //nolint:gosec
 			require.ErrorIs(t, err, tt.expectedError)
 
 			for index, key := range keys {

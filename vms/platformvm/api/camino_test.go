@@ -588,7 +588,7 @@ func TestBuildCaminoGenesis(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			actualReply := &BuildGenesisReply{}
 
-			err := buildCaminoGenesis(&tt.args, actualReply)
+			err := buildCaminoGenesis(&tt.args, actualReply) //nolint:gosec
 			require.ErrorIs(t, err, tt.expectedErr)
 
 			if tt.expectedGenesis != nil {

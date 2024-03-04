@@ -9,7 +9,7 @@ import (
 	"github.com/ava-labs/avalanchego/database"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/vms/components/multisig"
-	"github.com/ava-labs/avalanchego/vms/platformvm/blocks"
+	"github.com/ava-labs/avalanchego/vms/platformvm/block"
 	"github.com/ava-labs/avalanchego/vms/types"
 )
 
@@ -48,7 +48,7 @@ func (cs *caminoState) GetMultisigAlias(id ids.ShortID) (*multisig.AliasWithNonc
 	}
 
 	dbMultisigAlias := &msigAlias{}
-	if _, err = blocks.GenesisCodec.Unmarshal(maBytes, dbMultisigAlias); err != nil {
+	if _, err = block.GenesisCodec.Unmarshal(maBytes, dbMultisigAlias); err != nil {
 		return nil, err
 	}
 
@@ -78,7 +78,7 @@ func (cs *caminoState) writeMultisigAliases() error {
 				Owners: alias.Owners,
 				Nonce:  alias.Nonce,
 			}
-			aliasBytes, err := blocks.GenesisCodec.Marshal(blocks.Version, multisigAlias)
+			aliasBytes, err := block.GenesisCodec.Marshal(block.Version, multisigAlias)
 			if err != nil {
 				return fmt.Errorf("failed to serialize multisig alias: %w", err)
 			}

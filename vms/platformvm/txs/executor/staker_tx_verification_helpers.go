@@ -116,13 +116,13 @@ func GetNextStakerChangeTime(state state.Chain) (time.Time, error) {
 		nextCurrentTime := currentStakerIterator.Value().NextTime
 		nextPendingTime := pendingStakerIterator.Value().NextTime
 		if nextCurrentTime.Before(nextPendingTime) {
-			return nextCurrentTime, nil
+			return GetNextChainEventTime(state, nextCurrentTime)
 		}
-		return nextPendingTime, nil
+		return GetNextChainEventTime(state, nextPendingTime)
 	case hasCurrentStaker:
-		return currentStakerIterator.Value().NextTime, nil
+		return GetNextChainEventTime(state, currentStakerIterator.Value().NextTime)
 	case hasPendingStaker:
-		return pendingStakerIterator.Value().NextTime, nil
+		return GetNextChainEventTime(state, pendingStakerIterator.Value().NextTime)
 	default:
 		return time.Time{}, database.ErrNotFound
 	}

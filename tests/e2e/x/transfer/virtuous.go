@@ -38,7 +38,7 @@ import (
 const (
 	totalRounds = 50
 
-	metricBlksProcessing = "camino_X_blks_processing"
+	metricBlksProcessing = "camino_X_blks_processing" //nolint:gosec
 	metricBlksAccepted   = "camino_X_blks_accepted_count"
 )
 

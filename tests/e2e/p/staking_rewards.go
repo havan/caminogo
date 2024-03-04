@@ -243,7 +243,7 @@ var _ = ginkgo.Describe("[Staking Rewards]", func() {
 		// directly. Currently, due to a circular dependency issue, a
 		// map-based equivalent is used for which manual unmarshaling
 		// is required.
-		adminClient := admin.NewClient(e2e.Env.GetRandomNodeURI().URI)
+		adminClient := admin.NewClient(e2e.Env.GetRandomNodeURI().URI, "e2e")
 		rawNodeConfigMap, err := adminClient.GetConfig(e2e.DefaultContext())
 		require.NoError(err)
 		nodeConfigMap, ok := rawNodeConfigMap.(map[string]interface{})

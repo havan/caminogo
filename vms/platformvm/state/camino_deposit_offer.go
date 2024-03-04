@@ -8,7 +8,7 @@ import (
 
 	"github.com/ava-labs/avalanchego/database"
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/vms/platformvm/blocks"
+	"github.com/ava-labs/avalanchego/vms/platformvm/block"
 	"github.com/ava-labs/avalanchego/vms/platformvm/deposit"
 )
 
@@ -62,7 +62,7 @@ func (cs *caminoState) loadDepositOffers() error {
 
 		depositOfferBytes := depositOffersIt.Value()
 		depositOffer := &deposit.Offer{ID: depositOfferID}
-		if _, err := blocks.GenesisCodec.Unmarshal(depositOfferBytes, depositOffer); err != nil {
+		if _, err := block.GenesisCodec.Unmarshal(depositOfferBytes, depositOffer); err != nil {
 			return err
 		}
 
@@ -85,7 +85,7 @@ func (cs *caminoState) writeDepositOffers() error {
 			}
 			delete(cs.depositOffers, offerID)
 		} else {
-			offerBytes, err := blocks.GenesisCodec.Marshal(blocks.Version, offer)
+			offerBytes, err := block.GenesisCodec.Marshal(block.Version, offer)
 			if err != nil {
 				return fmt.Errorf("failed to serialize deposit offer: %w", err)
 			}

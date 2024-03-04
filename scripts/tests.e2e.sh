@@ -6,7 +6,7 @@ set -euo pipefail
 # ./scripts/tests.e2e.sh
 # ./scripts/tests.e2e.sh --ginkgo.label-filter=x                                       # All arguments are supplied to ginkgo
 # E2E_SERIAL=1 ./scripts/tests.e2e.sh ./build/caminogo                                 # Run tests serially
-# CAMINOGO_PATH=./build/avalanchego ./scripts/tests.e2e.sh                             # Customization of caminogo path
+# CAMINOGO_BIN_PATH=./build/avalanchego ./scripts/tests.e2e.sh                             # Customization of caminogo path
 # E2E_USE_PERSISTENT_NETWORK=1 TESTNETCTL_NETWORK_DIR=/path/to ./scripts/tests.e2e.sh  # Execute against a persistent network
 if ! [[ "$0" =~ scripts/tests.e2e.sh ]]; then
   echo "must be run from repository root"
@@ -34,8 +34,8 @@ ACK_GINKGO_RC=true ginkgo build ./tests/e2e
 if [[ -n "${E2E_USE_PERSISTENT_NETWORK:-}" && -n "${TESTNETCTL_NETWORK_DIR:-}" ]]; then
   E2E_ARGS="--use-persistent-network"
 else
-  CAMINOGO_PATH="$(realpath ${CAMINOGO_PATH:-./build/caminogo})"
-  E2E_ARGS="--avalanchego-path=${CAMINOGO_PATH}"
+  CAMINOGO_BIN_PATH="$(realpath ${CAMINOGO_BIN_PATH:-./build/caminogo})"
+  E2E_ARGS="--avalanchego-path=${CAMINOGO_BIN_PATH}"
 fi
 
 #################################
