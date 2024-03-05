@@ -13,10 +13,8 @@ import (
 
 func TestGetAssetDescriptionC4T(t *testing.T) {
 	env := setup(t, &envConfig{})
-	defer func() {
-		require.NoError(t, env.vm.Shutdown(context.Background()))
-		env.vm.ctx.Lock.Unlock()
-	}()
+	env.vm.ctx.Lock.Unlock()
+	defer stopEnv(t, env)
 
 	type args struct {
 		in0   *http.Request
@@ -61,4 +59,10 @@ func TestGetAssetDescriptionC4T(t *testing.T) {
 			require.Equal(t, tt.want[2], tt.args.reply.AssetID.String())
 		})
 	}
+}
+
+func stopEnv(t *testing.T, env *environment) {
+	env.vm.ctx.Lock.Lock()
+	require.NoError(t, env.vm.Shutdown(context.Background()))
+	env.vm.ctx.Lock.Unlock()
 }
