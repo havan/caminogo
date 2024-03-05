@@ -51,7 +51,7 @@ func (mcr *MultisigCredential) MarshalJSON() ([]byte, error) {
 	if err = json.Unmarshal(b, &jsonFieldMap); err != nil {
 		return nil, err
 	}
-	jsonFieldMap["sigIdxs"] = mcr.SigIdxs
+	jsonFieldMap["sigIdxs"] = mcr.SigIdxs //nolint:gosec
 	return json.Marshal(jsonFieldMap)
 }
 

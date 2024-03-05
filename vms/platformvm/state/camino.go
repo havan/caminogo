@@ -23,7 +23,7 @@ import (
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/components/multisig"
 	as "github.com/ava-labs/avalanchego/vms/platformvm/addrstate"
-	"github.com/ava-labs/avalanchego/vms/platformvm/blocks"
+	"github.com/ava-labs/avalanchego/vms/platformvm/block"
 	"github.com/ava-labs/avalanchego/vms/platformvm/config"
 	"github.com/ava-labs/avalanchego/vms/platformvm/dac"
 	"github.com/ava-labs/avalanchego/vms/platformvm/deposit"
@@ -429,9 +429,9 @@ func (cs *caminoState) SyncGenesis(s *state, g *genesis.State) error {
 
 	// adding blocks (validators and deposits)
 
-	for blockIndex, block := range g.Camino.Blocks {
+	for blockIndex, blk := range g.Camino.Blocks {
 		// add unlocked utxos txs
-		for _, tx := range block.UnlockedUTXOsTxs {
+		for _, tx := range blk.UnlockedUTXOsTxs {
 			if txIDs.Contains(tx.ID()) {
 				return errNotUniqueTx
 			}
@@ -441,7 +441,7 @@ func (cs *caminoState) SyncGenesis(s *state, g *genesis.State) error {
 		}
 
 		// add validators
-		for _, tx := range block.Validators {
+		for _, tx := range blk.Validators {
 			if txIDs.Contains(tx.ID()) {
 				return errNotUniqueTx
 			}
@@ -462,7 +462,7 @@ func (cs *caminoState) SyncGenesis(s *state, g *genesis.State) error {
 		}
 
 		// add deposits
-		for _, tx := range block.Deposits {
+		for _, tx := range blk.Deposits {
 			depositTxID := tx.ID()
 			if txIDs.Contains(depositTxID) {
 				return errNotUniqueTx
@@ -484,7 +484,7 @@ func (cs *caminoState) SyncGenesis(s *state, g *genesis.State) error {
 
 			deposit := &deposit.Deposit{
 				DepositOfferID: depositTx.DepositOfferID,
-				Start:          block.Timestamp,
+				Start:          blk.Timestamp,
 				Duration:       depositTx.DepositDuration,
 				Amount:         depositAmount,
 				RewardOwner:    depositTx.RewardsOwner,
@@ -511,11 +511,11 @@ func (cs *caminoState) SyncGenesis(s *state, g *genesis.State) error {
 		}
 
 		height := uint64(blockIndex) + 1 // +1 because 0-block is commit block from avax syncGenesis
-		genesisBlock, err := blocks.NewBanffStandardBlock(
-			block.Time(),
+		genesisBlock, err := block.NewBanffStandardBlock(
+			blk.Time(),
 			s.GetLastAccepted(), // must be not empty
 			height,
-			block.Txs(),
+			blk.Txs(),
 		)
 		if err != nil {
 			return err

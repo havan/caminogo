@@ -21,7 +21,7 @@ import (
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	as "github.com/ava-labs/avalanchego/vms/platformvm/addrstate"
 	"github.com/ava-labs/avalanchego/vms/platformvm/api"
-	"github.com/ava-labs/avalanchego/vms/platformvm/blocks"
+	"github.com/ava-labs/avalanchego/vms/platformvm/block"
 	"github.com/ava-labs/avalanchego/vms/platformvm/dac"
 	"github.com/ava-labs/avalanchego/vms/platformvm/deposit"
 	"github.com/ava-labs/avalanchego/vms/platformvm/genesis"
@@ -34,8 +34,8 @@ import (
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 
 	smcon "github.com/ava-labs/avalanchego/snow/consensus/snowman"
-	"github.com/ava-labs/avalanchego/vms/platformvm/blocks/builder"
-	blockexecutor "github.com/ava-labs/avalanchego/vms/platformvm/blocks/executor"
+	"github.com/ava-labs/avalanchego/vms/platformvm/block/builder"
+	blockexecutor "github.com/ava-labs/avalanchego/vms/platformvm/block/executor"
 	txexecutor "github.com/ava-labs/avalanchego/vms/platformvm/txs/executor"
 )
 
@@ -174,23 +174,23 @@ func TestRemoveDeferredValidator(t *testing.T) {
 	require.NoError(err)
 
 	// Assert preferences are correct
-	block := blk.(smcon.OracleBlock)
-	options, err := block.Options(context.Background())
+	oracleBlk := blk.(smcon.OracleBlock)
+	options, err := oracleBlk.Options(context.Background())
 	require.NoError(err)
 
 	commit := options[1].(*blockexecutor.Block)
-	_, ok := commit.Block.(*blocks.BanffCommitBlock)
+	_, ok := commit.Block.(*block.BanffCommitBlock)
 	require.True(ok)
 
 	abort := options[0].(*blockexecutor.Block)
-	_, ok = abort.Block.(*blocks.BanffAbortBlock)
+	_, ok = abort.Block.(*block.BanffAbortBlock)
 	require.True(ok)
 
-	require.NoError(block.Accept(context.Background()))
+	require.NoError(oracleBlk.Accept(context.Background()))
 	require.NoError(commit.Verify(context.Background()))
 	require.NoError(abort.Verify(context.Background()))
 
-	txID := blk.(blocks.Block).Txs()[0].ID()
+	txID := blk.(block.Block).Txs()[0].ID()
 	{
 		onAccept, ok := vm.manager.GetState(abort.ID())
 		require.True(ok)
@@ -370,23 +370,23 @@ func TestRemoveReactivatedValidator(t *testing.T) {
 	require.NoError(err)
 
 	// Assert preferences are correct
-	block := blk.(smcon.OracleBlock)
-	options, err := block.Options(context.Background())
+	oracleBlk := blk.(smcon.OracleBlock)
+	options, err := oracleBlk.Options(context.Background())
 	require.NoError(err)
 
 	commit := options[1].(*blockexecutor.Block)
-	_, ok := commit.Block.(*blocks.BanffCommitBlock)
+	_, ok := commit.Block.(*block.BanffCommitBlock)
 	require.True(ok)
 
 	abort := options[0].(*blockexecutor.Block)
-	_, ok = abort.Block.(*blocks.BanffAbortBlock)
+	_, ok = abort.Block.(*block.BanffAbortBlock)
 	require.True(ok)
 
-	require.NoError(block.Accept(context.Background()))
+	require.NoError(oracleBlk.Accept(context.Background()))
 	require.NoError(commit.Verify(context.Background()))
 	require.NoError(abort.Verify(context.Background()))
 
-	txID := blk.(blocks.Block).Txs()[0].ID()
+	txID := blk.(block.Block).Txs()[0].ID()
 	{
 		onAccept, ok := vm.manager.GetState(abort.ID())
 		require.True(ok)
@@ -1249,14 +1249,14 @@ func TestExcludeMemberProposals(t *testing.T) {
 	}
 }
 
-func buildAndAcceptBlock(t *testing.T, vm *VM, tx *txs.Tx) blocks.Block {
+func buildAndAcceptBlock(t *testing.T, vm *VM, tx *txs.Tx) block.Block {
 	t.Helper()
 	if tx != nil {
 		require.NoError(t, vm.Builder.AddUnverifiedTx(tx))
 	}
 	blk, err := vm.Builder.BuildBlock(context.Background())
 	require.NoError(t, err)
-	block, ok := blk.(blocks.Block)
+	block, ok := blk.(block.Block)
 	require.True(t, ok)
 	require.NoError(t, blk.Verify(context.Background()))
 	require.NoError(t, blk.Accept(context.Background()))

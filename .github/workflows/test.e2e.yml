@@ -7,6 +7,8 @@ on:
   push:
     branches: [chain4travel, dev]
   workflow_dispatch:
+  merge_group:
+    types: [checks_requested]
 
 permissions:
   contents: read
@@ -29,7 +31,7 @@ jobs:
         run: ./scripts/build.sh
       - name: Run e2e tests
         shell: bash
-        run: E2E_SERIAL=1 scripts/tests.e2e.sh ./build/caminogo
+        run: E2E_SERIAL=1 ./scripts/tests.e2e.sh
       - name: Upload testnet network dir
         uses: actions/upload-artifact@v3
         if: always()

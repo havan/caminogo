@@ -789,7 +789,7 @@ func (h *handler) VerifyLock(
 		if err != nil {
 			return fmt.Errorf(
 				"failed to read consumed UTXO %s due to: %w",
-				&input.UTXOID,
+				&input.UTXOID, //nolint:gosec
 				err,
 			)
 		}
@@ -1042,7 +1042,7 @@ func (h *handler) VerifyUnlockDeposit(
 		if err != nil {
 			return fmt.Errorf(
 				"failed to read consumed UTXO %s due to: %w",
-				&input.UTXOID,
+				&input.UTXOID, //nolint:gosec
 				err,
 			)
 		}

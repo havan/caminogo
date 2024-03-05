@@ -6,6 +6,8 @@ on:
   pull_request:
     tags-ignore: ["*"]  
     branches: [chain4travel, dev]
+  merge_group:
+    types: [checks_requested]
 
 permissions:
   contents: read

@@ -22,7 +22,7 @@ import (
 	"github.com/ava-labs/avalanchego/vms/nftfx"
 	as "github.com/ava-labs/avalanchego/vms/platformvm/addrstate"
 	"github.com/ava-labs/avalanchego/vms/platformvm/api"
-	"github.com/ava-labs/avalanchego/vms/platformvm/blocks"
+	"github.com/ava-labs/avalanchego/vms/platformvm/block"
 	"github.com/ava-labs/avalanchego/vms/platformvm/deposit"
 	"github.com/ava-labs/avalanchego/vms/platformvm/genesis"
 	pchaintxs "github.com/ava-labs/avalanchego/vms/platformvm/txs"
@@ -536,7 +536,7 @@ func GenesisChainData(genesisBytes []byte, vmIDs []ids.ID) ([]*pchaintxs.Tx, boo
 
 func GetGenesisBlocksIDs(genesisBytes []byte, genesis *genesis.Genesis) ([]ids.ID, error) {
 	genesisID := hashing.ComputeHash256Array(genesisBytes)
-	zeroBlock, err := blocks.NewApricotCommitBlock(genesisID, 0 /*height*/)
+	zeroBlock, err := block.NewApricotCommitBlock(genesisID, 0 /*height*/)
 	if err != nil {
 		return nil, err
 	}
@@ -544,12 +544,12 @@ func GetGenesisBlocksIDs(genesisBytes []byte, genesis *genesis.Genesis) ([]ids.I
 	parentID := zeroBlock.ID()
 	blockIDs := make([]ids.ID, len(genesis.Camino.Blocks))
 
-	for i, block := range genesis.Camino.Blocks {
-		genesisBlock, err := blocks.NewBanffStandardBlock(
-			block.Time(),
+	for i, blk := range genesis.Camino.Blocks {
+		genesisBlock, err := block.NewBanffStandardBlock(
+			blk.Time(),
 			parentID,
 			uint64(i)+1,
-			block.Txs(),
+			blk.Txs(),
 		)
 		if err != nil {
 			return nil, err

@@ -115,20 +115,14 @@ type Config struct {
 	// Time of the Cortina network upgrade
 	CortinaTime time.Time
 
+	// Time of the D network upgrade
+	DTime time.Time
+
 	// Time of the Athens Phase network upgrade
 	AthensPhaseTime time.Time
 
 	// Time of the BerlinPhase network upgrade
 	BerlinPhaseTime time.Time
-
-	// Subnet ID --> Minimum portion of the subnet's stake this node must be
-	// connected to in order to report healthy.
-	// [constants.PrimaryNetworkID] is always a key in this map.
-	// If a subnet is in this map, but it isn't tracked, its corresponding value
-	// isn't used.
-	// If a subnet is tracked but not in this map, we use the value for the
-	// Primary Network.
-	MinPercentConnectedStakeHealthy map[ids.ID]float64
 
 	// Camino relevant configuration
 	CaminoConfig caminoconfig.Config
@@ -156,6 +150,11 @@ func (c *Config) IsBanffActivated(timestamp time.Time) bool {
 
 func (c *Config) IsCortinaActivated(timestamp time.Time) bool {
 	return !timestamp.Before(c.CortinaTime)
+}
+
+// TODO: Rename
+func (c *Config) IsDActivated(timestamp time.Time) bool {
+	return !timestamp.Before(c.DTime)
 }
 
 func (c *Config) IsAthensPhaseActivated(timestamp time.Time) bool {

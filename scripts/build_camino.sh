@@ -48,13 +48,13 @@ LDFLAGS="$LDFLAGS -X github.com/ava-labs/coreth/plugin/evm.GitCommit=$caminoethv
 LDFLAGS="$LDFLAGS -X github.com/ava-labs/coreth/plugin/evm.Version=$caminoethvm_tag"
 LDFLAGS="$LDFLAGS $static_ld_flags"
 
-go build -ldflags "$LDFLAGS" -o "$caminogo_path" "$CAMINOGO_PATH/main/"*.go
+go build -ldflags "$LDFLAGS" -o "$CAMINOGO_BIN_PATH" "$CAMINOGO_PATH/main/"*.go
 
 # Make plugin folder
 mkdir -p $plugin_dir
 
 # Exit build successfully if the binaries are created
-if [[ -f "$caminogo_path" ]]; then
+if [[ -f "$CAMINOGO_BIN_PATH" ]]; then
     ln -sf caminogo $camino_node_symlink_path
     echo "Build Successful"
     exit 0

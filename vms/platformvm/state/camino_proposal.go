@@ -14,7 +14,7 @@ import (
 	"github.com/ava-labs/avalanchego/utils"
 	"github.com/ava-labs/avalanchego/utils/set"
 	"github.com/ava-labs/avalanchego/utils/timer/mockable"
-	"github.com/ava-labs/avalanchego/vms/platformvm/blocks"
+	"github.com/ava-labs/avalanchego/vms/platformvm/block"
 	"github.com/ava-labs/avalanchego/vms/platformvm/dac"
 )
 
@@ -198,7 +198,7 @@ func (cs *caminoState) writeProposals() error {
 				return err
 			}
 		} else {
-			proposalBytes, err := dac.Codec.Marshal(blocks.Version, &proposalStateWrapper{ProposalState: proposalDiff.Proposal})
+			proposalBytes, err := dac.Codec.Marshal(block.Version, &proposalStateWrapper{ProposalState: proposalDiff.Proposal})
 			if err != nil {
 				return fmt.Errorf("failed to serialize deposit: %w", err)
 			}
