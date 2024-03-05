@@ -971,6 +971,18 @@ func (mr *MockChainMockRecorder) SetDelegateeReward(arg0, arg1, arg2 interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDelegateeReward", reflect.TypeOf((*MockChain)(nil).SetDelegateeReward), arg0, arg1, arg2)
 }
 
+// SetSubnetOwner mocks base method.
+func (m *MockChain) SetSubnetOwner(arg0 ids.ID, arg1 fx.Owner) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetSubnetOwner", arg0, arg1)
+}
+
+// SetSubnetOwner indicates an expected call of SetSubnetOwner.
+func (mr *MockChainMockRecorder) SetSubnetOwner(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSubnetOwner", reflect.TypeOf((*MockChain)(nil).SetSubnetOwner), arg0, arg1)
+}
+
 // SetLastRewardImportTimestamp mocks base method.
 func (m *MockChain) SetLastRewardImportTimestamp(arg0 uint64) {
 	m.ctrl.T.Helper()

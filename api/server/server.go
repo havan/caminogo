@@ -32,6 +32,8 @@ import (
 
 	"go.uber.org/zap"
 
+	"golang.org/x/net/http2"
+
 	"github.com/ava-labs/avalanchego/api"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/snow"
@@ -41,7 +43,10 @@ import (
 	"github.com/ava-labs/avalanchego/utils/logging"
 )
 
-const baseURL = "/ext"
+const (
+	baseURL              = "/ext"
+	maxConcurrentStreams = 64
+)
 
 var (
 	errUnknownLockOption = errors.New("invalid lock options")
@@ -151,6 +156,20 @@ func New(
 		handler = wrapper.WrapHandler(handler)
 	}
 
+	httpServer := &http.Server{
+		Handler:           handler,
+		ReadTimeout:       httpConfig.ReadTimeout,
+		ReadHeaderTimeout: httpConfig.ReadHeaderTimeout,
+		WriteTimeout:      httpConfig.WriteTimeout,
+		IdleTimeout:       httpConfig.IdleTimeout,
+	}
+	err = http2.ConfigureServer(httpServer, &http2.Server{
+		MaxConcurrentStreams: maxConcurrentStreams,
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	log.Info("API created",
 		zap.Strings("allowedOrigins", allowedOrigins),
 	)
@@ -163,14 +182,8 @@ func New(
 		tracer:          tracer,
 		metrics:         m,
 		router:          router,
-		srv: &http.Server{
-			Handler:           handler,
-			ReadTimeout:       httpConfig.ReadTimeout,
-			ReadHeaderTimeout: httpConfig.ReadHeaderTimeout,
-			WriteTimeout:      httpConfig.WriteTimeout,
-			IdleTimeout:       httpConfig.IdleTimeout,
-		},
-		listener: listener,
+		srv:             httpServer,
+		listener:        listener,
 	}, nil
 }
 

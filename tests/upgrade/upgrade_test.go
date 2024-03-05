@@ -11,26 +11,23 @@
 // Copyright (C) 2019-2023, Ava Labs, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
-// Runs upgrade tests.
-package upgrade_test
+package upgrade
 
 import (
-	"context"
 	"flag"
 	"fmt"
-	"os"
+	"strings"
 	"testing"
-	"time"
 
 	"github.com/onsi/ginkgo/v2"
+
 	"github.com/onsi/gomega"
 
-	runner_sdk "github.com/ava-labs/avalanche-network-runner-sdk"
+	"github.com/stretchr/testify/require"
 
-	"github.com/ava-labs/avalanchego/tests"
+	"github.com/ava-labs/avalanchego/config"
+	"github.com/ava-labs/avalanchego/tests/e2e"
 )
-
-const DefaultTimeout = 2 * time.Minute
 
 func TestUpgrade(t *testing.T) {
 	gomega.RegisterFailHandler(ginkgo.Fail)
@@ -38,116 +35,56 @@ func TestUpgrade(t *testing.T) {
 }
 
 var (
-	logLevel                                 string
-	networkRunnerGRPCEp                      string
-	networkRunnerCaminoNodeExecPath          string
-	networkRunnerCaminoNodeExecPathToUpgrade string
-	networkRunnerCaminoLogLevel              string
+	avalancheGoExecPath            string
+	avalancheGoExecPathToUpgradeTo string
 )
 
 func init() {
 	flag.StringVar(
-		&logLevel,
-		"log-level",
-		"info",
-		"log level",
-	)
-	flag.StringVar(
-		&networkRunnerGRPCEp,
-		"network-runner-grpc-endpoint",
+		&avalancheGoExecPath,
+		"avalanchego-path",
 		"",
-		"gRPC server endpoint for network-runner",
+		"avalanchego executable path",
 	)
 	flag.StringVar(
-		&networkRunnerCaminoNodeExecPath,
-		"network-runner-camino-node-path",
+		&avalancheGoExecPathToUpgradeTo,
+		"avalanchego-path-to-upgrade-to",
 		"",
-		"camino-node executable path",
-	)
-	flag.StringVar(
-		&networkRunnerCaminoNodeExecPathToUpgrade,
-		"network-runner-camino-node-path-to-upgrade",
-		"",
-		"camino-node executable path (to upgrade to, only required for upgrade tests with local network-runner)",
-	)
-	flag.StringVar(
-		&networkRunnerCaminoLogLevel,
-		"network-runner-camino-log-level",
-		"INFO",
-		"camino log-level",
+		"avalanchego executable path to upgrade to",
 	)
 }
 
-var runnerCli runner_sdk.Client
-
-var _ = ginkgo.BeforeSuite(func() {
-	_, err := os.Stat(networkRunnerCaminoNodeExecPath)
-	gomega.Expect(err).Should(gomega.BeNil())
-
-	_, err = os.Stat(networkRunnerCaminoNodeExecPathToUpgrade)
-	gomega.Expect(err).Should(gomega.BeNil())
-
-	runnerCli, err = runner_sdk.New(runner_sdk.Config{
-		LogLevel:    logLevel,
-		Endpoint:    networkRunnerGRPCEp,
-		DialTimeout: 10 * time.Second,
-	})
-	gomega.Expect(err).Should(gomega.BeNil())
-
-	ctx, cancel := context.WithTimeout(context.Background(), DefaultTimeout)
-	presp, err := runnerCli.Ping(ctx)
-	cancel()
-	gomega.Expect(err).Should(gomega.BeNil())
-	tests.Outf("{{green}}network-runner running in PID %d{{/}}\n", presp.Pid)
-
-	tests.Outf("{{magenta}}starting network-runner with %q{{/}}\n", networkRunnerCaminoNodeExecPath)
-	ctx, cancel = context.WithTimeout(context.Background(), DefaultTimeout)
-	resp, err := runnerCli.Start(ctx, networkRunnerCaminoNodeExecPath,
-		runner_sdk.WithNumNodes(5),
-		runner_sdk.WithGlobalNodeConfig(fmt.Sprintf(`{"log-level":"%s"}`, networkRunnerCaminoLogLevel)),
-	)
-	cancel()
-	gomega.Expect(err).Should(gomega.BeNil())
-	tests.Outf("{{green}}successfully started network-runner: {{/}} %+v\n", resp.ClusterInfo.NodeNames)
-
-	ctx, cancel = context.WithTimeout(context.Background(), DefaultTimeout)
-	_, err = runnerCli.Health(ctx)
-	cancel()
-	gomega.Expect(err).Should(gomega.BeNil())
-})
-
-var _ = ginkgo.AfterSuite(func() {
-	tests.Outf("{{red}}shutting down network-runner cluster{{/}}\n")
-	ctx, cancel := context.WithTimeout(context.Background(), DefaultTimeout)
-	_, err := runnerCli.Stop(ctx)
-	cancel()
-	gomega.Expect(err).Should(gomega.BeNil())
-
-	tests.Outf("{{red}}shutting down network-runner client{{/}}\n")
-	err = runnerCli.Close()
-	gomega.Expect(err).Should(gomega.BeNil())
-})
-
 var _ = ginkgo.Describe("[Upgrade]", func() {
+	require := require.New(ginkgo.GinkgoT())
+
 	ginkgo.It("can upgrade versions", func() {
-		tests.Outf("{{magenta}}starting upgrade tests %q{{/}}\n", networkRunnerCaminoNodeExecPathToUpgrade)
-		ctx, cancel := context.WithTimeout(context.Background(), DefaultTimeout)
-		sresp, err := runnerCli.Status(ctx)
-		cancel()
-		gomega.Expect(err).Should(gomega.BeNil())
+		// TODO(marun) How many nodes should the target network have to best validate upgrade?
+		network := e2e.StartLocalNetwork(avalancheGoExecPath, e2e.DefaultNetworkDir)
 
-		for _, name := range sresp.ClusterInfo.NodeNames {
-			tests.Outf("{{magenta}}restarting the node %q{{/}} with %q\n", name, networkRunnerCaminoNodeExecPathToUpgrade)
-			ctx, cancel := context.WithTimeout(context.Background(), DefaultTimeout)
-			resp, err := runnerCli.RestartNode(ctx, name, runner_sdk.WithExecPath(networkRunnerCaminoNodeExecPathToUpgrade))
-			cancel()
-			gomega.Expect(err).Should(gomega.BeNil())
+		ginkgo.By(fmt.Sprintf("restarting all nodes with %q binary", avalancheGoExecPathToUpgradeTo))
+		for _, node := range network.Nodes {
+			ginkgo.By(fmt.Sprintf("restarting node %q with %q binary", node.GetID(), avalancheGoExecPathToUpgradeTo))
+			require.NoError(node.Stop())
 
-			ctx, cancel = context.WithTimeout(context.Background(), DefaultTimeout)
-			_, err = runnerCli.Health(ctx)
-			cancel()
-			gomega.Expect(err).Should(gomega.BeNil())
-			tests.Outf("{{green}}successfully upgraded %q to %q{{/}} (current info: %+v)\n", name, networkRunnerCaminoNodeExecPathToUpgrade, resp.ClusterInfo.NodeInfos)
+			// A node must start with sufficient bootstrap nodes to represent a quorum. Since the node's current
+			// bootstrap configuration may not satisfy this requirement (i.e. if on network start the node was one of
+			// the first validators), updating the node to bootstrap from all running validators maximizes the
+			// chances of a successful start.
+			//
+			// TODO(marun) Refactor node start to do this automatically
+			bootstrapIPs, bootstrapIDs, err := network.GetBootstrapIPsAndIDs()
+			require.NoError(err)
+			require.NotEmpty(bootstrapIDs)
+			node.Flags[config.BootstrapIDsKey] = strings.Join(bootstrapIDs, ",")
+			node.Flags[config.BootstrapIPsKey] = strings.Join(bootstrapIPs, ",")
+			require.NoError(node.WriteConfig())
+
+			require.NoError(node.Start(ginkgo.GinkgoWriter, avalancheGoExecPath))
+
+			ginkgo.By(fmt.Sprintf("waiting for node %q to report healthy after restart", node.GetID()))
+			e2e.WaitForHealthy(node)
 		}
+
+		e2e.CheckBootstrapIsPossible(network)
 	})
 })
