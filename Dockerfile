@@ -4,7 +4,8 @@
 # README.md
 # go.mod
 # ============= Compilation Stage ================
-FROM golang:1.20.8-bullseye AS builder
+FROM golang:1.20.10-bullseye AS builder
+
 WORKDIR /build
 # Copy and download caminogo dependencies using go mod
 COPY go.mod .

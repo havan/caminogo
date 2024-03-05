@@ -123,19 +123,19 @@ func newCaminoEnvironment(postBanff bool, caminoGenesisConf api.Camino) *caminoE
 	baseDB := versiondb.New(baseDBManager.Current().Database)
 	ctx, msm := defaultCtx(baseDB)
 
-	fx := defaultFx(&clk, ctx.Log, isBootstrapped.Get())
+	fx := defaultFx(clk, ctx.Log, isBootstrapped.Get())
 
 	rewards := reward.NewCalculator(config.RewardConfig)
 	baseState := defaultCaminoState(&config, ctx, baseDB, rewards, caminoGenesisConf)
 
 	atomicUTXOs := avax.NewAtomicUTXOManager(ctx.SharedMemory, txs.Codec)
-	uptimes := uptime.NewManager(baseState)
-	utxoHandler := utxo.NewCaminoHandler(ctx, &clk, fx, true)
+	uptimes := uptime.NewManager(baseState, clk)
+	utxoHandler := utxo.NewCaminoHandler(ctx, clk, fx, true)
 
 	txBuilder := NewCamino(
 		ctx,
 		&config,
-		&clk,
+		clk,
 		fx,
 		baseState,
 		atomicUTXOs,
@@ -145,7 +145,7 @@ func newCaminoEnvironment(postBanff bool, caminoGenesisConf api.Camino) *caminoE
 	backend := executor.Backend{
 		Config:       &config,
 		Ctx:          ctx,
-		Clk:          &clk,
+		Clk:          clk,
 		Bootstrapped: &isBootstrapped,
 		Fx:           fx,
 		FlowChecker:  utxoHandler,
@@ -156,7 +156,7 @@ func newCaminoEnvironment(postBanff bool, caminoGenesisConf api.Camino) *caminoE
 	env := &caminoEnvironment{
 		isBootstrapped: &isBootstrapped,
 		config:         &config,
-		clk:            &clk,
+		clk:            clk,
 		baseDB:         baseDB,
 		ctx:            ctx,
 		msm:            msm,
@@ -186,15 +186,15 @@ func newCaminoBuilder(postBanff bool, state state.State) (*caminoBuilder, *versi
 	baseDB := versiondb.New(baseDBManager.Current().Database)
 	ctx, _ := defaultCtx(baseDB)
 
-	fx := defaultFx(&clk, ctx.Log, isBootstrapped.Get())
+	fx := defaultFx(clk, ctx.Log, isBootstrapped.Get())
 
 	atomicUTXOs := avax.NewAtomicUTXOManager(ctx.SharedMemory, txs.Codec)
-	utxoHandler := utxo.NewHandler(ctx, &clk, fx)
+	utxoHandler := utxo.NewHandler(ctx, clk, fx)
 
 	txBuilder := NewCamino(
 		ctx,
 		&config,
-		&clk,
+		clk,
 		fx,
 		state,
 		atomicUTXOs,
@@ -284,13 +284,13 @@ func defaultCtx(db database.Database) (*snow.Context, *mutableSharedMemory) {
 	return ctx, msm
 }
 
-func defaultClock(postBanff bool) mockable.Clock {
+func defaultClock(postBanff bool) *mockable.Clock {
 	now := defaultGenesisTime
 	if postBanff {
 		// 1 second after Banff fork
 		now = defaultValidateEndTime.Add(-2 * time.Second)
 	}
-	clk := mockable.Clock{}
+	clk := &mockable.Clock{}
 	clk.Set(now)
 	return clk
 }
@@ -583,15 +583,15 @@ func newCaminoBuilderWithMocks(postBanff bool, state state.State, sharedMemory a
 		ctx.SharedMemory = sharedMemory
 	}
 
-	fx := defaultFx(&clk, ctx.Log, isBootstrapped.Get())
+	fx := defaultFx(clk, ctx.Log, isBootstrapped.Get())
 
 	atomicUTXOs := avax.NewAtomicUTXOManager(ctx.SharedMemory, txs.Codec)
-	utxoHandler := utxo.NewHandler(ctx, &clk, fx)
+	utxoHandler := utxo.NewHandler(ctx, clk, fx)
 
 	txBuilder := NewCamino(
 		ctx,
 		&config,
-		&clk,
+		clk,
 		fx,
 		state,
 		atomicUTXOs,

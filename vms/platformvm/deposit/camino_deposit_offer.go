@@ -44,21 +44,21 @@ type Offer struct {
 	UpgradeVersionID codec.UpgradeVersionID
 	ID               ids.ID
 
-	InterestRateNominator   uint64              `serialize:"true" json:"interestRateNominator"`                   // deposit.Amount * (interestRateNominator / interestRateDenominator) == reward for deposit with 1 year duration
-	Start                   uint64              `serialize:"true" json:"start"`                                   // Unix time in seconds, when this offer becomes active (can be used to create new deposits)
-	End                     uint64              `serialize:"true" json:"end"`                                     // Unix time in seconds, when this offer becomes inactive (can't be used to create new deposits)
-	MinAmount               uint64              `serialize:"true" json:"minAmount"`                               // Minimum amount that can be deposited with this offer
-	TotalMaxAmount          uint64              `serialize:"true" json:"totalMaxAmount"`                          // Maximum amount that can be deposited with this offer in total (across all deposits)
-	DepositedAmount         uint64              `serialize:"true" json:"depositedAmount"`                         // Amount that was already deposited with this offer
-	MinDuration             uint32              `serialize:"true" json:"minDuration"`                             // Minimum duration of deposit created with this offer
-	MaxDuration             uint32              `serialize:"true" json:"maxDuration"`                             // Maximum duration of deposit created with this offer
-	UnlockPeriodDuration    uint32              `serialize:"true" json:"unlockPeriodDuration"`                    // Duration of period during which tokens deposited with this offer will be unlocked. The unlock period starts at the end of deposit minus unlockPeriodDuration
-	NoRewardsPeriodDuration uint32              `serialize:"true" json:"noRewardsPeriodDuration"`                 // Duration of period during which rewards won't be accumulated. No rewards period starts at the end of deposit minus unlockPeriodDuration
-	Memo                    types.JSONByteSlice `serialize:"true" json:"memo"`                                    // Arbitrary offer memo
-	Flags                   OfferFlag           `serialize:"true" json:"flags"`                                   // Bitfield with flags
-	TotalMaxRewardAmount    uint64              `serialize:"true" json:"totalMaxRewardAmount" upgradeVersion:"1"` // Maximum amount that can be rewarded for all deposits created with this offer in total
-	RewardedAmount          uint64              `serialize:"true" json:"rewardedAmount"       upgradeVersion:"1"` // Amount that was already rewarded (including potential rewards) for deposits created with this offer
-	OwnerAddress            ids.ShortID         `serialize:"true" json:"ownerAddress"         upgradeVersion:"1"` // Address that can sign deposit-creator permission
+	InterestRateNominator   uint64              `serialize:"true" json:"interestRateNominator"`                      // deposit.Amount * (interestRateNominator / interestRateDenominator) == reward for deposit with 1 year duration
+	Start                   uint64              `serialize:"true" json:"start"`                                      // Unix time in seconds, when this offer becomes active (can be used to create new deposits)
+	End                     uint64              `serialize:"true" json:"end"`                                        // Unix time in seconds, when this offer becomes inactive (can't be used to create new deposits)
+	MinAmount               uint64              `serialize:"true" json:"minAmount"`                                  // Minimum amount that can be deposited with this offer
+	TotalMaxAmount          uint64              `serialize:"true" json:"totalMaxAmount"`                             // Maximum amount that can be deposited with this offer in total (across all deposits)
+	DepositedAmount         uint64              `serialize:"true" json:"depositedAmount"`                            // Amount that was already deposited with this offer
+	MinDuration             uint32              `serialize:"true" json:"minDuration"`                                // Minimum duration of deposit created with this offer
+	MaxDuration             uint32              `serialize:"true" json:"maxDuration"`                                // Maximum duration of deposit created with this offer
+	UnlockPeriodDuration    uint32              `serialize:"true" json:"unlockPeriodDuration"`                       // Duration of period during which tokens deposited with this offer will be unlocked. The unlock period starts at the end of deposit minus unlockPeriodDuration
+	NoRewardsPeriodDuration uint32              `serialize:"true" json:"noRewardsPeriodDuration"`                    // Duration of period during which rewards won't be accumulated. No rewards period starts at the end of deposit minus unlockPeriodDuration
+	Memo                    types.JSONByteSlice `serialize:"true" json:"memo"`                                       // Arbitrary offer memo
+	Flags                   OfferFlag           `serialize:"true" json:"flags"`                                      // Bitfield with flags
+	TotalMaxRewardAmount    uint64              `serialize:"true" json:"totalMaxRewardAmount"    upgradeVersion:"1"` // Maximum amount that can be rewarded for all deposits created with this offer in total
+	RewardedAmount          uint64              `serialize:"true" json:"rewardedAmount"          upgradeVersion:"1"` // Amount that was already rewarded (including potential rewards) for deposits created with this offer
+	OwnerAddress            ids.ShortID         `serialize:"true" json:"ownerAddress"            upgradeVersion:"1"` // Address that can sign deposit-creator permission
 }
 
 // Time when this offer becomes active

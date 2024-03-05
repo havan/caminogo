@@ -233,7 +233,7 @@ func TestSyncGenesis(t *testing.T) {
 
 	type args struct {
 		s *state
-		g *pvm_genesis.State
+		g *pvm_genesis.Genesis
 	}
 	tests := map[string]struct {
 		cs   caminoState
@@ -392,16 +392,18 @@ func testGenesisConfig(lockModeBondDeposit bool, validator, deposit bool) *root_
 	}
 }
 
-func defaultGenesisState(addresses []pvm_genesis.AddressState, deposits []*txs.Tx, initialAdmin ids.ShortID) *pvm_genesis.State {
-	return &pvm_genesis.State{
-		UTXOs: []*avax.UTXO{{
-			UTXOID: avax.UTXOID{
-				TxID:        initialTxID,
-				OutputIndex: 0,
-			},
-			Asset: avax.Asset{ID: initialTxID},
-			Out: &secp256k1fx.TransferOutput{
-				Amt: units.Schmeckle,
+func defaultGenesisState(addresses []pvm_genesis.AddressState, deposits []*txs.Tx, initialAdmin ids.ShortID) *pvm_genesis.Genesis {
+	return &pvm_genesis.Genesis{
+		UTXOs: []*pvm_genesis.UTXO{{
+			UTXO: avax.UTXO{
+				UTXOID: avax.UTXOID{
+					TxID:        initialTxID,
+					OutputIndex: 0,
+				},
+				Asset: avax.Asset{ID: initialTxID},
+				Out: &secp256k1fx.TransferOutput{
+					Amt: units.Schmeckle,
+				},
 			},
 		}},
 		Chains:        []*txs.Tx{{}},
