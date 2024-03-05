@@ -112,7 +112,7 @@ func newCaminoEnvironment(postBanff, addSubnet bool, caminoGenesisConf api.Camin
 	baseState := defaultCaminoState(&config, ctx, baseDB, rewards, caminoGenesisConf)
 
 	atomicUTXOs := avax.NewAtomicUTXOManager(ctx.SharedMemory, txs.Codec)
-	uptimes := uptime.NewManager(baseState)
+	uptimes := uptime.NewManager(baseState, clk)
 	utxoHandler := utxo.NewCaminoHandler(ctx, clk, fx, true)
 
 	txBuilder := builder.NewCamino(
@@ -648,7 +648,7 @@ func newCaminoEnvironmentWithMocks(
 	}
 
 	atomicUTXOs := avax.NewAtomicUTXOManager(ctx.SharedMemory, txs.Codec)
-	uptimes := uptime.NewManager(defaultState)
+	uptimes := uptime.NewManager(defaultState, clk)
 	utxoHandler := utxo.NewCaminoHandler(ctx, clk, fx, true)
 
 	ctx.Lock.Lock()
