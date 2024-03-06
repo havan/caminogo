@@ -1,4 +1,4 @@
-name: Build + Unit Tests
+name: Unit Tests
 
 on:
   push:
@@ -8,6 +8,11 @@ on:
     branches: [chain4travel, dev]
   merge_group:
     types: [checks_requested]
+
+# Cancel ongoing workflow runs if a new one is started
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   run_build_unit_tests:
@@ -25,6 +30,4 @@ jobs:
       - name: fuzz_test
         shell: bash
         if: matrix.os == 'ubuntu-22.04' # Only run on Ubuntu 22.04
-        run: | # Run each fuzz test 15 seconds
-          cd ${{ github.workspace }}
-          ./scripts/build_fuzz.sh 15
+        run: ./scripts/build_fuzz.sh 15 # Run each fuzz test 15 seconds

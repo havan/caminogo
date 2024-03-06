@@ -14,6 +14,8 @@ then
   go install -v go.uber.org/mock/mockgen@v0.2.0
 fi
 
+source ./scripts/constants.sh
+
 # tuples of (source interface import path, comma-separated interface names, output file path)
 input="scripts/mocks.mockgen.txt"
 while IFS= read -r line
