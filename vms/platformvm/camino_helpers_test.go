@@ -11,6 +11,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/ava-labs/avalanchego/api/keystore"
 	"github.com/ava-labs/avalanchego/chains"
 	"github.com/ava-labs/avalanchego/chains/atomic"
 	"github.com/ava-labs/avalanchego/database/manager"
@@ -25,15 +26,18 @@ import (
 	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/utils/json"
+	"github.com/ava-labs/avalanchego/utils/logging"
 	"github.com/ava-labs/avalanchego/utils/nodeid"
 	"github.com/ava-labs/avalanchego/utils/timer/mockable"
 	"github.com/ava-labs/avalanchego/utils/units"
 	"github.com/ava-labs/avalanchego/version"
+	"github.com/ava-labs/avalanchego/vms/components/avax"
 	as "github.com/ava-labs/avalanchego/vms/platformvm/addrstate"
 	"github.com/ava-labs/avalanchego/vms/platformvm/api"
 	"github.com/ava-labs/avalanchego/vms/platformvm/caminoconfig"
 	"github.com/ava-labs/avalanchego/vms/platformvm/config"
 	"github.com/ava-labs/avalanchego/vms/platformvm/genesis"
+	"github.com/ava-labs/avalanchego/vms/platformvm/locked"
 	"github.com/ava-labs/avalanchego/vms/platformvm/reward"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 )
@@ -47,6 +51,22 @@ var (
 	caminoPreFundedKeys       = secp256k1.TestKeys()
 	_, caminoPreFundedNodeIDs = nodeid.LoadLocalCaminoNodeKeysAndIDs(localStakingPath)
 )
+
+func defaultCaminoService(t *testing.T, camino api.Camino, utxos []api.UTXO) *CaminoService {
+	vm := newCaminoVM(t, camino, utxos, nil)
+
+	vm.ctx.Lock.Lock()
+	defer vm.ctx.Lock.Unlock()
+	ks := keystore.New(logging.NoLog{}, manager.NewMemDB(version.Semantic1_0_0))
+	require.NoError(t, ks.CreateUser(testUsername, testPassword))
+	vm.ctx.Keystore = ks.NewBlockchainKeyStore(vm.ctx.ChainID)
+	return &CaminoService{
+		Service: Service{
+			vm:          vm,
+			addrManager: avax.NewAddressManager(vm.ctx),
+		},
+	}
+}
 
 func newCaminoVM(t *testing.T, genesisConfig api.Camino, genesisUTXOs []api.UTXO, startTime *time.Time) *VM {
 	vm := &VM{Config: defaultCaminoConfig(true)}
@@ -227,5 +247,32 @@ func generateKeyAndOwner(t *testing.T) (*secp256k1.PrivateKey, ids.ShortID, secp
 		Locktime:  0,
 		Threshold: 1,
 		Addrs:     []ids.ShortID{addr},
+	}
+}
+
+func stopService(t *testing.T, service *CaminoService) {
+	service.vm.ctx.Lock.Lock()
+	require.NoError(t, service.vm.Shutdown(context.TODO()))
+	service.vm.ctx.Lock.Unlock()
+}
+
+func generateTestUTXO(txID ids.ID, assetID ids.ID, amount uint64, outputOwners secp256k1fx.OutputOwners, depositTxID, bondTxID ids.ID) *avax.UTXO {
+	var out avax.TransferableOut = &secp256k1fx.TransferOutput{
+		Amt:          amount,
+		OutputOwners: outputOwners,
+	}
+	if depositTxID != ids.Empty || bondTxID != ids.Empty {
+		out = &locked.Out{
+			IDs: locked.IDs{
+				DepositTxID: depositTxID,
+				BondTxID:    bondTxID,
+			},
+			TransferableOut: out,
+		}
+	}
+	return &avax.UTXO{
+		UTXOID: avax.UTXOID{TxID: txID},
+		Asset:  avax.Asset{ID: assetID},
+		Out:    out,
 	}
 }

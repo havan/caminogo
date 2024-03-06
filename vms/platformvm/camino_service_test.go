@@ -4,7 +4,6 @@
 package platformvm
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
@@ -12,19 +11,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	json_api "github.com/ava-labs/avalanchego/api"
-	"github.com/ava-labs/avalanchego/api/keystore"
-	"github.com/ava-labs/avalanchego/database/manager"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/formatting"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/utils/json"
-	"github.com/ava-labs/avalanchego/utils/logging"
-	"github.com/ava-labs/avalanchego/version"
-	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm/api"
 	"github.com/ava-labs/avalanchego/vms/platformvm/deposit"
-	"github.com/ava-labs/avalanchego/vms/platformvm/locked"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 )
 
@@ -108,11 +101,7 @@ func TestGetCaminoBalance(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			service := defaultCaminoService(t, tt.camino, tt.genesisUTXOs)
-			service.vm.ctx.Lock.Lock()
-			defer func() {
-				require.NoError(t, service.vm.Shutdown(context.TODO()))
-				service.vm.ctx.Lock.Unlock()
-			}()
+			defer stopService(t, service)
 
 			request := GetBalanceRequest{
 				Addresses: []string{
@@ -120,6 +109,8 @@ func TestGetCaminoBalance(t *testing.T) {
 				},
 			}
 			responseWrapper := GetBalanceResponseWrapper{}
+
+			service.vm.ctx.Lock.Lock()
 
 			if tt.deposited != 0 {
 				outputOwners := secp256k1fx.OutputOwners{
@@ -154,6 +145,8 @@ func TestGetCaminoBalance(t *testing.T) {
 				require.NoError(t, service.vm.state.Commit())
 			}
 
+			service.vm.ctx.Lock.Unlock()
+
 			err := service.GetBalance(nil, &request, &responseWrapper)
 			require.ErrorIs(t, err, tt.expectedError)
 			if tt.expectedError != nil {
@@ -176,43 +169,6 @@ func TestGetCaminoBalance(t *testing.T) {
 				require.Equal(t, json.Uint64(defaultBalance), response.UnlockedOutputs[avaxAssetID], "Wrong unlocked balance. Expected %d ; Returned %d", defaultBalance, response.UnlockedOutputs[avaxAssetID])
 			}
 		})
-	}
-}
-
-func defaultCaminoService(t *testing.T, camino api.Camino, utxos []api.UTXO) *CaminoService {
-	vm := newCaminoVM(t, camino, utxos, nil)
-
-	vm.ctx.Lock.Lock()
-	defer vm.ctx.Lock.Unlock()
-	ks := keystore.New(logging.NoLog{}, manager.NewMemDB(version.Semantic1_0_0))
-	require.NoError(t, ks.CreateUser(testUsername, testPassword))
-	vm.ctx.Keystore = ks.NewBlockchainKeyStore(vm.ctx.ChainID)
-	return &CaminoService{
-		Service: Service{
-			vm:          vm,
-			addrManager: avax.NewAddressManager(vm.ctx),
-		},
-	}
-}
-
-func generateTestUTXO(txID ids.ID, assetID ids.ID, amount uint64, outputOwners secp256k1fx.OutputOwners, depositTxID, bondTxID ids.ID) *avax.UTXO {
-	var out avax.TransferableOut = &secp256k1fx.TransferOutput{
-		Amt:          amount,
-		OutputOwners: outputOwners,
-	}
-	if depositTxID != ids.Empty || bondTxID != ids.Empty {
-		out = &locked.Out{
-			IDs: locked.IDs{
-				DepositTxID: depositTxID,
-				BondTxID:    bondTxID,
-			},
-			TransferableOut: out,
-		}
-	}
-	return &avax.UTXO{
-		UTXOID: avax.UTXOID{TxID: txID},
-		Asset:  avax.Asset{ID: assetID},
-		Out:    out,
 	}
 }
 
@@ -259,6 +215,7 @@ func TestCaminoService_GetAllDepositOffers(t *testing.T) {
 				},
 			},
 			prepare: func(service CaminoService) {
+				service.vm.ctx.Lock.Lock()
 				service.vm.state.SetDepositOffer(&deposit.Offer{
 					ID:    ids.ID{0},
 					Start: 0,
@@ -284,13 +241,12 @@ func TestCaminoService_GetAllDepositOffers(t *testing.T) {
 					Start: 51, // start after timestamp
 					End:   100,
 				})
+				service.vm.ctx.Lock.Unlock()
 			},
 		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			tt.fields.Service.vm.ctx.Lock.Lock()
-			defer tt.fields.Service.vm.ctx.Lock.Unlock()
 			tt.prepare(tt.fields.Service)
 			err := tt.fields.Service.GetAllDepositOffers(nil, tt.args.depositOffersArgs, tt.args.response)
 			require.ErrorIs(t, err, tt.wantErr)
@@ -377,8 +333,6 @@ func TestGetFakeKeys(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			s.vm.ctx.Lock.Lock()
-			defer s.vm.ctx.Lock.Unlock()
 			keys, err := s.getFakeKeys(&tt.from) //nolint:gosec
 			require.ErrorIs(t, err, tt.expectedError)
 
@@ -425,8 +379,6 @@ func TestSpend(t *testing.T) {
 
 	spendReply := SpendReply{}
 
-	service.vm.ctx.Lock.Lock()
-	defer service.vm.ctx.Lock.Unlock()
 	require.NoError(t, service.Spend(nil, &spendArgs, &spendReply))
 	require.Equal(t, "0x00000000000100000000000000000000000100000001fceda8f90fcb5d30614b99d79fc4baa2930776262dcf0a4e", spendReply.Owners)
 }

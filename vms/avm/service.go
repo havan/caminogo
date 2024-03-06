@@ -19,6 +19,8 @@ import (
 	"math"
 	"net/http"
 
+	stdjson "encoding/json"
+
 	"go.uber.org/zap"
 
 	"github.com/ava-labs/avalanchego/api"
@@ -80,6 +82,9 @@ func (s *Service) GetBlock(_ *http.Request, args *api.GetBlockArgs, reply *api.G
 		zap.Stringer("encoding", args.Encoding),
 	)
 
+	s.vm.ctx.Lock.Lock()
+	defer s.vm.ctx.Lock.Unlock()
+
 	if s.vm.chainManager == nil {
 		return errNotLinearized
 	}
@@ -89,6 +94,7 @@ func (s *Service) GetBlock(_ *http.Request, args *api.GetBlockArgs, reply *api.G
 	}
 	reply.Encoding = args.Encoding
 
+	var result any
 	if args.Encoding == formatting.JSON {
 		block.InitCtx(s.vm.ctx)
 		for _, tx := range block.Txs() {
@@ -102,16 +108,16 @@ func (s *Service) GetBlock(_ *http.Request, args *api.GetBlockArgs, reply *api.G
 				return err
 			}
 		}
-		reply.Block = block
-		return nil
+		result = block
+	} else {
+		result, err = formatting.Encode(args.Encoding, block.Bytes())
+		if err != nil {
+			return fmt.Errorf("couldn't encode block %s as string: %w", args.BlockID, err)
+		}
 	}
 
-	reply.Block, err = formatting.Encode(args.Encoding, block.Bytes())
-	if err != nil {
-		return fmt.Errorf("couldn't encode block %s as string: %w", args.BlockID, err)
-	}
-
-	return nil
+	reply.Block, err = stdjson.Marshal(result)
+	return err
 }
 
 // GetBlockByHeight returns the block at the given height.
@@ -121,6 +127,9 @@ func (s *Service) GetBlockByHeight(_ *http.Request, args *api.GetBlockByHeightAr
 		zap.String("method", "getBlockByHeight"),
 		zap.Uint64("height", uint64(args.Height)),
 	)
+
+	s.vm.ctx.Lock.Lock()
+	defer s.vm.ctx.Lock.Unlock()
 
 	if s.vm.chainManager == nil {
 		return errNotLinearized
@@ -140,6 +149,7 @@ func (s *Service) GetBlockByHeight(_ *http.Request, args *api.GetBlockByHeightAr
 		return fmt.Errorf("couldn't get block with id %s: %w", blockID, err)
 	}
 
+	var result any
 	if args.Encoding == formatting.JSON {
 		block.InitCtx(s.vm.ctx)
 		for _, tx := range block.Txs() {
@@ -153,16 +163,16 @@ func (s *Service) GetBlockByHeight(_ *http.Request, args *api.GetBlockByHeightAr
 				return err
 			}
 		}
-		reply.Block = block
-		return nil
+		result = block
+	} else {
+		result, err = formatting.Encode(args.Encoding, block.Bytes())
+		if err != nil {
+			return fmt.Errorf("couldn't encode block %s as string: %w", blockID, err)
+		}
 	}
 
-	reply.Block, err = formatting.Encode(args.Encoding, block.Bytes())
-	if err != nil {
-		return fmt.Errorf("couldn't encode block %s as string: %w", blockID, err)
-	}
-
-	return nil
+	reply.Block, err = stdjson.Marshal(result)
+	return err
 }
 
 // GetHeight returns the height of the last accepted block.
@@ -171,6 +181,9 @@ func (s *Service) GetHeight(_ *http.Request, _ *struct{}, reply *api.GetHeightRe
 		zap.String("service", "avm"),
 		zap.String("method", "getHeight"),
 	)
+
+	s.vm.ctx.Lock.Lock()
+	defer s.vm.ctx.Lock.Unlock()
 
 	if s.vm.chainManager == nil {
 		return errNotLinearized
@@ -202,6 +215,10 @@ func (s *Service) IssueTx(_ *http.Request, args *api.FormattedTx, reply *api.JSO
 	if err != nil {
 		return fmt.Errorf("problem decoding transaction: %w", err)
 	}
+
+	s.vm.ctx.Lock.Lock()
+	defer s.vm.ctx.Lock.Unlock()
+
 	txID, err := s.vm.IssueTx(txBytes)
 	if err != nil {
 		return err
@@ -269,6 +286,9 @@ func (s *Service) GetAddressTxs(_ *http.Request, args *GetAddressTxsArgs, reply 
 		zap.Uint64("pageSize", pageSize),
 	)
 
+	s.vm.ctx.Lock.Lock()
+	defer s.vm.ctx.Lock.Unlock()
+
 	// Read transactions from the indexer
 	reply.TxIDs, err = s.vm.addressTxsIndexer.Read(address[:], assetID, cursor, pageSize)
 	if err != nil {
@@ -302,6 +322,9 @@ func (s *Service) GetTxStatus(_ *http.Request, args *api.JSONTxID, reply *GetTxS
 		return errNilTxID
 	}
 
+	s.vm.ctx.Lock.Lock()
+	defer s.vm.ctx.Lock.Unlock()
+
 	_, err := s.vm.state.GetTx(args.TxID)
 	switch err {
 	case nil:
@@ -326,27 +349,33 @@ func (s *Service) GetTx(_ *http.Request, args *api.GetTxArgs, reply *api.GetTxRe
 		return errNilTxID
 	}
 
+	s.vm.ctx.Lock.Lock()
+	defer s.vm.ctx.Lock.Unlock()
+
 	tx, err := s.vm.state.GetTx(args.TxID)
 	if err != nil {
 		return err
 	}
-
 	reply.Encoding = args.Encoding
+
+	var result any
 	if args.Encoding == formatting.JSON {
-		reply.Tx = tx
-		return tx.Unsigned.Visit(&txInit{
+		err = tx.Unsigned.Visit(&txInit{
 			tx:            tx,
 			ctx:           s.vm.ctx,
 			typeToFxIndex: s.vm.typeToFxIndex,
 			fxs:           s.vm.fxs,
 		})
+		result = tx
+	} else {
+		result, err = formatting.Encode(args.Encoding, tx.Bytes())
+	}
+	if err != nil {
+		return err
 	}
 
-	reply.Tx, err = formatting.Encode(args.Encoding, tx.Bytes())
-	if err != nil {
-		return fmt.Errorf("couldn't encode tx as string: %w", err)
-	}
-	return nil
+	reply.Tx, err = stdjson.Marshal(result)
+	return err
 }
 
 // GetUTXOs gets all utxos for passed in addresses
@@ -402,6 +431,10 @@ func (s *Service) GetUTXOs(_ *http.Request, args *api.GetUTXOsArgs, reply *api.G
 	if limit <= 0 || int(maxPageSize) < limit {
 		limit = int(maxPageSize)
 	}
+
+	s.vm.ctx.Lock.Lock()
+	defer s.vm.ctx.Lock.Unlock()
+
 	if sourceChain == s.vm.ctx.ChainID {
 		utxos, endAddr, endUTXOID, err = avax.GetPaginatedUTXOs(
 			s.vm.state,
@@ -481,6 +514,9 @@ func (s *Service) GetAssetDescription(_ *http.Request, args *GetAssetDescription
 		}
 	}
 
+	s.vm.ctx.Lock.Lock()
+	defer s.vm.ctx.Lock.Unlock()
+
 	tx, err := s.vm.state.GetTx(assetID)
 	if err != nil {
 		return err
@@ -534,8 +570,10 @@ func (s *Service) GetBalance(_ *http.Request, args *GetBalanceArgs, reply *GetBa
 		return err
 	}
 
-	addrSet := set.Set[ids.ShortID]{}
-	addrSet.Add(addr)
+	addrSet := set.Of(addr)
+
+	s.vm.ctx.Lock.Lock()
+	defer s.vm.ctx.Lock.Unlock()
 
 	utxos, err := avax.GetAllUTXOs(s.vm.state, addrSet)
 	if err != nil {
@@ -602,8 +640,10 @@ func (s *Service) GetAllBalances(_ *http.Request, args *GetAllBalancesArgs, repl
 	if err != nil {
 		return fmt.Errorf("problem parsing address '%s': %w", args.Address, err)
 	}
-	addrSet := set.Set[ids.ShortID]{}
-	addrSet.Add(address)
+	addrSet := set.Of(address)
+
+	s.vm.ctx.Lock.Lock()
+	defer s.vm.ctx.Lock.Unlock()
 
 	utxos, err := avax.GetAllUTXOs(s.vm.state, addrSet)
 	if err != nil {
@@ -696,6 +736,9 @@ func (s *Service) CreateAsset(_ *http.Request, args *CreateAssetArgs, reply *Ass
 	if err != nil {
 		return err
 	}
+
+	s.vm.ctx.Lock.Lock()
+	defer s.vm.ctx.Lock.Unlock()
 
 	// Get the UTXOs/keys for the from addresses
 	utxos, kc, err := s.vm.LoadUser(args.Username, args.Password, fromAddrs)
@@ -852,6 +895,9 @@ func (s *Service) CreateNFTAsset(_ *http.Request, args *CreateNFTAssetArgs, repl
 		return err
 	}
 
+	s.vm.ctx.Lock.Lock()
+	defer s.vm.ctx.Lock.Unlock()
+
 	// Get the UTXOs/keys for the from addresses
 	utxos, kc, err := s.vm.LoadUser(args.Username, args.Password, fromAddrs)
 	if err != nil {
@@ -948,6 +994,9 @@ func (s *Service) CreateAddress(_ *http.Request, args *api.UserPass, reply *api.
 		logging.UserString("username", args.Username),
 	)
 
+	s.vm.ctx.Lock.Lock()
+	defer s.vm.ctx.Lock.Unlock()
+
 	user, err := keystore.NewUserFromKeystore(s.vm.ctx.Keystore, args.Username, args.Password)
 	if err != nil {
 		return err
@@ -976,6 +1025,9 @@ func (s *Service) ListAddresses(_ *http.Request, args *api.UserPass, response *a
 		zap.String("method", "listAddresses"),
 		logging.UserString("username", args.Username),
 	)
+
+	s.vm.ctx.Lock.Lock()
+	defer s.vm.ctx.Lock.Unlock()
 
 	user, err := keystore.NewUserFromKeystore(s.vm.ctx.Keystore, args.Username, args.Password)
 	if err != nil {
@@ -1029,6 +1081,9 @@ func (s *Service) ExportKey(_ *http.Request, args *ExportKeyArgs, reply *ExportK
 		return fmt.Errorf("problem parsing address %q: %w", args.Address, err)
 	}
 
+	s.vm.ctx.Lock.Lock()
+	defer s.vm.ctx.Lock.Unlock()
+
 	user, err := keystore.NewUserFromKeystore(s.vm.ctx.Keystore, args.Username, args.Password)
 	if err != nil {
 		return err
@@ -1067,6 +1122,9 @@ func (s *Service) ImportKey(_ *http.Request, args *ImportKeyArgs, reply *api.JSO
 	if args.PrivateKey == nil {
 		return errMissingPrivateKey
 	}
+
+	s.vm.ctx.Lock.Lock()
+	defer s.vm.ctx.Lock.Unlock()
 
 	user, err := keystore.NewUserFromKeystore(s.vm.ctx.Keystore, args.Username, args.Password)
 	if err != nil {
@@ -1153,6 +1211,9 @@ func (s *Service) SendMultiple(_ *http.Request, args *SendMultipleArgs, reply *a
 	if err != nil {
 		return err
 	}
+
+	s.vm.ctx.Lock.Lock()
+	defer s.vm.ctx.Lock.Unlock()
 
 	// Load user's UTXOs/keys
 	utxos, kc, err := s.vm.LoadUser(args.Username, args.Password, fromAddrs)
@@ -1312,6 +1373,9 @@ func (s *Service) Mint(_ *http.Request, args *MintArgs, reply *api.JSONTxIDChang
 		return err
 	}
 
+	s.vm.ctx.Lock.Lock()
+	defer s.vm.ctx.Lock.Unlock()
+
 	// Get the UTXOs/keys for the from addresses
 	feeUTXOs, feeKc, err := s.vm.LoadUser(args.Username, args.Password, fromAddrs)
 	if err != nil {
@@ -1429,6 +1493,9 @@ func (s *Service) SendNFT(_ *http.Request, args *SendNFTArgs, reply *api.JSONTxI
 		return err
 	}
 
+	s.vm.ctx.Lock.Lock()
+	defer s.vm.ctx.Lock.Unlock()
+
 	// Get the UTXOs/keys for the from addresses
 	utxos, kc, err := s.vm.LoadUser(args.Username, args.Password, fromAddrs)
 	if err != nil {
@@ -1545,6 +1612,9 @@ func (s *Service) MintNFT(_ *http.Request, args *MintNFTArgs, reply *api.JSONTxI
 		return err
 	}
 
+	s.vm.ctx.Lock.Lock()
+	defer s.vm.ctx.Lock.Unlock()
+
 	// Get the UTXOs/keys for the from addresses
 	feeUTXOs, feeKc, err := s.vm.LoadUser(args.Username, args.Password, fromAddrs)
 	if err != nil {
@@ -1660,6 +1730,9 @@ func (s *Service) Import(_ *http.Request, args *ImportArgs, reply *api.JSONTxID)
 	if err != nil {
 		return fmt.Errorf("problem parsing to address %q: %w", args.To, err)
 	}
+
+	s.vm.ctx.Lock.Lock()
+	defer s.vm.ctx.Lock.Unlock()
 
 	utxos, kc, err := s.vm.LoadUser(args.Username, args.Password, nil)
 	if err != nil {
@@ -1802,6 +1875,9 @@ func (s *Service) Export(_ *http.Request, args *ExportArgs, reply *api.JSONTxIDC
 	if err != nil {
 		return err
 	}
+
+	s.vm.ctx.Lock.Lock()
+	defer s.vm.ctx.Lock.Unlock()
 
 	// Get the UTXOs/keys for the from addresses
 	utxos, kc, err := s.vm.LoadUser(args.Username, args.Password, fromAddrs)
