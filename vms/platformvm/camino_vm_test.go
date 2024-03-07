@@ -12,6 +12,7 @@ import (
 
 	"github.com/ava-labs/avalanchego/database"
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/snow/consensus/snowman"
 	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
@@ -22,6 +23,8 @@ import (
 	as "github.com/ava-labs/avalanchego/vms/platformvm/addrstate"
 	"github.com/ava-labs/avalanchego/vms/platformvm/api"
 	"github.com/ava-labs/avalanchego/vms/platformvm/block"
+	"github.com/ava-labs/avalanchego/vms/platformvm/block/builder"
+	blockexecutor "github.com/ava-labs/avalanchego/vms/platformvm/block/executor"
 	"github.com/ava-labs/avalanchego/vms/platformvm/dac"
 	"github.com/ava-labs/avalanchego/vms/platformvm/deposit"
 	"github.com/ava-labs/avalanchego/vms/platformvm/genesis"
@@ -31,12 +34,8 @@ import (
 	"github.com/ava-labs/avalanchego/vms/platformvm/status"
 	"github.com/ava-labs/avalanchego/vms/platformvm/treasury"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
-	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
-
-	smcon "github.com/ava-labs/avalanchego/snow/consensus/snowman"
-	"github.com/ava-labs/avalanchego/vms/platformvm/block/builder"
-	blockexecutor "github.com/ava-labs/avalanchego/vms/platformvm/block/executor"
 	txexecutor "github.com/ava-labs/avalanchego/vms/platformvm/txs/executor"
+	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 )
 
 func TestRemoveDeferredValidator(t *testing.T) {
@@ -71,10 +70,7 @@ func TestRemoveDeferredValidator(t *testing.T) {
 
 	vm := newCaminoVM(t, caminoGenesisConf, genesisUTXOs, nil)
 	vm.ctx.Lock.Lock()
-	defer func() {
-		require.NoError(vm.Shutdown(context.Background()))
-		vm.ctx.Lock.Unlock()
-	}()
+	defer stopVM(t, vm, false)
 
 	utxo := generateTestUTXO(ids.GenerateTestID(), avaxAssetID, defaultBalance, *outputOwners, ids.Empty, ids.Empty)
 	vm.state.AddUTXO(utxo)
@@ -174,7 +170,7 @@ func TestRemoveDeferredValidator(t *testing.T) {
 	require.NoError(err)
 
 	// Assert preferences are correct
-	oracleBlk := blk.(smcon.OracleBlock)
+	oracleBlk := blk.(snowman.OracleBlock)
 	options, err := oracleBlk.Options(context.Background())
 	require.NoError(err)
 
@@ -253,10 +249,7 @@ func TestRemoveReactivatedValidator(t *testing.T) {
 
 	vm := newCaminoVM(t, caminoGenesisConf, genesisUTXOs, nil)
 	vm.ctx.Lock.Lock()
-	defer func() {
-		require.NoError(vm.Shutdown(context.Background()))
-		vm.ctx.Lock.Unlock()
-	}()
+	defer stopVM(t, vm, false)
 
 	utxo := generateTestUTXO(ids.GenerateTestID(), avaxAssetID, defaultBalance, *outputOwners, ids.Empty, ids.Empty)
 	vm.state.AddUTXO(utxo)
@@ -370,7 +363,7 @@ func TestRemoveReactivatedValidator(t *testing.T) {
 	require.NoError(err)
 
 	// Assert preferences are correct
-	oracleBlk := blk.(smcon.OracleBlock)
+	oracleBlk := blk.(snowman.OracleBlock)
 	options, err := oracleBlk.Options(context.Background())
 	require.NoError(err)
 
@@ -440,7 +433,7 @@ func TestDepositsAutoUnlock(t *testing.T) {
 		Address: depositOwnerAddrBech32,
 	}}, nil)
 	vm.ctx.Lock.Lock()
-	defer func() { require.NoError(vm.Shutdown(context.Background())) }() //nolint:lint
+	defer stopVM(t, vm, false)
 
 	// Add deposit
 	depositTx, err := vm.txBuilder.NewDepositTx(
@@ -498,7 +491,7 @@ func TestProposals(t *testing.T) {
 	caminoPreFundedKey0AddrStr, err := address.FormatBech32(constants.UnitTestHRP, caminoPreFundedKeys[0].Address().Bytes())
 	require.NoError(t, err)
 
-	defaultConfig := defaultCaminoConfig(true)
+	defaultConfig := defaultCaminoConfig()
 	proposalBondAmount := defaultConfig.CaminoConfig.DACProposalBondAmount
 	newFee := (defaultTxFee + 7) * 10
 
@@ -579,7 +572,7 @@ func TestProposals(t *testing.T) {
 				},
 			}, &defaultConfig.BanffTime)
 			vm.ctx.Lock.Lock()
-			defer func() { require.NoError(vm.Shutdown(context.Background())) }() //nolint:lint
+			defer stopVM(t, vm, false)
 			checkBalance(t, vm.state, proposerAddr,
 				balance,          // total
 				0, 0, 0, balance, // unlocked
@@ -701,7 +694,7 @@ func TestAdminProposals(t *testing.T) {
 
 	applicantAddr := proposerAddr
 
-	defaultConfig := defaultCaminoConfig(true)
+	defaultConfig := defaultCaminoConfig()
 	proposalBondAmount := defaultConfig.CaminoConfig.DACProposalBondAmount
 	balance := proposalBondAmount + defaultTxFee
 
@@ -721,7 +714,7 @@ func TestAdminProposals(t *testing.T) {
 		},
 	}, &defaultConfig.BanffTime)
 	vm.ctx.Lock.Lock()
-	defer func() { require.NoError(vm.Shutdown(context.Background())) }() //nolint:lint
+	defer stopVM(t, vm, false)
 	checkBalance(t, vm.state, proposerAddr,
 		balance,          // total
 		0, 0, 0, balance, // unlocked
@@ -817,7 +810,7 @@ func TestExcludeMemberProposals(t *testing.T) {
 	fundsKeyAddrStr, err := address.FormatBech32(constants.UnitTestHRP, fundsKey.Address().Bytes())
 	require.NoError(t, err)
 
-	defaultConfig := defaultCaminoConfig(true)
+	defaultConfig := defaultCaminoConfig()
 	fee := defaultConfig.TxFee
 	addValidatorFee := defaultConfig.AddPrimaryNetworkValidatorFee
 	proposalBondAmount := defaultConfig.CaminoConfig.DACProposalBondAmount
@@ -912,7 +905,7 @@ func TestExcludeMemberProposals(t *testing.T) {
 				InitialAdmin:        rootAdminKey.Address(),
 			}, []api.UTXO{{Amount: json.Uint64(initialBalance - defaultCaminoValidatorWeight), Address: fundsKeyAddrStr}}, &defaultConfig.BanffTime)
 			vm.ctx.Lock.Lock()
-			defer func() { require.NoError(vm.Shutdown(context.Background())) }() //nolint:lint
+			defer stopVM(t, vm, false)
 			height, err := vm.GetCurrentHeight(context.Background())
 			require.NoError(err)
 			require.Equal(expectedHeight, height)

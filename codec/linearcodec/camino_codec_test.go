@@ -18,7 +18,7 @@ func TestVectorsCamino(t *testing.T) {
 
 func TestMultipleTagsCamino(t *testing.T) {
 	for _, test := range codec.MultipleTagsTests {
-		c := NewCamino([]string{"tag1", "tag2"}, defaultMaxSliceLength)
+		c := NewCamino([]string{"tag1", "tag2"}, DefaultMaxSliceLength)
 		test(c, t)
 	}
 }

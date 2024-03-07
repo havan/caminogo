@@ -27,7 +27,6 @@ import (
 	"github.com/ava-labs/avalanchego/network"
 	"github.com/ava-labs/avalanchego/network/peer"
 	"github.com/ava-labs/avalanchego/snow/networking/benchlist"
-	"github.com/ava-labs/avalanchego/snow/validators"
 	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/ips"
 	"github.com/ava-labs/avalanchego/utils/json"
@@ -47,7 +46,6 @@ type Info struct {
 	networking   network.Network
 	chainManager chains.Manager
 	vmManager    vms.Manager
-	validators   validators.Set
 	benchlist    benchlist.Manager
 }
 
@@ -78,7 +76,6 @@ func NewService(
 	vmManager vms.Manager,
 	myIP ips.DynamicIPPort,
 	network network.Network,
-	validators validators.Set,
 	benchlist benchlist.Manager,
 ) (http.Handler, error) {
 	server := rpc.NewServer()
@@ -93,7 +90,6 @@ func NewService(
 			vmManager:    vmManager,
 			myIP:         myIP,
 			networking:   network,
-			validators:   validators,
 			benchlist:    benchlist,
 		},
 		"info",

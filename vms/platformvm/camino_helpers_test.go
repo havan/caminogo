@@ -5,7 +5,6 @@ package platformvm
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -28,7 +27,6 @@ import (
 	"github.com/ava-labs/avalanchego/utils/json"
 	"github.com/ava-labs/avalanchego/utils/logging"
 	"github.com/ava-labs/avalanchego/utils/nodeid"
-	"github.com/ava-labs/avalanchego/utils/timer/mockable"
 	"github.com/ava-labs/avalanchego/utils/units"
 	"github.com/ava-labs/avalanchego/version"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
@@ -38,7 +36,6 @@ import (
 	"github.com/ava-labs/avalanchego/vms/platformvm/config"
 	"github.com/ava-labs/avalanchego/vms/platformvm/genesis"
 	"github.com/ava-labs/avalanchego/vms/platformvm/locked"
-	"github.com/ava-labs/avalanchego/vms/platformvm/reward"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 )
 
@@ -50,7 +47,21 @@ var (
 	localStakingPath          = "../../staking/local/"
 	caminoPreFundedKeys       = secp256k1.TestKeys()
 	_, caminoPreFundedNodeIDs = nodeid.LoadLocalCaminoNodeKeysAndIDs(localStakingPath)
+	defaultStartTime          = banffForkTime.Add(time.Second)
+
+	testAddressID ids.ShortID
 )
+
+func init() {
+	_, _, testAddressBytes, err := address.Parse(testAddress)
+	if err != nil {
+		panic(err)
+	}
+	testAddressID, err = ids.ToShortID(testAddressBytes)
+	if err != nil {
+		panic(err)
+	}
+}
 
 func defaultCaminoService(t *testing.T, camino api.Camino, utxos []api.UTXO) *CaminoService {
 	vm := newCaminoVM(t, camino, utxos, nil)
@@ -69,14 +80,15 @@ func defaultCaminoService(t *testing.T, camino api.Camino, utxos []api.UTXO) *Ca
 }
 
 func newCaminoVM(t *testing.T, genesisConfig api.Camino, genesisUTXOs []api.UTXO, startTime *time.Time) *VM {
-	vm := &VM{Config: defaultCaminoConfig(true)}
+	require := require.New(t)
+
+	vm := &VM{Config: defaultCaminoConfig()}
 
 	baseDBManager := manager.NewMemDB(version.Semantic1_0_0)
 	chainDBManager := baseDBManager.NewPrefixDBManager([]byte{0})
 	atomicDB := prefixdb.New([]byte{1}, baseDBManager.Current().Database)
 
 	if startTime == nil {
-		defaultStartTime := banffForkTime.Add(time.Second)
 		startTime = &defaultStartTime
 	}
 	vm.clock.Set(*startTime)
@@ -91,26 +103,33 @@ func newCaminoVM(t *testing.T, genesisConfig api.Camino, genesisUTXOs []api.UTXO
 
 	ctx.Lock.Lock()
 	defer ctx.Lock.Unlock()
-	_, genesisBytes := newCaminoGenesisWithUTXOs(genesisConfig, genesisUTXOs, startTime)
+	_, genesisBytes := newCaminoGenesisWithUTXOs(t, genesisConfig, genesisUTXOs, startTime)
+	// _, genesisBytes := defaultGenesis(t)
 	appSender := &common.SenderTest{}
 	appSender.CantSendAppGossip = true
 	appSender.SendAppGossipF = func(context.Context, []byte) error {
 		return nil
 	}
 
-	if err := vm.Initialize(context.TODO(), ctx, chainDBManager, genesisBytes, nil, nil, msgChan, nil, appSender); err != nil {
-		panic(err)
-	}
-	if err := vm.SetState(context.TODO(), snow.NormalOp); err != nil {
-		panic(err)
-	}
+	require.NoError(vm.Initialize(
+		context.Background(),
+		ctx,
+		chainDBManager,
+		genesisBytes,
+		nil,
+		nil,
+		msgChan,
+		nil,
+		appSender,
+	))
+
+	require.NoError(vm.SetState(context.Background(), snow.NormalOp))
 
 	// Create a subnet and store it in testSubnet1
 	// Note: following Banff activation, block acceptance will move
 	// chain time ahead
-	var err error
-	testSubnet1, err = vm.txBuilder.NewCreateSubnetTx(
-		2, // threshold; 2 sigs from keys[0], keys[1], keys[2] needed to add validator to this subnet
+	testSubnet1, err := vm.txBuilder.NewCreateSubnetTx(
+		2, // threshold; 2 sigs from control keys needed to add validator to this subnet
 		[]ids.ShortID{ // control keys
 			caminoPreFundedKeys[0].PublicKey().Address(),
 			caminoPreFundedKeys[1].PublicKey().Address(),
@@ -119,53 +138,37 @@ func newCaminoVM(t *testing.T, genesisConfig api.Camino, genesisUTXOs []api.UTXO
 		[]*secp256k1.PrivateKey{caminoPreFundedKeys[0]},
 		caminoPreFundedKeys[0].PublicKey().Address(),
 	)
-	if err != nil {
-		panic(err)
-	} else if err := vm.Builder.AddUnverifiedTx(testSubnet1); err != nil {
-		panic(err)
-	} else if blk, err := vm.Builder.BuildBlock(context.TODO()); err != nil {
-		panic(err)
-	} else if err := blk.Verify(context.TODO()); err != nil {
-		panic(err)
-	} else if err := blk.Accept(context.TODO()); err != nil {
-		panic(err)
-	} else if err := vm.SetPreference(context.TODO(), vm.manager.LastAccepted()); err != nil {
-		panic(err)
-	}
+	require.NoError(err)
+	require.NoError(vm.Builder.AddUnverifiedTx(testSubnet1))
+	blk, err := vm.Builder.BuildBlock(context.Background())
+	require.NoError(err)
+	require.NoError(blk.Verify(context.Background()))
+	require.NoError(blk.Accept(context.Background()))
+	require.NoError(vm.SetPreference(context.Background(), vm.manager.LastAccepted()))
 
 	return vm
+	// return vm, baseDBManager.Current().Database, msm
 }
 
-func defaultCaminoConfig(postBanff bool) config.Config { //nolint:unparam
-	banffTime := mockable.MaxTime
-	if postBanff {
-		banffTime = defaultValidateEndTime.Add(-2 * time.Second)
-	}
-
-	vdrs := validators.NewManager()
-	primaryVdrs := validators.NewSet()
-	_ = vdrs.Add(constants.PrimaryNetworkID, primaryVdrs)
+func defaultCaminoConfig() config.Config {
 	return config.Config{
 		Chains:                 chains.TestManager,
 		UptimeLockedCalculator: uptime.NewLockedCalculator(),
-		Validators:             vdrs,
+		SybilProtectionEnabled: true,
+		Validators:             validators.NewManager(),
 		TxFee:                  defaultTxFee,
 		CreateSubnetTxFee:      100 * defaultTxFee,
+		TransformSubnetTxFee:   100 * defaultTxFee,
 		CreateBlockchainTxFee:  100 * defaultTxFee,
 		MinValidatorStake:      defaultCaminoValidatorWeight,
 		MaxValidatorStake:      defaultCaminoValidatorWeight,
 		MinDelegatorStake:      1 * units.MilliAvax,
 		MinStakeDuration:       defaultMinStakingDuration,
 		MaxStakeDuration:       defaultMaxStakingDuration,
-		RewardConfig: reward.Config{
-			MaxConsumptionRate: .12 * reward.PercentDenominator,
-			MinConsumptionRate: .10 * reward.PercentDenominator,
-			MintingPeriod:      365 * 24 * time.Hour,
-			SupplyCap:          720 * units.MegaAvax,
-		},
-		ApricotPhase3Time: defaultValidateEndTime,
-		ApricotPhase5Time: defaultValidateEndTime,
-		BanffTime:         banffTime,
+		RewardConfig:           defaultRewardConfig,
+		ApricotPhase3Time:      defaultValidateEndTime,
+		ApricotPhase5Time:      defaultValidateEndTime,
+		BanffTime:              banffForkTime,
 		CaminoConfig: caminoconfig.Config{
 			DACProposalBondAmount: 100 * units.Avax,
 		},
@@ -175,7 +178,9 @@ func defaultCaminoConfig(postBanff bool) config.Config { //nolint:unparam
 // Returns:
 // 1) The genesis state
 // 2) The byte representation of the default genesis for tests
-func newCaminoGenesisWithUTXOs(caminoGenesisConfig api.Camino, genesisUTXOs []api.UTXO, starttime *time.Time) (*api.BuildGenesisArgs, []byte) {
+func newCaminoGenesisWithUTXOs(t *testing.T, caminoGenesisConfig api.Camino, genesisUTXOs []api.UTXO, starttime *time.Time) (*api.BuildGenesisArgs, []byte) {
+	require := require.New(t)
+
 	if starttime == nil {
 		starttime = &defaultValidateStartTime
 	}
@@ -186,9 +191,7 @@ func newCaminoGenesisWithUTXOs(caminoGenesisConfig api.Camino, genesisUTXOs []ap
 	genesisValidators := make([]api.PermissionlessValidator, len(caminoPreFundedKeys))
 	for i, key := range caminoPreFundedKeys {
 		addr, err := address.FormatBech32(constants.UnitTestHRP, key.PublicKey().Address().Bytes())
-		if err != nil {
-			panic(err)
-		}
+		require.NoError(err)
 		genesisValidators[i] = api.PermissionlessValidator{
 			Staker: api.Staker{
 				StartTime: json.Uint64(starttime.Unix()),
@@ -226,14 +229,10 @@ func newCaminoGenesisWithUTXOs(caminoGenesisConfig api.Camino, genesisUTXOs []ap
 
 	buildGenesisResponse := api.BuildGenesisReply{}
 	platformvmSS := api.StaticService{}
-	if err := platformvmSS.BuildGenesis(nil, &buildGenesisArgs, &buildGenesisResponse); err != nil {
-		panic(fmt.Errorf("problem while building platform chain's genesis state: %w", err))
-	}
+	require.NoError(platformvmSS.BuildGenesis(nil, &buildGenesisArgs, &buildGenesisResponse))
 
 	genesisBytes, err := formatting.Decode(buildGenesisResponse.Encoding, buildGenesisResponse.Bytes)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(err)
 
 	return &buildGenesisArgs, genesisBytes
 }
@@ -250,10 +249,13 @@ func generateKeyAndOwner(t *testing.T) (*secp256k1.PrivateKey, ids.ShortID, secp
 	}
 }
 
-func stopService(t *testing.T, service *CaminoService) {
-	service.vm.ctx.Lock.Lock()
-	require.NoError(t, service.vm.Shutdown(context.TODO()))
-	service.vm.ctx.Lock.Unlock()
+func stopVM(t *testing.T, vm *VM, doLock bool) {
+	t.Helper()
+	if doLock {
+		vm.ctx.Lock.Lock()
+	}
+	require.NoError(t, vm.Shutdown(context.TODO()))
+	vm.ctx.Lock.Unlock()
 }
 
 func generateTestUTXO(txID ids.ID, assetID ids.ID, amount uint64, outputOwners secp256k1fx.OutputOwners, depositTxID, bondTxID ids.ID) *avax.UTXO {

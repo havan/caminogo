@@ -16,7 +16,6 @@ import (
 	"github.com/ava-labs/avalanchego/snow"
 	"github.com/ava-labs/avalanchego/snow/validators"
 	"github.com/ava-labs/avalanchego/utils"
-	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/units"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm/config"
@@ -55,14 +54,12 @@ func generateBaseTx(assetID ids.ID, amount uint64, outputOwners secp256k1fx.Outp
 }
 
 func newEmptyState(t *testing.T) *state {
-	vdrs := validators.NewManager()
-	_ = vdrs.Add(constants.PrimaryNetworkID, validators.NewSet())
 	execCfg, _ := config.GetExecutionConfig(nil)
 	newState, err := newState(
 		memdb.New(),
 		metrics.Noop,
 		&config.Config{
-			Validators: vdrs,
+			Validators: validators.NewManager(),
 		},
 		execCfg,
 		&snow.Context{},

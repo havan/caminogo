@@ -15,7 +15,6 @@ package platformvm
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -68,8 +67,6 @@ var (
 	_ secp256k1fx.VM             = (*VM)(nil)
 	_ validators.State           = (*VM)(nil)
 	_ validators.SubnetConnector = (*VM)(nil)
-
-	errMissingValidatorSet = errors.New("missing validator set")
 )
 
 type VM struct {
@@ -165,7 +162,7 @@ func (vm *VM) Initialize(
 	validatorManager := pvalidators.NewManager(chainCtx.Log, vm.Config, vm.state, vm.metrics, &vm.clock)
 	vm.State = validatorManager
 	vm.atomicUtxosManager = avax.NewAtomicUTXOManager(chainCtx.SharedMemory, txs.Codec)
-	camCfg, _ := vm.state.CaminoConfig()
+	camCfg, _ := vm.state.CaminoConfig() // should never error
 	utxoHandler := utxo.NewCaminoHandler(vm.ctx, &vm.clock, vm.fx, camCfg != nil && camCfg.LockModeBondDeposit)
 	vm.uptimeManager = uptime.NewManager(vm.state, &vm.clock)
 	vm.UptimeLockedCalculator.SetCalculator(&vm.bootstrapped, &chainCtx.Lock, vm.uptimeManager)
@@ -318,19 +315,15 @@ func (vm *VM) onNormalOperationsStarted() error {
 		return err
 	}
 
-	primaryVdrIDs, err := validators.NodeIDs(vm.Validators, constants.PrimaryNetworkID)
-	if err != nil {
-		return err
-	}
+	primaryVdrIDs := vm.Validators.GetValidatorIDs(constants.PrimaryNetworkID)
+
 	if err := vm.uptimeManager.StartTracking(primaryVdrIDs, constants.PrimaryNetworkID); err != nil {
 		return err
 	}
 
 	for subnetID := range vm.TrackedSubnets {
-		vdrIDs, err := validators.NodeIDs(vm.Validators, subnetID)
-		if err != nil {
-			return err
-		}
+		vdrIDs := vm.Validators.GetValidatorIDs(subnetID)
+
 		if err := vm.uptimeManager.StartTracking(vdrIDs, subnetID); err != nil {
 			return err
 		}
@@ -365,19 +358,13 @@ func (vm *VM) Shutdown(context.Context) error {
 	vm.Builder.Shutdown()
 
 	if vm.bootstrapped.Get() {
-		primaryVdrIDs, err := validators.NodeIDs(vm.Validators, constants.PrimaryNetworkID)
-		if err != nil {
-			return err
-		}
+		primaryVdrIDs := vm.Validators.GetValidatorIDs(constants.PrimaryNetworkID)
 		if err := vm.uptimeManager.StopTracking(primaryVdrIDs, constants.PrimaryNetworkID); err != nil {
 			return err
 		}
 
 		for subnetID := range vm.TrackedSubnets {
-			vdrIDs, err := validators.NodeIDs(vm.Validators, subnetID)
-			if err != nil {
-				return err
-			}
+			vdrIDs := vm.Validators.GetValidatorIDs(subnetID)
 			if err := vm.uptimeManager.StopTracking(vdrIDs, subnetID); err != nil {
 				return err
 			}
