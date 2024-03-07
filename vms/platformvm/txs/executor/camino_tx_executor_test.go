@@ -3035,7 +3035,7 @@ func TestCaminoStandardTxExecutorDepositTx(t *testing.T) {
 		for phaseIndex, phase := range phases {
 			t.Run(fmt.Sprintf("%s, %s", phase.name, name), func(t *testing.T) {
 				env := newCaminoEnvironmentWithMocks(tt.caminoGenesisConf, nil)
-				defer func() { require.NoError(t, shutdownCaminoEnvironment(env)) }() //nolint:lint
+				defer func() { require.NoError(t, shutdownCaminoEnvironment(env)) }()
 
 				phase.prepare(env, tt.chaintime)
 
@@ -3400,7 +3400,7 @@ func TestCaminoStandardTxExecutorUnlockDepositTx(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			require := require.New(t)
 			env := newCaminoEnvironmentWithMocks(caminoGenesisConf, nil)
-			defer func() { require.NoError(shutdownCaminoEnvironment(env)) }() //nolint:lint
+			defer func() { require.NoError(shutdownCaminoEnvironment(env)) }()
 
 			tt.utx.BlockchainID = env.ctx.ChainID
 			tt.utx.NetworkID = env.ctx.NetworkID
@@ -4261,7 +4261,7 @@ func TestCaminoStandardTxExecutorClaimTx(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			require := require.New(t)
 			env := newCaminoEnvironmentWithMocks(caminoGenesisConf, nil)
-			defer func() { require.NoError(shutdownCaminoEnvironment(env)) }() //nolint:lint
+			defer func() { require.NoError(shutdownCaminoEnvironment(env)) }()
 
 			// ensuring that ins and outs from test case are sorted, signing tx
 
@@ -4576,7 +4576,7 @@ func TestCaminoStandardTxExecutorRegisterNodeTx(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			env := newCaminoEnvironmentWithMocks(caminoGenesisConf, nil)
-			defer func() { require.NoError(t, shutdownCaminoEnvironment(env)) }() //nolint:lint
+			defer func() { require.NoError(t, shutdownCaminoEnvironment(env)) }()
 
 			utx := tt.utx()
 			avax.SortTransferableInputsWithSigners(utx.Ins, tt.signers)
@@ -4862,7 +4862,7 @@ func TestCaminoStandardTxExecutorRewardsImportTx(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
 			env := newCaminoEnvironmentWithMocks(caminoGenesisConf, tt.sharedMemory(t, ctrl, tt.utxos))
-			defer func() { require.NoError(shutdownCaminoEnvironment(env)) }() //nolint:lint
+			defer func() { require.NoError(shutdownCaminoEnvironment(env)) }()
 
 			utx := tt.utx(tt.utxos)
 			avax.SortTransferableInputsWithSigners(utx.Ins, tt.signers)
@@ -5514,7 +5514,7 @@ func TestCaminoStandardTxExecutorMultisigAliasTx(t *testing.T) {
 			require := require.New(t)
 			env := newCaminoEnvironmentWithMocks(caminoGenesisConf, nil)
 
-			defer func() { require.NoError(shutdownCaminoEnvironment(env)) }() //nolint:lint
+			defer func() { require.NoError(shutdownCaminoEnvironment(env)) }()
 
 			avax.SortTransferableInputsWithSigners(tt.utx.Ins, tt.signers)
 

@@ -32,7 +32,7 @@ var _ StructFielder = (*structFielder)(nil)
 type FieldDesc struct {
 	Index          int
 	MaxSliceLen    uint32
-	Nullable    bool
+	Nullable       bool
 	UpgradeVersion uint16
 }
 
@@ -150,7 +150,7 @@ func (s *structFielder) GetSerializedFields(t reflect.Type) (*SerializedFields, 
 		serializedFields.Fields = append(serializedFields.Fields, FieldDesc{
 			Index:          i,
 			MaxSliceLen:    maxSliceLen,
-			Nullable:    nullable,
+			Nullable:       nullable,
 			UpgradeVersion: upgradeVersion,
 		})
 	}

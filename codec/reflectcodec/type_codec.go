@@ -241,7 +241,7 @@ func (c *genericCodec) size(
 				size += wrappers.LongLen
 			}
 		}
-		
+
 		for _, fieldDesc := range serializedFields.Fields {
 			if fieldDesc.UpgradeVersion > upgradeVersion {
 				break

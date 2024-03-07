@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/decred/dcrd/dcrec/secp256k1/v4"
@@ -53,7 +54,7 @@ func main() {
 	num := ""
 	for i := 1; i <= count; i++ {
 		if count > 1 {
-			num = fmt.Sprintf("%d", i)
+			num = strconv.Itoa(i)
 		}
 
 		keyPath := path.Join(destPath, fmt.Sprintf(keyFile, num))
