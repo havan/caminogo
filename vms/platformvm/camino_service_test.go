@@ -101,7 +101,7 @@ func TestGetCaminoBalance(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			service := defaultCaminoService(t, tt.camino, tt.genesisUTXOs)
-			defer stopService(t, service)
+			defer stopVM(t, service.vm, true)
 
 			request := GetBalanceRequest{
 				Addresses: []string{
@@ -173,24 +173,17 @@ func TestGetCaminoBalance(t *testing.T) {
 }
 
 func TestCaminoService_GetAllDepositOffers(t *testing.T) {
-	type fields struct {
-		Service CaminoService
-	}
 	type args struct {
 		depositOffersArgs *GetAllDepositOffersArgs
 		response          *GetAllDepositOffersReply
 	}
 	tests := map[string]struct {
-		fields  fields
 		args    args
 		want    []*APIDepositOffer
 		wantErr error
-		prepare func(service CaminoService)
+		prepare func(service *CaminoService)
 	}{
 		"OK": {
-			fields: fields{
-				Service: *defaultCaminoService(t, api.Camino{}, []api.UTXO{}),
-			},
 			args: args{
 				depositOffersArgs: &GetAllDepositOffersArgs{
 					Timestamp: 50,
@@ -214,7 +207,7 @@ func TestCaminoService_GetAllDepositOffers(t *testing.T) {
 					End:   100,
 				},
 			},
-			prepare: func(service CaminoService) {
+			prepare: func(service *CaminoService) {
 				service.vm.ctx.Lock.Lock()
 				service.vm.state.SetDepositOffer(&deposit.Offer{
 					ID:    ids.ID{0},
@@ -247,8 +240,12 @@ func TestCaminoService_GetAllDepositOffers(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			tt.prepare(tt.fields.Service)
-			err := tt.fields.Service.GetAllDepositOffers(nil, tt.args.depositOffersArgs, tt.args.response)
+			s := defaultCaminoService(t, api.Camino{}, []api.UTXO{})
+			defer stopVM(t, s.vm, true)
+
+			tt.prepare(s)
+
+			err := s.GetAllDepositOffers(nil, tt.args.depositOffersArgs, tt.args.response)
 			require.ErrorIs(t, err, tt.wantErr)
 			require.ElementsMatch(t, tt.want, tt.args.response.DepositOffers)
 		})
@@ -256,12 +253,7 @@ func TestCaminoService_GetAllDepositOffers(t *testing.T) {
 }
 
 func TestGetKeystoreKeys(t *testing.T) {
-	s, _ := defaultService(t)
 	userPass := json_api.UserPass{Username: testUsername, Password: testPassword}
-	// Insert testAddress into keystore
-	defaultAddress(t, s)
-	_, _, testAddressBytes, _ := address.Parse(testAddress)
-	testAddressID, _ := ids.ToShortID(testAddressBytes)
 
 	tests := map[string]struct {
 		from          json_api.JSONFromAddrs
@@ -290,8 +282,11 @@ func TestGetKeystoreKeys(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			s, _ := defaultService(t)
+			defaultAddress(t, s) // Insert testAddress into keystore
 			s.vm.ctx.Lock.Lock()
-			defer s.vm.ctx.Lock.Unlock()
+			defer stopVM(t, s.vm, false)
+
 			keys, err := s.getKeystoreKeys(&userPass, &tt.from) //nolint:gosec
 			require.ErrorIs(t, err, tt.expectedError)
 
@@ -308,6 +303,7 @@ func TestGetKeystoreKeys(t *testing.T) {
 
 func TestGetFakeKeys(t *testing.T) {
 	s, _ := defaultService(t)
+	defer stopVM(t, s.vm, true)
 
 	_, _, testAddressBytes, _ := address.Parse(testAddress)
 	testAddressID, _ := ids.ToShortID(testAddressBytes)
@@ -364,6 +360,7 @@ func TestSpend(t *testing.T) {
 			Message:  "",
 		}},
 	)
+	defer stopVM(t, service.vm, true)
 
 	spendArgs := SpendArgs{
 		JSONFromAddrs: json_api.JSONFromAddrs{

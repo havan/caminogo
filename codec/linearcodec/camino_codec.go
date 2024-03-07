@@ -50,7 +50,7 @@ func NewCamino(tagNames []string, maxSliceLen uint32) CaminoCodec {
 
 // NewDefault is a convenience constructor; it returns a new codec with reasonable default values
 func NewCaminoDefault() CaminoCodec {
-	return NewCamino([]string{reflectcodec.DefaultTagName}, defaultMaxSliceLength)
+	return NewCamino([]string{reflectcodec.DefaultTagName}, DefaultMaxSliceLength)
 }
 
 // NewCustomMaxLength is a convenience constructor; it returns a new codec with custom max length and default tags

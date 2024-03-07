@@ -374,14 +374,10 @@ func defaultCaminoConfig(postBanff bool) config.Config {
 		banffTime = defaultValidateEndTime.Add(-2 * time.Second)
 	}
 
-	vdrs := validators.NewManager()
-	primaryVdrs := validators.NewSet()
-	_ = vdrs.Add(constants.PrimaryNetworkID, primaryVdrs)
-
 	return config.Config{
 		Chains:                 chains.TestManager,
 		UptimeLockedCalculator: uptime.NewLockedCalculator(),
-		Validators:             vdrs,
+		Validators:             validators.NewManager(),
 		TxFee:                  defaultTxFee,
 		CreateSubnetTxFee:      100 * defaultTxFee,
 		CreateBlockchainTxFee:  100 * defaultTxFee,
@@ -476,10 +472,7 @@ func buildCaminoGenesisTest(ctx *snow.Context, caminoGenesisConf api.Camino) []b
 
 func shutdownCaminoEnvironment(env *caminoEnvironment) error {
 	if env.isBootstrapped.Get() {
-		validatorIDs, err := validators.NodeIDs(env.config.Validators, constants.PrimaryNetworkID)
-		if err != nil {
-			return err
-		}
+		validatorIDs := env.config.Validators.GetValidatorIDs(constants.PrimaryNetworkID)
 
 		if err := env.uptimes.StopTracking(validatorIDs, constants.PrimaryNetworkID); err != nil {
 			return err

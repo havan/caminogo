@@ -11,7 +11,6 @@ import (
 
 	"github.com/ava-labs/avalanchego/database"
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow/validators"
 	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
 	"github.com/ava-labs/avalanchego/utils/nodeid"
@@ -208,7 +207,6 @@ func TestDeferredStakers(t *testing.T) {
 
 			subnetID := testSubnet1.ID()
 			env.config.TrackedSubnets.Add(subnetID)
-			env.config.Validators.Add(subnetID, validators.NewSet())
 
 			for _, staker := range test.stakers {
 				_, err := addCaminoPendingValidator(
@@ -282,11 +280,13 @@ func TestDeferredStakers(t *testing.T) {
 				case pending:
 					_, err := env.state.GetPendingValidator(constants.PrimaryNetworkID, stakerNodeID)
 					require.NoError(err)
-					require.False(validators.Contains(env.config.Validators, constants.PrimaryNetworkID, stakerNodeID))
+					_, ok := env.config.Validators.GetValidator(constants.PrimaryNetworkID, stakerNodeID)
+					require.False(ok)
 				case current:
 					_, err := env.state.GetCurrentValidator(constants.PrimaryNetworkID, stakerNodeID)
 					require.NoError(err)
-					require.True(validators.Contains(env.config.Validators, constants.PrimaryNetworkID, stakerNodeID))
+					_, ok := env.config.Validators.GetValidator(constants.PrimaryNetworkID, stakerNodeID)
+					require.True(ok)
 				case expired:
 					_, err := env.state.GetCurrentValidator(constants.PrimaryNetworkID, stakerNodeID)
 					require.ErrorIs(err, database.ErrNotFound)
@@ -300,11 +300,13 @@ func TestDeferredStakers(t *testing.T) {
 				case pending:
 					_, err := env.state.GetPendingValidator(subnetID, stakerNodeID)
 					require.NoError(err)
-					require.False(validators.Contains(env.config.Validators, subnetID, stakerNodeID))
+					_, ok := env.config.Validators.GetValidator(subnetID, stakerNodeID)
+					require.False(ok)
 				case current:
 					_, err := env.state.GetCurrentValidator(subnetID, stakerNodeID)
 					require.NoError(err)
-					require.True(validators.Contains(env.config.Validators, subnetID, stakerNodeID))
+					_, ok := env.config.Validators.GetValidator(subnetID, stakerNodeID)
+					require.True(ok)
 				case expired:
 					_, err := env.state.GetCurrentValidator(subnetID, stakerNodeID)
 					require.ErrorIs(err, database.ErrNotFound)
