@@ -18,6 +18,7 @@ import (
 
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/codec/linearcodec"
+	"github.com/ava-labs/avalanchego/utils"
 	"github.com/ava-labs/avalanchego/utils/wrappers"
 	"github.com/ava-labs/avalanchego/vms/components/multisig"
 	"github.com/ava-labs/avalanchego/vms/platformvm/dac"
@@ -146,5 +147,8 @@ func RegisterUnsignedTxsTypes(targetCodec linearcodec.CaminoCodec) error {
 }
 
 func RegisterDUnsignedTxsTypes(targetCodec linearcodec.Codec) error {
-	return targetCodec.RegisterType(&TransferSubnetOwnershipTx{})
+	return utils.Err(
+		targetCodec.RegisterType(&TransferSubnetOwnershipTx{}),
+		targetCodec.RegisterType(&BaseTx{}),
+	)
 }

@@ -58,7 +58,7 @@ func TestKeychainAdd(t *testing.T) {
 	skBytes, err := formatting.Decode(formatting.HexNC, keys[0])
 	require.NoError(err)
 
-	sk, err := kc.factory.ToPrivateKey(skBytes)
+	sk, err := secp256k1.ToPrivateKey(skBytes)
 	require.NoError(err)
 	kc.Add(sk)
 
@@ -99,7 +99,7 @@ func TestKeychainMatch(t *testing.T) {
 		skBytes, err := formatting.Decode(formatting.HexNC, keyStr)
 		require.NoError(err)
 
-		sk, err := kc.factory.ToPrivateKey(skBytes)
+		sk, err := secp256k1.ToPrivateKey(skBytes)
 		require.NoError(err)
 		sks = append(sks, sk)
 	}
@@ -144,7 +144,7 @@ func TestKeychainSpendMint(t *testing.T) {
 		skBytes, err := formatting.Decode(formatting.HexNC, keyStr)
 		require.NoError(err)
 
-		sk, err := kc.factory.ToPrivateKey(skBytes)
+		sk, err := secp256k1.ToPrivateKey(skBytes)
 		require.NoError(err)
 		sks = append(sks, sk)
 	}
@@ -186,7 +186,7 @@ func TestKeychainSpendTransfer(t *testing.T) {
 		skBytes, err := formatting.Decode(formatting.HexNC, keyStr)
 		require.NoError(err)
 
-		sk, err := kc.factory.ToPrivateKey(skBytes)
+		sk, err := secp256k1.ToPrivateKey(skBytes)
 		require.NoError(err)
 		sks = append(sks, sk)
 	}
@@ -234,7 +234,7 @@ func TestKeychainString(t *testing.T) {
 	skBytes, err := formatting.Decode(formatting.HexNC, keys[0])
 	require.NoError(err)
 
-	sk, err := kc.factory.ToPrivateKey(skBytes)
+	sk, err := secp256k1.ToPrivateKey(skBytes)
 	require.NoError(err)
 	kc.Add(sk)
 
@@ -249,7 +249,7 @@ func TestKeychainPrefixedString(t *testing.T) {
 	skBytes, err := formatting.Decode(formatting.HexNC, keys[0])
 	require.NoError(err)
 
-	sk, err := kc.factory.ToPrivateKey(skBytes)
+	sk, err := secp256k1.ToPrivateKey(skBytes)
 	require.NoError(err)
 	kc.Add(sk)
 

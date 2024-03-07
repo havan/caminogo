@@ -27,7 +27,7 @@ import (
 	"github.com/ava-labs/avalanchego/cache"
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/codec/linearcodec"
-	"github.com/ava-labs/avalanchego/database/manager"
+	"github.com/ava-labs/avalanchego/database"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/snow"
 	"github.com/ava-labs/avalanchego/snow/consensus/snowman"
@@ -39,7 +39,6 @@ import (
 	"github.com/ava-labs/avalanchego/utils/json"
 	"github.com/ava-labs/avalanchego/utils/logging"
 	"github.com/ava-labs/avalanchego/utils/timer/mockable"
-	"github.com/ava-labs/avalanchego/utils/wrappers"
 	"github.com/ava-labs/avalanchego/version"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm/api"
@@ -83,8 +82,8 @@ type VM struct {
 	uptimeManager uptime.Manager
 
 	// The context of this vm
-	ctx       *snow.Context
-	dbManager manager.Manager
+	ctx *snow.Context
+	db  database.Database
 
 	state state.State
 
@@ -106,7 +105,7 @@ type VM struct {
 func (vm *VM) Initialize(
 	ctx context.Context,
 	chainCtx *snow.Context,
-	dbManager manager.Manager,
+	db database.Database,
 	genesisBytes []byte,
 	_ []byte,
 	configBytes []byte,
@@ -134,7 +133,7 @@ func (vm *VM) Initialize(
 	}
 
 	vm.ctx = chainCtx
-	vm.dbManager = dbManager
+	vm.db = db
 
 	vm.codecRegistry = linearcodec.NewCaminoDefault()
 	vm.fx = &secp256k1fx.CaminoFx{}
@@ -145,7 +144,7 @@ func (vm *VM) Initialize(
 	rewards := reward.NewCalculator(vm.RewardConfig)
 
 	vm.state, err = state.New(
-		vm.dbManager.Current().Database,
+		vm.db,
 		genesisBytes,
 		registerer,
 		&vm.Config,
@@ -351,7 +350,7 @@ func (vm *VM) SetState(_ context.Context, state snow.State) error {
 
 // Shutdown this blockchain
 func (vm *VM) Shutdown(context.Context) error {
-	if vm.dbManager == nil {
+	if vm.db == nil {
 		return nil
 	}
 
@@ -375,12 +374,10 @@ func (vm *VM) Shutdown(context.Context) error {
 		}
 	}
 
-	errs := wrappers.Errs{}
-	errs.Add(
+	return utils.Err(
 		vm.state.Close(),
-		vm.dbManager.Close(),
+		vm.db.Close(),
 	)
-	return errs.Err
 }
 
 func (vm *VM) ParseBlock(_ context.Context, b []byte) (snowman.Block, error) {
