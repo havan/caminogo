@@ -108,6 +108,9 @@ type Staker struct {
 	StakeAmount *json.Uint64 `json:"stakeAmount,omitempty"`
 }
 
+// GenesisValidator should to be used for genesis validators only.
+type GenesisValidator Staker
+
 // Owner is the repr. of a reward owner sent over APIs.
 type Owner struct {
 	Locktime  json.Uint64 `json:"locktime"`
@@ -140,6 +143,15 @@ type PermissionlessValidator struct {
 	DelegatorCount  *json.Uint64        `json:"delegatorCount,omitempty"`
 	DelegatorWeight *json.Uint64        `json:"delegatorWeight,omitempty"`
 	Delegators      *[]PrimaryDelegator `json:"delegators,omitempty"`
+}
+
+// GenesisPermissionlessValidator should to be used for genesis validators only.
+type GenesisPermissionlessValidator struct {
+	GenesisValidator
+	RewardOwner        *Owner       `json:"rewardOwner,omitempty"`
+	DelegationFee      json.Float32 `json:"delegationFee"`
+	ExactDelegationFee *json.Uint32 `json:"exactDelegationFee,omitempty"`
+	Staked             []UTXO       `json:"staked,omitempty"`
 }
 
 // PermissionedValidator is the repr. of a permissioned validator sent over APIs.
@@ -184,7 +196,7 @@ type BuildGenesisArgs struct {
 	AvaxAssetID   ids.ID                    `json:"avaxAssetID"`
 	NetworkID     json.Uint32               `json:"networkID"`
 	UTXOs         []UTXO                    `json:"utxos"`
-	Validators    []PermissionlessValidator `json:"validators"`
+	Validators    []GenesisPermissionlessValidator `json:"validators"`
 	Chains        []Chain                   `json:"chains"`
 	Camino        *Camino                   `json:"camino"`
 	Time          json.Uint64               `json:"time"`
