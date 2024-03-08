@@ -19,6 +19,10 @@ const (
 	// TagValue is the value the tag must have to be serialized.
 	TagValue = "true"
 
+	// TagValue is the value the tag must have to be serialized, this variant
+	// includes the nullable option
+	TagWithNullableValue = "true,nullable"
+
 	UpgradeVersionIDFieldName = "UpgradeVersionID"
 	UpgradeVersionTagName     = "upgradeVersion"
 )
@@ -28,6 +32,7 @@ var _ StructFielder = (*structFielder)(nil)
 type FieldDesc struct {
 	Index          int
 	MaxSliceLen    uint32
+	Nullable       bool
 	UpgradeVersion uint16
 }
 
@@ -100,10 +105,19 @@ func (s *structFielder) GetSerializedFields(t reflect.Type) (*SerializedFields, 
 		// Multiple tags per fields can be specified.
 		// Serialize/Deserialize field if it has
 		// any tag with the right value
-		captureField := false
+		var (
+			captureField bool
+			nullable     bool
+		)
 		for _, tag := range s.tags {
-			if field.Tag.Get(tag) == TagValue {
+			switch field.Tag.Get(tag) {
+			case TagValue:
 				captureField = true
+			case TagWithNullableValue:
+				captureField = true
+				nullable = true
+			}
+			if captureField {
 				break
 			}
 		}
@@ -136,6 +150,7 @@ func (s *structFielder) GetSerializedFields(t reflect.Type) (*SerializedFields, 
 		serializedFields.Fields = append(serializedFields.Fields, FieldDesc{
 			Index:          i,
 			MaxSliceLen:    maxSliceLen,
+			Nullable:       nullable,
 			UpgradeVersion: upgradeVersion,
 		})
 	}

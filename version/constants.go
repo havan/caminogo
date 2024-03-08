@@ -24,7 +24,7 @@ import (
 
 // RPCChainVMProtocol should be bumped anytime changes are made which require
 // the plugin vm to upgrade to latest avalanchego release to be compatible.
-const RPCChainVMProtocol uint = 29
+const RPCChainVMProtocol uint = 30
 
 // These are globals that describe network upgrades and node versions
 var (
@@ -35,7 +35,7 @@ var (
 	Current = &Semantic{
 		Major: 1,
 		Minor: 1,
-		Patch: 14,
+		Patch: 15,
 	}
 	CurrentApp = &Application{
 		Major: Current.Major,

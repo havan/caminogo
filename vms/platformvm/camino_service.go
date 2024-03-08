@@ -137,7 +137,7 @@ utxoFor:
 			continue utxoFor
 		}
 
-		utxoIDs = append(utxoIDs, &utxo.UTXOID) //nolint:gosec
+		utxoIDs = append(utxoIDs, &utxo.UTXOID)
 	}
 
 	response.camino = GetBalanceResponseV2{balances, unlockedOutputs, bondedOutputs, depositedOutputs, depositedBondedOutputs, utxoIDs}
@@ -601,7 +601,7 @@ func (s *CaminoService) Claim(_ *http.Request, args *ClaimArgs, reply *api.JSONT
 type TransferArgs struct {
 	api.UserPass
 	api.JSONFromAddrs
-	Change     platformapi.Owner `json:"change"`
+	Change     string            `json:"change"`
 	TransferTo platformapi.Owner `json:"transferTo"`
 	Amount     json.Uint64       `json:"amount"`
 }
@@ -618,7 +618,7 @@ func (s *CaminoService) Transfer(_ *http.Request, args *TransferArgs, reply *api
 		return err
 	}
 
-	change, err := s.secpOwnerFromAPI(&args.Change)
+	_, change, err := s.addrManager.ParseAddress(args.Change)
 	if err != nil {
 		return fmt.Errorf(errInvalidChangeAddr, err)
 	}
@@ -631,7 +631,7 @@ func (s *CaminoService) Transfer(_ *http.Request, args *TransferArgs, reply *api
 	// Create the transaction
 	tx, err := s.vm.txBuilder.NewBaseTx(
 		uint64(args.Amount),
-		transferTo,
+		*transferTo,
 		privKeys,
 		change,
 	)
