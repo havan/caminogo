@@ -1,12 +1,11 @@
 name: Auto-Generated Code Checker
 on:
-  push:
-    tags:
-      - "*"
-    branches:
-      - master
-      - dev
   pull_request:
+    tags-ignore: ["*"]
+    branches: [chain4travel, dev]
+  push:
+    branches: [chain4travel, dev]
+  workflow_dispatch:
   merge_group:
     types: [checks_requested]
 
