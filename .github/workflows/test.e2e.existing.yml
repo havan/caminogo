@@ -29,9 +29,9 @@ jobs:
       - name: Build the caminogo binaries
         shell: bash
         run: ./scripts/build.sh
-      - name: Run e2e tests with persistent network
+      - name: Run e2e tests with existing network
         shell: bash
-        run: E2E_SERIAL=1 ./scripts/tests.e2e.persistent.sh ./build/caminogo
+        run: E2E_SERIAL=1 ./scripts/tests.e2e.existing.sh ./build/caminogo
       - name: Upload tmpnet network dir
         uses: actions/upload-artifact@v3
         if: always()
