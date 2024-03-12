@@ -117,10 +117,8 @@ type Chain interface {
 	GetCurrentSupply(subnetID ids.ID) (uint64, error)
 	SetCurrentSupply(subnetID ids.ID, cs uint64)
 
-	GetRewardUTXOs(txID ids.ID) ([]*avax.UTXO, error)
 	AddRewardUTXO(txID ids.ID, utxo *avax.UTXO)
 
-	GetSubnets() ([]*txs.Tx, error)
 	AddSubnet(createSubnetTx *txs.Tx)
 
 	GetSubnetOwner(subnetID ids.ID) (fx.Owner, error)
@@ -129,7 +127,6 @@ type Chain interface {
 	GetSubnetTransformation(subnetID ids.ID) (*txs.Tx, error)
 	AddSubnetTransformation(transformSubnetTx *txs.Tx)
 
-	GetChains(subnetID ids.ID) ([]*txs.Tx, error)
 	AddChain(createChainTx *txs.Tx)
 
 	GetTx(txID ids.ID) (*txs.Tx, status.Status, error)
@@ -150,6 +147,10 @@ type State interface {
 	AddStatelessBlock(block block.Block)
 
 	GetBlockIDAtHeight(height uint64) (ids.ID, error)
+
+	GetRewardUTXOs(txID ids.ID) ([]*avax.UTXO, error)
+	GetSubnets() ([]*txs.Tx, error)
+	GetChains(subnetID ids.ID) ([]*txs.Tx, error)
 
 	// ApplyValidatorWeightDiffs iterates from [startHeight] towards the genesis
 	// block until it has applied all of the diffs up to and including
@@ -1339,13 +1340,13 @@ func (s *state) syncGenesis(genesisBlk block.Block, genesis *genesis.Genesis) er
 
 	// Persist primary network validator set at genesis
 	for _, vdrTx := range genesis.Validators {
-		tx, ok := vdrTx.Unsigned.(txs.ValidatorTx)
+		validatorTx, ok := vdrTx.Unsigned.(txs.ValidatorTx)
 		if !ok {
 			return fmt.Errorf("expected tx type txs.ValidatorTx but got %T", vdrTx.Unsigned)
 		}
 
-		stakeAmount := tx.Weight()
-		stakeDuration := tx.EndTime().Sub(tx.StartTime())
+		stakeAmount := validatorTx.Weight()
+		stakeDuration := validatorTx.EndTime().Sub(validatorTx.StartTime())
 		currentSupply, err := s.GetCurrentSupply(constants.PrimaryNetworkID)
 		if err != nil {
 			return err
@@ -1361,7 +1362,7 @@ func (s *state) syncGenesis(genesisBlk block.Block, genesis *genesis.Genesis) er
 			return err
 		}
 
-		staker, err := NewCurrentStaker(vdrTx.ID(), tx, potentialReward)
+		staker, err := NewCurrentStaker(vdrTx.ID(), validatorTx, potentialReward)
 		if err != nil {
 			return err
 		}

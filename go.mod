@@ -11,7 +11,7 @@ require (
 	github.com/DataDog/zstd v1.5.2
 	github.com/Microsoft/go-winio v0.5.2
 	github.com/NYTimes/gziphandler v1.1.1
-	github.com/ava-labs/coreth v0.12.9-rc.5
+	github.com/ava-labs/coreth v0.12.9-rc.9
 	github.com/ava-labs/ledger-avalanche/go v0.0.0-20231102202641-ae2ebdaeac34
 	github.com/btcsuite/btcd/btcutil v1.1.3
 	github.com/cockroachdb/pebble v0.0.0-20230209160836-829675f94811
@@ -162,4 +162,4 @@ require (
 
 replace github.com/ava-labs/avalanche-ledger-go => github.com/chain4travel/camino-ledger-go v0.0.13-c4t
 
-replace github.com/ava-labs/coreth => github.com/chain4travel/caminoethvm v1.1.16-rc0
+replace github.com/ava-labs/coreth => github.com/chain4travel/caminoethvm v1.1.17-rc0
