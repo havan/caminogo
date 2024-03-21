@@ -11,6 +11,7 @@ import (
 
 	"github.com/ava-labs/avalanchego/database"
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/snow/snowtest"
 	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
@@ -23,7 +24,7 @@ import (
 )
 
 func TestProposalVerifierBaseFeeProposal(t *testing.T) {
-	ctx := defaultCtx(nil)
+	ctx := snowtest.Context(t, snowtest.PChainID)
 
 	feeOwnerKey, _, feeOwner := generateKeyAndOwner(t)
 	bondOwnerKey, _, bondOwner := generateKeyAndOwner(t)
@@ -34,7 +35,7 @@ func TestProposalVerifierBaseFeeProposal(t *testing.T) {
 	bondUTXO := generateTestUTXO(ids.ID{1, 2, 3, 4, 6}, ctx.AVAXAssetID, proposalBondAmt, bondOwner, ids.Empty, ids.Empty)
 
 	proposal := &txs.ProposalWrapper{Proposal: &dac.BaseFeeProposal{End: 1, Options: []uint64{1}}}
-	proposalBytes, err := txs.Codec.Marshal(txs.Version, proposal)
+	proposalBytes, err := txs.Codec.Marshal(txs.CodecVersion, proposal)
 	require.NoError(t, err)
 
 	baseTx := txs.BaseTx{BaseTx: avax.BaseTx{
@@ -127,7 +128,7 @@ func TestProposalVerifierBaseFeeProposal(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			fx := defaultFx(true)
+			fx := defaultFx(t)
 
 			utx := tt.utx()
 			avax.SortTransferableInputsWithSigners(utx.Ins, tt.signers)
@@ -166,7 +167,7 @@ func TestProposalExecutorBaseFeeProposal(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			fx := defaultFx(true)
+			fx := defaultFx(t)
 			err := tt.proposal.ExecuteWith(NewProposalExecutor(tt.state(gomock.NewController(t)), fx))
 			require.ErrorIs(t, err, tt.expectedErr)
 		})
@@ -174,7 +175,7 @@ func TestProposalExecutorBaseFeeProposal(t *testing.T) {
 }
 
 func TestProposalVerifierAddMemberProposal(t *testing.T) {
-	ctx := defaultCtx(nil)
+	ctx := snowtest.Context(t, snowtest.PChainID)
 
 	feeOwnerKey, _, feeOwner := generateKeyAndOwner(t)
 	bondOwnerKey, _, bondOwner := generateKeyAndOwner(t)
@@ -186,7 +187,7 @@ func TestProposalVerifierAddMemberProposal(t *testing.T) {
 	bondUTXO := generateTestUTXO(ids.ID{1, 2, 3, 4, 6}, ctx.AVAXAssetID, proposalBondAmt, bondOwner, ids.Empty, ids.Empty)
 
 	proposal := &txs.ProposalWrapper{Proposal: &dac.AddMemberProposal{End: 1, ApplicantAddress: applicantAddress}}
-	proposalBytes, err := txs.Codec.Marshal(txs.Version, proposal)
+	proposalBytes, err := txs.Codec.Marshal(txs.CodecVersion, proposal)
 	require.NoError(t, err)
 
 	baseTx := txs.BaseTx{BaseTx: avax.BaseTx{
@@ -298,7 +299,7 @@ func TestProposalVerifierAddMemberProposal(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			fx := defaultFx(true)
+			fx := defaultFx(t)
 
 			utx := tt.utx()
 			avax.SortTransferableInputsWithSigners(utx.Ins, tt.signers)
@@ -341,7 +342,7 @@ func TestProposalExecutorAddMemberProposal(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			fx := defaultFx(true)
+			fx := defaultFx(t)
 			err := tt.proposal.ExecuteWith(NewProposalExecutor(tt.state(gomock.NewController(t)), fx))
 			require.ErrorIs(t, err, tt.expectedErr)
 		})
@@ -349,7 +350,7 @@ func TestProposalExecutorAddMemberProposal(t *testing.T) {
 }
 
 func TestProposalVerifierExcludeMemberProposal(t *testing.T) {
-	ctx := defaultCtx(nil)
+	ctx := snowtest.Context(t, snowtest.PChainID)
 
 	feeOwnerKey, _, feeOwner := generateKeyAndOwner(t)
 	bondOwnerKey, _, bondOwner := generateKeyAndOwner(t)
@@ -364,7 +365,7 @@ func TestProposalVerifierExcludeMemberProposal(t *testing.T) {
 	bondUTXO := generateTestUTXO(ids.ID{1, 2, 3, 4, 6}, ctx.AVAXAssetID, proposalBondAmt, bondOwner, ids.Empty, ids.Empty)
 
 	proposal := &txs.ProposalWrapper{Proposal: &dac.ExcludeMemberProposal{End: 1, MemberAddress: memberAddress}}
-	proposalBytes, err := txs.Codec.Marshal(txs.Version, proposal)
+	proposalBytes, err := txs.Codec.Marshal(txs.CodecVersion, proposal)
 	require.NoError(t, err)
 
 	baseTx := txs.BaseTx{BaseTx: avax.BaseTx{
@@ -551,7 +552,7 @@ func TestProposalVerifierExcludeMemberProposal(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			fx := defaultFx(true)
+			fx := defaultFx(t)
 
 			utx := tt.utx()
 			avax.SortTransferableInputsWithSigners(utx.Ins, tt.signers)
@@ -679,7 +680,7 @@ func TestProposalExecutorExcludeMemberProposal(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			fx := defaultFx(true)
+			fx := defaultFx(t)
 			err := tt.proposal.ExecuteWith(NewProposalExecutor(tt.state(gomock.NewController(t)), fx))
 			require.ErrorIs(t, err, tt.expectedErr)
 		})
@@ -820,7 +821,7 @@ func TestGetBondTxIDs(t *testing.T) {
 }
 
 func TestProposalVerifierFeeDistributionProposal(t *testing.T) {
-	ctx := defaultCtx(nil)
+	ctx := snowtest.Context(t, snowtest.PChainID)
 
 	feeOwnerKey, _, feeOwner := generateKeyAndOwner(t)
 	bondOwnerKey, _, bondOwner := generateKeyAndOwner(t)
@@ -831,7 +832,7 @@ func TestProposalVerifierFeeDistributionProposal(t *testing.T) {
 	bondUTXO := generateTestUTXO(ids.ID{1, 2, 3, 4, 6}, ctx.AVAXAssetID, proposalBondAmt, bondOwner, ids.Empty, ids.Empty)
 
 	proposal := &txs.ProposalWrapper{Proposal: &dac.FeeDistributionProposal{End: 1, Options: [][dac.FeeDistributionFractionsCount]uint64{{1}}}}
-	proposalBytes, err := txs.Codec.Marshal(txs.Version, proposal)
+	proposalBytes, err := txs.Codec.Marshal(txs.CodecVersion, proposal)
 	require.NoError(t, err)
 
 	baseTx := txs.BaseTx{BaseTx: avax.BaseTx{
@@ -924,7 +925,7 @@ func TestProposalVerifierFeeDistributionProposal(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			fx := defaultFx(true)
+			fx := defaultFx(t)
 
 			utx := tt.utx()
 			avax.SortTransferableInputsWithSigners(utx.Ins, tt.signers)
@@ -963,7 +964,7 @@ func TestProposalExecutorFeeDistributionProposal(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			fx := defaultFx(true)
+			fx := defaultFx(t)
 			err := tt.proposal.ExecuteWith(NewProposalExecutor(tt.state(gomock.NewController(t)), fx))
 			require.ErrorIs(t, err, tt.expectedErr)
 		})

@@ -13,6 +13,7 @@ import (
 	"github.com/ava-labs/avalanchego/chains/atomic"
 	"github.com/ava-labs/avalanchego/database"
 	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/snow/snowtest"
 	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
 	"github.com/ava-labs/avalanchego/utils/nodeid"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
@@ -32,7 +33,7 @@ func TestCaminoEnv(t *testing.T) {
 		VerifyNodeSignature: true,
 		LockModeBondDeposit: true,
 	}
-	env := newCaminoEnvironment( /*postBanff*/ false, caminoGenesisConf)
+	env := newCaminoEnvironment(t, false, caminoGenesisConf)
 	env.ctx.Lock.Lock()
 	defer func() {
 		require.NoError(t, shutdownCaminoEnvironment(env))
@@ -46,7 +47,7 @@ func TestCaminoBuilderTxAddressState(t *testing.T) {
 		LockModeBondDeposit: true,
 	}
 
-	env := newCaminoEnvironment(true, caminoConfig)
+	env := newCaminoEnvironment(t, true, caminoConfig)
 	env.ctx.Lock.Lock()
 	defer func() {
 		require.NoError(t, shutdownCaminoEnvironment(env))
@@ -146,7 +147,7 @@ func TestCaminoBuilderNewAddSubnetValidatorTxNodeSig(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			env := newCaminoEnvironment(true, tt.caminoConfig)
+			env := newCaminoEnvironment(t, true, tt.caminoConfig)
 			env.ctx.Lock.Lock()
 			defer func() {
 				require.NoError(t, shutdownCaminoEnvironment(env))
@@ -167,6 +168,8 @@ func TestCaminoBuilderNewAddSubnetValidatorTxNodeSig(t *testing.T) {
 }
 
 func TestUnlockDepositTx(t *testing.T) {
+	ctx := snowtest.Context(t, snowtest.PChainID)
+
 	caminoGenesisConf := api.Camino{
 		VerifyNodeSignature: true,
 		LockModeBondDeposit: true,
@@ -204,24 +207,24 @@ func TestUnlockDepositTx(t *testing.T) {
 	}{
 		"Happy path, ins and feeIns consumed different UTXOs": {
 			utxos: []*avax.UTXO{
-				generateTestUTXO(ids.ID{1}, avaxAssetID, defaultCaminoValidatorWeight, outputOwners, depositTxID, ids.Empty),
-				generateTestUTXO(ids.ID{2}, avaxAssetID, defaultTxFee, outputOwners, ids.Empty, ids.Empty),
+				generateTestUTXO(ids.ID{1}, ctx.AVAXAssetID, defaultCaminoValidatorWeight, outputOwners, depositTxID, ids.Empty),
+				generateTestUTXO(ids.ID{2}, ctx.AVAXAssetID, defaultTxFee, outputOwners, ids.Empty, ids.Empty),
 			},
 			expectedErr: nil,
 		},
 		"Happy path, multiple ins and multiple feeIns consumed different UTXOs": {
 			utxos: []*avax.UTXO{
-				generateTestUTXO(ids.ID{1}, avaxAssetID, defaultCaminoValidatorWeight/2, outputOwners, depositTxID, ids.Empty),
-				generateTestUTXO(ids.ID{2}, avaxAssetID, defaultCaminoValidatorWeight/2, outputOwners, depositTxID, ids.Empty),
-				generateTestUTXO(ids.ID{3}, avaxAssetID, defaultTxFee/2, outputOwners, ids.Empty, ids.Empty),
-				generateTestUTXO(ids.ID{4}, avaxAssetID, defaultTxFee/2, outputOwners, ids.Empty, ids.Empty),
+				generateTestUTXO(ids.ID{1}, ctx.AVAXAssetID, defaultCaminoValidatorWeight/2, outputOwners, depositTxID, ids.Empty),
+				generateTestUTXO(ids.ID{2}, ctx.AVAXAssetID, defaultCaminoValidatorWeight/2, outputOwners, depositTxID, ids.Empty),
+				generateTestUTXO(ids.ID{3}, ctx.AVAXAssetID, defaultTxFee/2, outputOwners, ids.Empty, ids.Empty),
+				generateTestUTXO(ids.ID{4}, ctx.AVAXAssetID, defaultTxFee/2, outputOwners, ids.Empty, ids.Empty),
 			},
 			expectedErr: nil,
 		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			env := newCaminoEnvironment( /*postBanff*/ true, caminoGenesisConf)
+			env := newCaminoEnvironment(t, true, caminoGenesisConf)
 			env.ctx.Lock.Lock()
 			defer func() {
 				require.NoError(t, shutdownCaminoEnvironment(env))
@@ -263,7 +266,7 @@ func TestUnlockDepositTx(t *testing.T) {
 }
 
 func TestNewClaimTx(t *testing.T) {
-	ctx, _ := defaultCtx(nil)
+	ctx := snowtest.Context(t, snowtest.PChainID)
 
 	caminoConfig := &state.CaminoConfig{
 		LockModeBondDeposit: true,
@@ -721,7 +724,7 @@ func TestNewClaimTx(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			require := require.New(t)
-			b, db := newCaminoBuilder(true, tt.state(gomock.NewController(t)))
+			b, db := newCaminoBuilder(t, true, tt.state(gomock.NewController(t)))
 			defer func() {
 				require.NoError(db.Close())
 			}()
@@ -743,7 +746,7 @@ func TestNewClaimTx(t *testing.T) {
 }
 
 func TestNewRewardsImportTx(t *testing.T) {
-	ctx, _ := defaultCtx(nil)
+	ctx := snowtest.Context(t, snowtest.PChainID)
 	blockTime := time.Unix(1000, 0)
 
 	tests := map[string]struct {
@@ -770,7 +773,7 @@ func TestNewRewardsImportTx(t *testing.T) {
 					}
 					utxoID := utxo.InputID()
 					utxoIDs[i] = utxoID[:]
-					utxoBytes, err := txs.Codec.Marshal(txs.Version, toMarshal)
+					utxoBytes, err := txs.Codec.Marshal(txs.CodecVersion, toMarshal)
 					require.NoError(t, err)
 					utxosBytes[i] = utxoBytes
 				}
@@ -830,7 +833,7 @@ func TestNewRewardsImportTx(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			require := require.New(t)
 			ctrl := gomock.NewController(t)
-			b, db := newCaminoBuilderWithMocks(true, tt.state(ctrl), tt.sharedMemory(ctrl, tt.utxos))
+			b, db := newCaminoBuilderWithMocks(t, true, tt.state(ctrl), tt.sharedMemory(ctrl, tt.utxos))
 			defer func() {
 				require.NoError(db.Close())
 			}()

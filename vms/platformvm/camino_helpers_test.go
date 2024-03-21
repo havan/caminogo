@@ -5,6 +5,7 @@ package platformvm
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -18,6 +19,7 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/snow"
 	"github.com/ava-labs/avalanchego/snow/engine/common"
+	"github.com/ava-labs/avalanchego/snow/snowtest"
 	"github.com/ava-labs/avalanchego/snow/uptime"
 	"github.com/ava-labs/avalanchego/snow/validators"
 	"github.com/ava-labs/avalanchego/utils/constants"
@@ -27,6 +29,7 @@ import (
 	"github.com/ava-labs/avalanchego/utils/json"
 	"github.com/ava-labs/avalanchego/utils/logging"
 	"github.com/ava-labs/avalanchego/utils/nodeid"
+	"github.com/ava-labs/avalanchego/utils/timer/mockable"
 	"github.com/ava-labs/avalanchego/utils/units"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	as "github.com/ava-labs/avalanchego/vms/platformvm/addrstate"
@@ -46,7 +49,6 @@ var (
 	localStakingPath          = "../../staking/local/"
 	caminoPreFundedKeys       = secp256k1.TestKeys()
 	_, caminoPreFundedNodeIDs = nodeid.LoadLocalCaminoNodeKeysAndIDs(localStakingPath)
-	defaultStartTime          = banffForkTime.Add(time.Second)
 
 	testAddressID ids.ShortID
 )
@@ -63,7 +65,7 @@ func init() {
 }
 
 func defaultCaminoService(t *testing.T, camino api.Camino, utxos []api.UTXO) *CaminoService {
-	vm := newCaminoVM(t, camino, utxos, nil)
+	vm := newCaminoVM(t, camino, utxos)
 
 	vm.ctx.Lock.Lock()
 	defer vm.ctx.Lock.Unlock()
@@ -78,21 +80,18 @@ func defaultCaminoService(t *testing.T, camino api.Camino, utxos []api.UTXO) *Ca
 	}
 }
 
-func newCaminoVM(t *testing.T, genesisConfig api.Camino, genesisUTXOs []api.UTXO, startTime *time.Time) *VM {
+func newCaminoVM(t *testing.T, genesisConfig api.Camino, genesisUTXOs []api.UTXO) *VM {
 	require := require.New(t)
 
-	vm := &VM{Config: defaultCaminoConfig()}
+	vm := &VM{Config: defaultCaminoConfig(t)}
 
 	db := memdb.New()
 	chainDB := prefixdb.New([]byte{0}, db)
 	atomicDB := prefixdb.New([]byte{1}, db)
 
-	if startTime == nil {
-		startTime = &defaultStartTime
-	}
-	vm.clock.Set(*startTime)
+	vm.clock.Set(latestForkTime)
 	msgChan := make(chan common.Message, 1)
-	ctx := defaultContext(t)
+	ctx := snowtest.Context(t, snowtest.PChainID)
 
 	m := atomic.NewMemory(atomicDB)
 	msm := &mutableSharedMemory{
@@ -100,9 +99,19 @@ func newCaminoVM(t *testing.T, genesisConfig api.Camino, genesisUTXOs []api.UTXO
 	}
 	ctx.SharedMemory = msm
 
+	id := caminoPreFundedKeys[0].PublicKey().Address()
+	caminoPreFundedKeysAddr0, err := address.FormatBech32(constants.UnitTestHRP, id.Bytes())
+	require.NoError(err)
+
+	// utxo with funds for testSubnet1 (see below)
+	genesisUTXOs = append(genesisUTXOs, api.UTXO{
+		Amount:  json.Uint64(vm.Config.CreateSubnetTxFee),
+		Address: caminoPreFundedKeysAddr0,
+	})
+
 	ctx.Lock.Lock()
 	defer ctx.Lock.Unlock()
-	_, genesisBytes := newCaminoGenesisWithUTXOs(t, genesisConfig, genesisUTXOs, startTime)
+	_, genesisBytes := newCaminoGenesisWithUTXOs(t, ctx.AVAXAssetID, genesisConfig, genesisUTXOs, &latestForkTime)
 	// _, genesisBytes := defaultGenesis(t)
 	appSender := &common.SenderTest{}
 	appSender.CantSendAppGossip = true
@@ -122,6 +131,9 @@ func newCaminoVM(t *testing.T, genesisConfig api.Camino, genesisUTXOs []api.UTXO
 		appSender,
 	))
 
+	// align chain time and local clock
+	vm.state.SetTimestamp(vm.clock.Time())
+
 	require.NoError(vm.SetState(context.Background(), snow.NormalOp))
 
 	// Create a subnet and store it in testSubnet1
@@ -138,7 +150,9 @@ func newCaminoVM(t *testing.T, genesisConfig api.Camino, genesisUTXOs []api.UTXO
 		caminoPreFundedKeys[0].PublicKey().Address(),
 	)
 	require.NoError(err)
-	require.NoError(vm.Network.IssueTx(context.Background(), testSubnet1))
+	vm.ctx.Lock.Unlock()
+	require.NoError(vm.issueTx(context.Background(), testSubnet1))
+	vm.ctx.Lock.Lock()
 	blk, err := vm.Builder.BuildBlock(context.Background())
 	require.NoError(err)
 	require.NoError(blk.Verify(context.Background()))
@@ -149,7 +163,39 @@ func newCaminoVM(t *testing.T, genesisConfig api.Camino, genesisUTXOs []api.UTXO
 	// return vm, baseDBManager.Current().Database, msm
 }
 
-func defaultCaminoConfig() config.Config {
+func defaultCaminoConfig(t *testing.T) config.Config {
+	t.Helper()
+
+	var (
+		apricotPhase3Time = mockable.MaxTime
+		apricotPhase5Time = mockable.MaxTime
+		banffTime         = mockable.MaxTime
+		cortinaTime       = mockable.MaxTime
+		durangoTime       = mockable.MaxTime
+	)
+
+	// always reset latestForkTime (a package level variable)
+	// to ensure test independence
+	latestForkTime = defaultGenesisTime.Add(time.Second)
+	switch latestFork {
+	case durangoFork:
+		durangoTime = latestForkTime
+		fallthrough
+	case cortinaFork:
+		cortinaTime = latestForkTime
+		fallthrough
+	case banffFork:
+		banffTime = latestForkTime
+		fallthrough
+	case apricotPhase5:
+		apricotPhase5Time = latestForkTime
+		fallthrough
+	case apricotPhase3:
+		apricotPhase3Time = latestForkTime
+	default:
+		require.NoError(t, fmt.Errorf("unhandled fork %d", latestFork))
+	}
+
 	return config.Config{
 		Chains:                 chains.TestManager,
 		UptimeLockedCalculator: uptime.NewLockedCalculator(),
@@ -165,9 +211,11 @@ func defaultCaminoConfig() config.Config {
 		MinStakeDuration:       defaultMinStakingDuration,
 		MaxStakeDuration:       defaultMaxStakingDuration,
 		RewardConfig:           defaultRewardConfig,
-		ApricotPhase3Time:      defaultValidateEndTime,
-		ApricotPhase5Time:      defaultValidateEndTime,
-		BanffTime:              banffForkTime,
+		ApricotPhase3Time:      apricotPhase3Time,
+		ApricotPhase5Time:      apricotPhase5Time,
+		BanffTime:              banffTime,
+		CortinaTime:            cortinaTime,
+		DurangoTime:            durangoTime,
 		CaminoConfig: caminoconfig.Config{
 			DACProposalBondAmount: 100 * units.Avax,
 		},
@@ -177,7 +225,7 @@ func defaultCaminoConfig() config.Config {
 // Returns:
 // 1) The genesis state
 // 2) The byte representation of the default genesis for tests
-func newCaminoGenesisWithUTXOs(t *testing.T, caminoGenesisConfig api.Camino, genesisUTXOs []api.UTXO, starttime *time.Time) (*api.BuildGenesisArgs, []byte) {
+func newCaminoGenesisWithUTXOs(t *testing.T, avaxAssetID ids.ID, caminoGenesisConfig api.Camino, genesisUTXOs []api.UTXO, starttime *time.Time) (*api.BuildGenesisArgs, []byte) {
 	require := require.New(t)
 
 	if starttime == nil {

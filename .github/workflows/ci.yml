@@ -1,13 +1,12 @@
 name: Tests
 
 on:
-  push:
-    tags:
-      - "*"
-    branches:
-      - master
-      - dev
   pull_request:
+    tags-ignore: ["*"]
+    branches: [chain4travel, dev]
+  push:
+    branches: [chain4travel, dev]
+  workflow_dispatch:
   merge_group:
     types: [checks_requested]
 
@@ -21,7 +20,7 @@ concurrency:
 
 env:
   go_version: '~1.20.12'
-  tmpnet_data_path: ~/.tmpnet/networks/1000
+  tmpnet_data_path: ~/.tmpnet/networks/1003
 
 jobs:
   Unit:
@@ -29,7 +28,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-12, ubuntu-20.04, ubuntu-22.04, windows-2022, [self-hosted, linux, ARM64, focal], [self-hosted, linux, ARM64, jammy]]
+        # os: [macos-12, ubuntu-20.04, ubuntu-22.04, windows-2022, [self-hosted, linux, ARM64, focal], [self-hosted, linux, ARM64, jammy]]
+        os: [ubuntu-22.04]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -60,11 +60,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - uses: actions/setup-go@v3
         with:
           go-version: ${{ env.go_version }}
           check-latest: true
-      - name: Build AvalancheGo Binary
+      - name: Build the caminogo binaries
         shell: bash
         run: ./scripts/build.sh -r
       - name: Run e2e tests
@@ -81,11 +83,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - uses: actions/setup-go@v3
         with:
           go-version: ${{ env.go_version }}
           check-latest: true
-      - name: Build AvalancheGo Binary
+      - name: Build caminogo binaries
         shell: bash
         run: ./scripts/build.sh -r
       - name: Run e2e tests with existing network
@@ -98,28 +102,28 @@ jobs:
           name: e2e-existing-network-tmpnet-data
           path: ${{ env.tmpnet_data_path }}
           if-no-files-found: error
-  Upgrade:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version: ${{ env.go_version }}
-          check-latest: true
-      - name: Build AvalancheGo Binary
-        shell: bash
-        run: ./scripts/build.sh
-      # TODO: re-activate this test after there is a compatible tag to use
-      # - name: Run e2e tests
-      #   shell: bash
-      #   run: ./scripts/tests.upgrade.sh
-      # - name: Upload tmpnet network dir
-      #   uses: actions/upload-artifact@v3
-      #   if: always()
-      #   with:
-      #     name: upgrade-tmpnet-data
-      #     path: ${{ env.tmpnet_data_path }}
-      #     if-no-files-found: error
+  # TODO: re-activate this test after there is a compatible tag to use
+  # Upgrade:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - uses: actions/setup-go@v3
+  #       with:
+  #         go-version: ${{ env.go_version }}
+  #         check-latest: true
+  #     - name: Build caminogo Binary
+  #       shell: bash
+  #       run: ./scripts/build.sh
+  #     - name: Run e2e tests
+  #       shell: bash
+  #       run: ./scripts/tests.upgrade.sh
+  #     - name: Upload tmpnet network dir
+  #       uses: actions/upload-artifact@v3
+  #       if: always()
+  #       with:
+  #         name: upgrade-tmpnet-data
+  #         path: ${{ env.tmpnet_data_path }}
+  #         if-no-files-found: error
   Lint:
     runs-on: ubuntu-latest
     steps:
@@ -138,7 +142,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: bufbuild/buf-setup-action@v1.26.1
         with:
-          github_token: ${{ github.token }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
       - uses: bufbuild/buf-lint-action@v1
         with:
           input: "proto"
@@ -182,3 +186,13 @@ jobs:
         run: go mod tidy
       - shell: bash
         run: .github/workflows/check-clean-branch.sh
+  build_docker_image:
+    name: Test docker image building
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Build docker image
+        run: scripts/build_local_image.sh
+
