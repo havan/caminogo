@@ -4,22 +4,16 @@
 package dac
 
 import (
-	"context"
-	"errors"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/ava-labs/avalanchego/chains/atomic"
 	"github.com/ava-labs/avalanchego/codec"
 	"github.com/ava-labs/avalanchego/codec/linearcodec"
-	"github.com/ava-labs/avalanchego/database"
-	"github.com/ava-labs/avalanchego/database/prefixdb"
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow"
-	"github.com/ava-labs/avalanchego/snow/validators"
-	"github.com/ava-labs/avalanchego/utils/constants"
+	"github.com/ava-labs/avalanchego/snow/snowtest"
+	"github.com/ava-labs/avalanchego/utils"
 	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
 	"github.com/ava-labs/avalanchego/utils/logging"
 	"github.com/ava-labs/avalanchego/utils/timer/mockable"
@@ -35,48 +29,7 @@ var (
 	defaultGenesisTime        = time.Date(1997, 1, 1, 0, 0, 0, 0, time.UTC)
 	defaultValidateStartTime  = defaultGenesisTime
 	defaultValidateEndTime    = defaultValidateStartTime.Add(10 * defaultMinStakingDuration)
-	xChainID                  = ids.Empty.Prefix(0)
-	cChainID                  = ids.Empty.Prefix(1)
-	avaxAssetID               = ids.ID{'y', 'e', 'e', 't'}
-
-	errMissing = errors.New("missing")
 )
-
-type mutableSharedMemory struct {
-	atomic.SharedMemory
-}
-
-func defaultCtx(db database.Database) *snow.Context { //nolint:unparam
-	ctx := snow.DefaultContextTest()
-	ctx.NetworkID = 10
-	ctx.XChainID = xChainID
-	ctx.CChainID = cChainID
-	ctx.AVAXAssetID = avaxAssetID
-
-	atomicDB := prefixdb.New([]byte{1}, db)
-	m := atomic.NewMemory(atomicDB)
-
-	msm := &mutableSharedMemory{
-		SharedMemory: m.NewSharedMemory(ctx.ChainID),
-	}
-	ctx.SharedMemory = msm
-
-	ctx.ValidatorState = &validators.TestState{
-		GetSubnetIDF: func(_ context.Context, chainID ids.ID) (ids.ID, error) {
-			subnetID, ok := map[ids.ID]ids.ID{
-				constants.PlatformChainID: constants.PrimaryNetworkID,
-				xChainID:                  constants.PrimaryNetworkID,
-				cChainID:                  constants.PrimaryNetworkID,
-			}[chainID]
-			if !ok {
-				return ids.Empty, errMissing
-			}
-			return subnetID, nil
-		},
-	}
-
-	return ctx
-}
 
 func defaultClock(postBanff bool) mockable.Clock {
 	now := defaultGenesisTime
@@ -107,22 +60,22 @@ func (fvi *fxVMInt) Logger() logging.Logger {
 	return fvi.log
 }
 
-func defaultFx(isBootstrapped bool) fx.Fx { //nolint:unparam
+func defaultFx(t *testing.T) fx.Fx {
+	t.Helper()
+
+	var isBootstrapped utils.Atomic[bool]
+	isBootstrapped.Set(true)
 	clk := defaultClock(true)
+	ctx := snowtest.Context(t, snowtest.PChainID)
+
 	fxVMInt := &fxVMInt{
-		registry: linearcodec.NewDefault(),
+		registry: linearcodec.NewDefault(time.Time{}),
 		clk:      &clk,
-		log:      snow.DefaultContextTest().Log,
+		log:      ctx.Log,
 	}
 	res := &secp256k1fx.Fx{}
-	if err := res.Initialize(fxVMInt); err != nil {
-		panic(err)
-	}
-	if isBootstrapped {
-		if err := res.Bootstrapped(); err != nil {
-			panic(err)
-		}
-	}
+	require.NoError(t, res.Initialize(fxVMInt))
+	require.NoError(t, res.Bootstrapped())
 	return res
 }
 

@@ -4,10 +4,9 @@
 package builder
 
 import (
-	"context"
-	"errors"
 	"fmt"
 	"math"
+	"testing"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -18,10 +17,10 @@ import (
 	"github.com/ava-labs/avalanchego/codec/linearcodec"
 	"github.com/ava-labs/avalanchego/database"
 	"github.com/ava-labs/avalanchego/database/memdb"
-	"github.com/ava-labs/avalanchego/database/prefixdb"
 	"github.com/ava-labs/avalanchego/database/versiondb"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/snow"
+	"github.com/ava-labs/avalanchego/snow/snowtest"
 	"github.com/ava-labs/avalanchego/snow/uptime"
 	"github.com/ava-labs/avalanchego/snow/validators"
 	"github.com/ava-labs/avalanchego/utils"
@@ -66,15 +65,11 @@ var (
 	defaultGenesisTime           = time.Date(1997, 1, 1, 0, 0, 0, 0, time.UTC)
 	defaultValidateStartTime     = defaultGenesisTime
 	defaultValidateEndTime       = defaultValidateStartTime.Add(10 * defaultMinStakingDuration)
-	avaxAssetID                  = ids.ID{'y', 'e', 'e', 't'}
-	xChainID                     = ids.Empty.Prefix(0)
-	cChainID                     = ids.Empty.Prefix(1)
 	caminoPreFundedKeys          = secp256k1.TestKeys()
 	_, caminoPreFundedNodeIDs    = nodeid.LoadLocalCaminoNodeKeysAndIDs(localStakingPath)
 	testCaminoSubnet1ControlKeys = caminoPreFundedKeys[0:3]
 	lastAcceptedID               = ids.GenerateTestID()
 	testSubnet1                  *txs.Tx
-	errMissing                   = errors.New("missing")
 )
 
 type mutableSharedMemory struct {
@@ -87,7 +82,6 @@ type caminoEnvironment struct {
 	clk            *mockable.Clock
 	baseDB         *versiondb.Database
 	ctx            *snow.Context
-	msm            *mutableSharedMemory
 	fx             fx.Fx
 	state          state.State
 	states         map[ids.ID]state.Chain
@@ -110,7 +104,7 @@ func (e *caminoEnvironment) SetState(blkID ids.ID, chainState state.Chain) {
 	e.states[blkID] = chainState
 }
 
-func newCaminoEnvironment(postBanff bool, caminoGenesisConf api.Camino) *caminoEnvironment {
+func newCaminoEnvironment(t *testing.T, postBanff bool, caminoGenesisConf api.Camino) *caminoEnvironment {
 	var isBootstrapped utils.Atomic[bool]
 	isBootstrapped.Set(true)
 
@@ -118,7 +112,7 @@ func newCaminoEnvironment(postBanff bool, caminoGenesisConf api.Camino) *caminoE
 	clk := defaultClock(postBanff)
 
 	baseDB := versiondb.New(memdb.New())
-	ctx, msm := defaultCtx(baseDB)
+	ctx := defaultContext(t, baseDB)
 
 	fx := defaultFx(clk, ctx.Log, isBootstrapped.Get())
 
@@ -156,7 +150,6 @@ func newCaminoEnvironment(postBanff bool, caminoGenesisConf api.Camino) *caminoE
 		clk:            clk,
 		baseDB:         baseDB,
 		ctx:            ctx,
-		msm:            msm,
 		fx:             fx,
 		state:          baseState,
 		states:         make(map[ids.ID]state.Chain),
@@ -172,7 +165,7 @@ func newCaminoEnvironment(postBanff bool, caminoGenesisConf api.Camino) *caminoE
 	return env
 }
 
-func newCaminoBuilder(postBanff bool, state state.State) (*caminoBuilder, *versiondb.Database) {
+func newCaminoBuilder(t *testing.T, postBanff bool, state state.State) (*caminoBuilder, *versiondb.Database) {
 	var isBootstrapped utils.Atomic[bool]
 	isBootstrapped.Set(true)
 
@@ -180,7 +173,7 @@ func newCaminoBuilder(postBanff bool, state state.State) (*caminoBuilder, *versi
 	clk := defaultClock(postBanff)
 
 	baseDB := versiondb.New(memdb.New())
-	ctx, _ := defaultCtx(baseDB)
+	ctx := defaultContext(t, baseDB)
 
 	fx := defaultFx(clk, ctx.Log, isBootstrapped.Get())
 
@@ -249,37 +242,6 @@ func addCaminoSubnet(
 	}
 }
 
-func defaultCtx(db database.Database) (*snow.Context, *mutableSharedMemory) {
-	ctx := snow.DefaultContextTest()
-	ctx.NetworkID = 10
-	ctx.XChainID = xChainID
-	ctx.AVAXAssetID = avaxAssetID
-
-	atomicDB := prefixdb.New([]byte{1}, db)
-	m := atomic.NewMemory(atomicDB)
-
-	msm := &mutableSharedMemory{
-		SharedMemory: m.NewSharedMemory(ctx.ChainID),
-	}
-	ctx.SharedMemory = msm
-
-	ctx.ValidatorState = &validators.TestState{
-		GetSubnetIDF: func(_ context.Context, chainID ids.ID) (ids.ID, error) {
-			subnetID, ok := map[ids.ID]ids.ID{
-				constants.PlatformChainID: constants.PrimaryNetworkID,
-				xChainID:                  constants.PrimaryNetworkID,
-				cChainID:                  constants.PrimaryNetworkID,
-			}[chainID]
-			if !ok {
-				return ids.Empty, errMissing
-			}
-			return subnetID, nil
-		},
-	}
-
-	return ctx, msm
-}
-
 func defaultClock(postBanff bool) *mockable.Clock {
 	now := defaultGenesisTime
 	if postBanff {
@@ -311,7 +273,7 @@ func (fvi *fxVMInt) Logger() logging.Logger {
 
 func defaultFx(clk *mockable.Clock, log logging.Logger, isBootstrapped bool) fx.Fx {
 	fxVMInt := &fxVMInt{
-		registry: linearcodec.NewDefault(),
+		registry: linearcodec.NewDefault(time.Time{}),
 		clk:      clk,
 		log:      log,
 	}
@@ -340,7 +302,7 @@ func defaultCaminoState(
 		db,
 		genesisBytes,
 		prometheus.NewRegistry(),
-		cfg.Validators,
+		cfg,
 		execCfg,
 		ctx,
 		metrics.Noop,
@@ -556,7 +518,7 @@ func generateTestInFromUTXO(utxo *avax.UTXO, sigIndices []uint32, init bool) *av
 	return input
 }
 
-func newCaminoBuilderWithMocks(postBanff bool, state state.State, sharedMemory atomic.SharedMemory) (*caminoBuilder, *versiondb.Database) {
+func newCaminoBuilderWithMocks(t *testing.T, postBanff bool, state state.State, sharedMemory atomic.SharedMemory) (*caminoBuilder, *versiondb.Database) {
 	var isBootstrapped utils.Atomic[bool]
 	isBootstrapped.Set(true)
 
@@ -564,7 +526,7 @@ func newCaminoBuilderWithMocks(postBanff bool, state state.State, sharedMemory a
 	clk := defaultClock(postBanff)
 
 	baseDB := versiondb.New(memdb.New())
-	ctx, _ := defaultCtx(baseDB)
+	ctx := defaultContext(t, baseDB)
 
 	if sharedMemory != nil {
 		ctx.SharedMemory = sharedMemory
@@ -605,4 +567,14 @@ func expectLock(s *state.MockState, allUTXOs map[ids.ShortID][]*avax.UTXO) {
 			s.EXPECT().GetMultisigAlias(addr).Return(nil, database.ErrNotFound).Times(2)
 		}
 	}
+}
+
+func defaultContext(t *testing.T, baseDB database.Database) *snow.Context {
+	ctx := snowtest.Context(t, snowtest.PChainID)
+	m := atomic.NewMemory(baseDB)
+	msm := &mutableSharedMemory{
+		SharedMemory: m.NewSharedMemory(ctx.ChainID),
+	}
+	ctx.SharedMemory = msm
+	return ctx
 }

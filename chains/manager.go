@@ -1,4 +1,4 @@
-// Copyright (C) 2019-2023, Ava Labs, Inc. All rights reserved.
+// Copyright (C) 2019-2024, Ava Labs, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package chains
@@ -264,18 +264,22 @@ type manager struct {
 }
 
 // New returns a new Manager
-func New(config *ManagerConfig) Manager {
+func New(config *ManagerConfig) (Manager, error) {
+	cert, err := staking.CertificateFromX509(config.StakingTLSCert.Leaf)
+	if err != nil {
+		return nil, err
+	}
 	return &manager{
 		Aliaser:                ids.NewAliaser(),
 		ManagerConfig:          *config,
 		stakingSigner:          config.StakingTLSCert.PrivateKey.(crypto.Signer),
-		stakingCert:            staking.CertificateFromX509(config.StakingTLSCert.Leaf),
+		stakingCert:            cert,
 		subnets:                make(map[ids.ID]subnets.Subnet),
 		chains:                 make(map[ids.ID]handler.Handler),
 		chainsQueue:            buffer.NewUnboundedBlockingDeque[ChainParameters](initialQueueSize),
 		unblockChainCreatorCh:  make(chan struct{}),
 		chainCreatorShutdownCh: make(chan struct{}),
-	}
+	}, nil
 }
 
 // Router that this chain manager is using to route consensus messages to chains
@@ -368,7 +372,7 @@ func (m *manager) createChain(chainParams ChainParameters) {
 		// created or not. This attempts to notify the node operator that their
 		// node may not be properly validating the subnet they expect to be
 		// validating.
-		healthCheckErr := fmt.Errorf("failed to create chain on subnet: %s", chainParams.SubnetID)
+		healthCheckErr := fmt.Errorf("failed to create chain on subnet %s: %w", chainParams.SubnetID, err)
 		err := m.Health.RegisterHealthCheck(
 			chainAlias,
 			health.CheckerFunc(func(context.Context) (interface{}, error) {
@@ -769,12 +773,15 @@ func (m *manager) createAvalancheChain(
 	// using.
 	var vmWrappingProposerVM block.ChainVM = proposervm.New(
 		vmWrappedInsideProposerVM,
-		m.ApricotPhase4Time,
-		m.ApricotPhase4MinPChainHeight,
-		minBlockDelay,
-		numHistoricalBlocks,
-		m.stakingSigner,
-		m.stakingCert,
+		proposervm.Config{
+			ActivationTime:      m.ApricotPhase4Time,
+			DurangoTime:         version.GetDurangoTime(m.NetworkID),
+			MinimumPChainHeight: m.ApricotPhase4MinPChainHeight,
+			MinBlkDelay:         minBlockDelay,
+			NumHistoricalBlocks: numHistoricalBlocks,
+			StakingLeafSigner:   m.stakingSigner,
+			StakingCertLeaf:     m.stakingCert,
+		},
 	)
 
 	if m.MeterVMEnabled {
@@ -1112,12 +1119,15 @@ func (m *manager) createSnowmanChain(
 
 	vm = proposervm.New(
 		vm,
-		m.ApricotPhase4Time,
-		m.ApricotPhase4MinPChainHeight,
-		minBlockDelay,
-		numHistoricalBlocks,
-		m.stakingSigner,
-		m.stakingCert,
+		proposervm.Config{
+			ActivationTime:      m.ApricotPhase4Time,
+			DurangoTime:         version.GetDurangoTime(m.NetworkID),
+			MinimumPChainHeight: m.ApricotPhase4MinPChainHeight,
+			MinBlkDelay:         minBlockDelay,
+			NumHistoricalBlocks: numHistoricalBlocks,
+			StakingLeafSigner:   m.stakingSigner,
+			StakingCertLeaf:     m.stakingCert,
+		},
 	)
 
 	if m.MeterVMEnabled {

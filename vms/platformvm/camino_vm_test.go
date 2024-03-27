@@ -68,11 +68,11 @@ func TestRemoveDeferredValidator(t *testing.T) {
 		},
 	}
 
-	vm := newCaminoVM(t, caminoGenesisConf, genesisUTXOs, nil)
+	vm := newCaminoVM(t, caminoGenesisConf, genesisUTXOs)
 	vm.ctx.Lock.Lock()
 	defer stopVM(t, vm, false)
 
-	utxo := generateTestUTXO(ids.GenerateTestID(), avaxAssetID, defaultBalance, *outputOwners, ids.Empty, ids.Empty)
+	utxo := generateTestUTXO(ids.GenerateTestID(), vm.ctx.AVAXAssetID, defaultBalance, *outputOwners, ids.Empty, ids.Empty)
 	vm.state.AddUTXO(utxo)
 	require.NoError(vm.state.Commit())
 
@@ -130,6 +130,7 @@ func TestRemoveDeferredValidator(t *testing.T) {
 	staker, err := state.NewCurrentStaker(
 		addValidatorTx.ID(),
 		addValidatorTx.Unsigned.(*txs.CaminoAddValidatorTx),
+		addValidatorTx.Unsigned.(*txs.CaminoAddValidatorTx).StartTime(),
 		0,
 	)
 	require.NoError(err)
@@ -137,7 +138,7 @@ func TestRemoveDeferredValidator(t *testing.T) {
 	vm.state.AddTx(addValidatorTx, status.Committed)
 	require.NoError(vm.state.Commit())
 
-	utxo = generateTestUTXO(ids.GenerateTestID(), avaxAssetID, defaultBalance, *outputOwners, ids.Empty, ids.Empty)
+	utxo = generateTestUTXO(ids.GenerateTestID(), vm.ctx.AVAXAssetID, defaultBalance, *outputOwners, ids.Empty, ids.Empty)
 	vm.state.AddUTXO(utxo)
 	require.NoError(vm.state.Commit())
 
@@ -246,11 +247,11 @@ func TestRemoveReactivatedValidator(t *testing.T) {
 		},
 	}
 
-	vm := newCaminoVM(t, caminoGenesisConf, genesisUTXOs, nil)
+	vm := newCaminoVM(t, caminoGenesisConf, genesisUTXOs)
 	vm.ctx.Lock.Lock()
 	defer stopVM(t, vm, false)
 
-	utxo := generateTestUTXO(ids.GenerateTestID(), avaxAssetID, defaultBalance, *outputOwners, ids.Empty, ids.Empty)
+	utxo := generateTestUTXO(ids.GenerateTestID(), vm.ctx.AVAXAssetID, defaultBalance, *outputOwners, ids.Empty, ids.Empty)
 	vm.state.AddUTXO(utxo)
 	require.NoError(vm.state.Commit())
 
@@ -309,6 +310,7 @@ func TestRemoveReactivatedValidator(t *testing.T) {
 	staker, err := state.NewCurrentStaker(
 		addValidatorTx.ID(),
 		addValidatorTx.Unsigned.(*txs.CaminoAddValidatorTx),
+		addValidatorTx.Unsigned.(*txs.CaminoAddValidatorTx).StartTime(),
 		0,
 	)
 	require.NoError(err)
@@ -316,7 +318,7 @@ func TestRemoveReactivatedValidator(t *testing.T) {
 	vm.state.AddTx(addValidatorTx, status.Committed)
 	require.NoError(vm.state.Commit())
 
-	utxo = generateTestUTXO(ids.GenerateTestID(), avaxAssetID, defaultBalance, *outputOwners, ids.Empty, ids.Empty)
+	utxo = generateTestUTXO(ids.GenerateTestID(), vm.ctx.AVAXAssetID, defaultBalance, *outputOwners, ids.Empty, ids.Empty)
 	vm.state.AddUTXO(utxo)
 	require.NoError(vm.state.Commit())
 
@@ -429,7 +431,7 @@ func TestDepositsAutoUnlock(t *testing.T) {
 	vm := newCaminoVM(t, caminoGenesisConf, []api.UTXO{{
 		Amount:  json.Uint64(depositOffer.MinAmount + defaultTxFee),
 		Address: depositOwnerAddrBech32,
-	}}, nil)
+	}})
 	vm.ctx.Lock.Lock()
 	defer stopVM(t, vm, false)
 
@@ -489,7 +491,7 @@ func TestProposals(t *testing.T) {
 	caminoPreFundedKey0AddrStr, err := address.FormatBech32(constants.UnitTestHRP, caminoPreFundedKeys[0].Address().Bytes())
 	require.NoError(t, err)
 
-	defaultConfig := defaultCaminoConfig()
+	defaultConfig := defaultCaminoConfig(t)
 	proposalBondAmount := defaultConfig.CaminoConfig.DACProposalBondAmount
 	newFee := (defaultTxFee + 7) * 10
 
@@ -568,7 +570,7 @@ func TestProposals(t *testing.T) {
 					Amount:  json.Uint64(defaultTxFee),
 					Address: caminoPreFundedKey0AddrStr,
 				},
-			}, &defaultConfig.BanffTime)
+			})
 			vm.ctx.Lock.Lock()
 			defer stopVM(t, vm, false)
 			checkBalance(t, vm.state, proposerAddr,
@@ -614,8 +616,8 @@ func TestProposals(t *testing.T) {
 			// Try to vote on proposal, expect to fail
 			vm.clock.Set(baseFeeProposalState.StartTime().Add(-time.Second))
 			addVoteTx := buildSimpleVoteTx(t, vm, proposerKey, fee, proposalTx.ID(), caminoPreFundedKeys[0], 0)
-			err = vm.Network.IssueTx(context.Background(), addVoteTx)
-			require.ErrorIs(err, txexecutor.ErrProposalInactive)
+			err = issueTx(t, vm, addVoteTx)
+			require.ErrorIs(err, dac.ErrNotYetActive)
 			vm.clock.Set(baseFeeProposalState.StartTime())
 
 			optionWeights := make([]uint32, len(baseFeeProposalState.Options))
@@ -692,7 +694,7 @@ func TestAdminProposals(t *testing.T) {
 
 	applicantAddr := proposerAddr
 
-	defaultConfig := defaultCaminoConfig()
+	defaultConfig := defaultCaminoConfig(t)
 	proposalBondAmount := defaultConfig.CaminoConfig.DACProposalBondAmount
 	balance := proposalBondAmount + defaultTxFee
 
@@ -710,7 +712,7 @@ func TestAdminProposals(t *testing.T) {
 			Amount:  json.Uint64(defaultTxFee * 2),
 			Address: caminoPreFundedKey0AddrStr,
 		},
-	}, &defaultConfig.BanffTime)
+	})
 	vm.ctx.Lock.Lock()
 	defer stopVM(t, vm, false)
 	checkBalance(t, vm.state, proposerAddr,
@@ -808,7 +810,7 @@ func TestExcludeMemberProposals(t *testing.T) {
 	fundsKeyAddrStr, err := address.FormatBech32(constants.UnitTestHRP, fundsKey.Address().Bytes())
 	require.NoError(t, err)
 
-	defaultConfig := defaultCaminoConfig()
+	defaultConfig := defaultCaminoConfig(t)
 	fee := defaultConfig.TxFee
 	addValidatorFee := defaultConfig.AddPrimaryNetworkValidatorFee
 	proposalBondAmount := defaultConfig.CaminoConfig.DACProposalBondAmount
@@ -901,7 +903,7 @@ func TestExcludeMemberProposals(t *testing.T) {
 				VerifyNodeSignature: true,
 				LockModeBondDeposit: true,
 				InitialAdmin:        rootAdminKey.Address(),
-			}, []api.UTXO{{Amount: json.Uint64(initialBalance - defaultCaminoValidatorWeight), Address: fundsKeyAddrStr}}, &defaultConfig.BanffTime)
+			}, []api.UTXO{{Amount: json.Uint64(initialBalance - defaultCaminoValidatorWeight), Address: fundsKeyAddrStr}})
 			vm.ctx.Lock.Lock()
 			defer stopVM(t, vm, false)
 			height, err := vm.GetCurrentHeight(context.Background())
@@ -1132,7 +1134,7 @@ func TestExcludeMemberProposals(t *testing.T) {
 			if tt.moreExlcude {
 				excludeMemberProposalTx := buildExcludeMemberProposalTx(t, vm, fundsKey, proposalBondAmount, fee,
 					consortiumAdminKey, memberToExcludeAddr, proposalStartTime, proposalStartTime.Add(time.Duration(dac.ExcludeMemberProposalMinDuration)*time.Second), true)
-				err = vm.Network.IssueTx(context.Background(), excludeMemberProposalTx)
+				err = issueTx(t, vm, excludeMemberProposalTx)
 				require.ErrorIs(err, txexecutor.ErrInvalidProposal)
 				height, err = vm.GetCurrentHeight(context.Background())
 				require.NoError(err)
@@ -1243,7 +1245,7 @@ func TestExcludeMemberProposals(t *testing.T) {
 func buildAndAcceptBlock(t *testing.T, vm *VM, tx *txs.Tx) block.Block {
 	t.Helper()
 	if tx != nil {
-		require.NoError(t, vm.Network.IssueTx(context.Background(), tx))
+		require.NoError(t, issueTx(t, vm, tx))
 	}
 	blk, err := vm.Builder.BuildBlock(context.Background())
 	require.NoError(t, err)
@@ -1345,7 +1347,7 @@ func buildBaseFeeProposalTx(
 		End:     uint64(endTime.Unix()),
 		Options: options,
 	}}
-	proposalBytes, err := txs.Codec.Marshal(txs.Version, proposal)
+	proposalBytes, err := txs.Codec.Marshal(txs.CodecVersion, proposal)
 	require.NoError(t, err)
 	proposalTx, err := txs.NewSigned(&txs.AddProposalTx{
 		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
@@ -1392,7 +1394,7 @@ func buildAddMemberProposalTx(
 		proposal = &dac.AdminProposal{Proposal: proposal}
 	}
 	wrapper := &txs.ProposalWrapper{Proposal: proposal}
-	proposalBytes, err := txs.Codec.Marshal(txs.Version, wrapper)
+	proposalBytes, err := txs.Codec.Marshal(txs.CodecVersion, wrapper)
 	require.NoError(t, err)
 	proposalTx, err := txs.NewSigned(&txs.AddProposalTx{
 		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
@@ -1440,7 +1442,7 @@ func buildExcludeMemberProposalTx(
 		proposal = &dac.AdminProposal{Proposal: proposal}
 	}
 	wrapper := &txs.ProposalWrapper{Proposal: proposal}
-	proposalBytes, err := txs.Codec.Marshal(txs.Version, wrapper)
+	proposalBytes, err := txs.Codec.Marshal(txs.CodecVersion, wrapper)
 	require.NoError(t, err)
 	proposalTx, err := txs.NewSigned(&txs.AddProposalTx{
 		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
@@ -1499,7 +1501,7 @@ func buildSimpleVoteTx(
 		nil, nil, 0,
 	)
 	require.NoError(t, err)
-	voteBytes, err := txs.Codec.Marshal(txs.Version, &txs.VoteWrapper{Vote: &dac.SimpleVote{OptionIndex: votedOption}})
+	voteBytes, err := txs.Codec.Marshal(txs.CodecVersion, &txs.VoteWrapper{Vote: &dac.SimpleVote{OptionIndex: votedOption}})
 	require.NoError(t, err)
 	addVoteTx, err := txs.NewSigned(&txs.AddVoteTx{
 		BaseTx: txs.BaseTx{BaseTx: avax.BaseTx{
@@ -1573,4 +1575,11 @@ func buildAndAcceptBaseTx(
 	blk := buildAndAcceptBlock(t, vm, feeTestingTx)
 	require.Len(t, blk.Txs(), 1)
 	checkTx(t, vm, blk.ID(), feeTestingTx.ID())
+}
+
+func issueTx(t *testing.T, vm *VM, tx *txs.Tx) error {
+	t.Helper()
+	vm.ctx.Lock.Unlock()
+	defer vm.ctx.Lock.Lock()
+	return vm.issueTx(context.Background(), tx)
 }

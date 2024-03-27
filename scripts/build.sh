@@ -10,10 +10,3 @@ echo "Downloading dependencies..."
 
 # Build caminogo
 "$CAMINOGO_PATH"/scripts/build_camino.sh
-
-CAMINO_NETWORK_RUNNER_PATH="$CAMINOGO_PATH"/tools/camino-network-runner
-
-if [ ! -f $CAMINO_NETWORK_RUNNER_PATH/.git ]; then
-    echo "Initializing git submodules..."
-    git --git-dir $CAMINOGO_PATH/.git submodule update --init --recursive
-fi

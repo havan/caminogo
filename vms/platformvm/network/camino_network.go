@@ -1,4 +1,4 @@
-// Copyright (C) 2023, Chain4Travel AG. All rights reserved.
+// Copyright (C) 2024, Chain4Travel AG. All rights reserved.
 // See the file LICENSE for licensing terms.
 
 package network
@@ -6,52 +6,73 @@ package network
 import (
 	"context"
 	"errors"
+	"sync"
 	"time"
 
 	"go.uber.org/zap"
 
-	"github.com/ava-labs/avalanchego/cache"
+	"github.com/prometheus/client_golang/prometheus"
+
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow"
 	"github.com/ava-labs/avalanchego/snow/engine/common"
+	"github.com/ava-labs/avalanchego/snow/validators"
+	"github.com/ava-labs/avalanchego/utils/logging"
 	"github.com/ava-labs/avalanchego/vms/components/message"
-	"github.com/ava-labs/avalanchego/vms/platformvm/block/executor"
-	txBuilder "github.com/ava-labs/avalanchego/vms/platformvm/txs/builder"
+	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs/mempool"
 )
 
 var errUnknownCrossChainMessage = errors.New("unknown cross-chain message")
 
+type SystemTxBuilder interface {
+	NewRewardsImportTx() (*txs.Tx, error)
+}
+
 type caminoNetwork struct {
-	network
-	txBuilder txBuilder.CaminoBuilder
+	*network
+	txBuilder SystemTxBuilder
+	lock      sync.Locker
 }
 
 func NewCamino(
-	ctx *snow.Context,
-	manager executor.Manager,
+	log logging.Logger,
+	nodeID ids.NodeID,
+	subnetID ids.ID,
+	vdrs validators.State,
+	txVerifier TxVerifier,
 	mempool mempool.Mempool,
 	partialSyncPrimaryNetwork bool,
 	appSender common.AppSender,
-	txBuilder txBuilder.CaminoBuilder,
-) Network {
-	return &caminoNetwork{
-		network: network{
-			AppHandler: common.NewNoOpAppHandler(ctx.Log),
-
-			ctx:                       ctx,
-			manager:                   manager,
-			mempool:                   mempool,
-			partialSyncPrimaryNetwork: partialSyncPrimaryNetwork,
-			appSender:                 appSender,
-			recentTxs:                 &cache.LRU[ids.ID, struct{}]{Size: recentCacheSize},
-		},
-		txBuilder: txBuilder,
+	registerer prometheus.Registerer,
+	config Config,
+	txBuilder SystemTxBuilder,
+	lock sync.Locker,
+) (Network, error) {
+	avaxNetwork, err := New(
+		log,
+		nodeID,
+		subnetID,
+		vdrs,
+		txVerifier,
+		mempool,
+		partialSyncPrimaryNetwork,
+		appSender,
+		registerer,
+		config,
+	)
+	if err != nil {
+		return nil, err
 	}
+
+	return &caminoNetwork{
+		network:   avaxNetwork.(*network),
+		txBuilder: txBuilder,
+		lock:      lock,
+	}, nil
 }
 
 func (n *caminoNetwork) CrossChainAppRequest(_ context.Context, chainID ids.ID, _ uint32, _ time.Time, request []byte) error {
-	n.ctx.Log.Debug("called CrossChainAppRequest message handler",
+	n.log.Debug("called CrossChainAppRequest message handler",
 		zap.Stringer("chainID", chainID),
 		zap.Int("messageLen", len(request)),
 	)
@@ -61,20 +82,28 @@ func (n *caminoNetwork) CrossChainAppRequest(_ context.Context, chainID ids.ID, 
 		return errUnknownCrossChainMessage // this would be fatal
 	}
 
-	n.ctx.Lock.Lock()
-	defer n.ctx.Lock.Unlock()
-
-	tx, err := n.txBuilder.NewRewardsImportTx()
-	if err != nil {
-		n.ctx.Log.Error("caminoCrossChainAppRequest couldn't create rewardsImportTx", zap.Error(err))
-		return nil // we don't want fatal here
+	tx := n.newRewardsImportTx()
+	if tx == nil {
+		return nil
 	}
 
 	if err := n.issueTx(tx); err != nil {
-		n.ctx.Log.Error("caminoCrossChainAppRequest couldn't issue rewardsImportTx", zap.Error(err))
+		n.log.Error("caminoCrossChainAppRequest couldn't issue rewardsImportTx", zap.Error(err))
 		// we don't want fatal here: its better to have network running
 		// and try to repair stalled reward imports, than crash the whole network
 	}
 
 	return nil
+}
+
+func (n *caminoNetwork) newRewardsImportTx() *txs.Tx {
+	n.lock.Lock()
+	defer n.lock.Unlock()
+
+	tx, err := n.txBuilder.NewRewardsImportTx()
+	if err != nil {
+		n.log.Error("caminoCrossChainAppRequest couldn't create rewardsImportTx", zap.Error(err))
+		return nil // we don't want fatal here
+	}
+	return tx
 }
