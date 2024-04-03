@@ -101,7 +101,6 @@ func TestGetCaminoBalance(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			service := defaultCaminoService(t, tt.camino, tt.genesisUTXOs)
-			defer stopVM(t, service.vm, true)
 
 			request := GetBalanceRequest{
 				Addresses: []string{
@@ -241,7 +240,6 @@ func TestCaminoService_GetAllDepositOffers(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			s := defaultCaminoService(t, api.Camino{}, []api.UTXO{})
-			defer stopVM(t, s.vm, true)
 
 			tt.prepare(s)
 
@@ -285,7 +283,7 @@ func TestGetKeystoreKeys(t *testing.T) {
 			s, _ := defaultService(t)
 			defaultAddress(t, s) // Insert testAddress into keystore
 			s.vm.ctx.Lock.Lock()
-			defer stopVM(t, s.vm, false)
+			defer s.vm.ctx.Lock.Unlock()
 
 			keys, err := s.getKeystoreKeys(&userPass, &tt.from) //nolint:gosec
 			require.ErrorIs(t, err, tt.expectedError)
@@ -303,7 +301,6 @@ func TestGetKeystoreKeys(t *testing.T) {
 
 func TestGetFakeKeys(t *testing.T) {
 	s, _ := defaultService(t)
-	defer stopVM(t, s.vm, true)
 
 	_, _, testAddressBytes, _ := address.Parse(testAddress)
 	testAddressID, _ := ids.ToShortID(testAddressBytes)
@@ -360,7 +357,6 @@ func TestSpend(t *testing.T) {
 			Message:  "",
 		}},
 	)
-	defer stopVM(t, service.vm, true)
 
 	spendArgs := SpendArgs{
 		JSONFromAddrs: json_api.JSONFromAddrs{

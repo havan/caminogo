@@ -168,8 +168,13 @@ func newCaminoVM(t *testing.T, genesisConfig api.Camino, genesisUTXOs []api.UTXO
 	require.NoError(blk.Accept(context.Background()))
 	require.NoError(vm.SetPreference(context.Background(), vm.manager.LastAccepted()))
 
+	t.Cleanup(func() {
+		vm.ctx.Lock.Lock()
+		defer vm.ctx.Lock.Unlock()
+		require.NoError(vm.Shutdown(context.Background()))
+	})
+
 	return vm
-	// return vm, baseDBManager.Current().Database, msm
 }
 
 func defaultCaminoConfig(t *testing.T) config.Config {
@@ -301,15 +306,6 @@ func generateKeyAndOwner(t *testing.T) (*secp256k1.PrivateKey, ids.ShortID, secp
 		Threshold: 1,
 		Addrs:     []ids.ShortID{addr},
 	}
-}
-
-func stopVM(t *testing.T, vm *VM, doLock bool) {
-	t.Helper()
-	if doLock {
-		vm.ctx.Lock.Lock()
-	}
-	require.NoError(t, vm.Shutdown(context.TODO()))
-	vm.ctx.Lock.Unlock()
 }
 
 func generateTestUTXO(txID ids.ID, assetID ids.ID, amount uint64, outputOwners secp256k1fx.OutputOwners, depositTxID, bondTxID ids.ID) *avax.UTXO {
