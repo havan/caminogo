@@ -23,4 +23,4 @@ echo "Pushing: $camino_node_dockerhub_repo:$current_branch"
 echo "$DOCKER_PASS" | docker login --username "$DOCKER_USERNAME" --password-stdin
 
 ## pushing image with tags
-docker image push -a $camino_node_dockerhub_repo
+docker image push -a "$camino_node_dockerhub_repo"

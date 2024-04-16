@@ -51,11 +51,11 @@ LDFLAGS="$LDFLAGS $static_ld_flags"
 go build -ldflags "$LDFLAGS" -o "$CAMINOGO_BIN_PATH" "$CAMINOGO_PATH/main/"*.go
 
 # Make plugin folder
-mkdir -p $plugin_dir
+mkdir -p "$plugin_dir"
 
 # Exit build successfully if the binaries are created
 if [[ -f "$CAMINOGO_BIN_PATH" ]]; then
-    ln -sf caminogo $camino_node_symlink_path
+    ln -sf caminogo "$camino_node_symlink_path"
     echo "Build Successful"
     exit 0
 else

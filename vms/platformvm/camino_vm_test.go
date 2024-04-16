@@ -60,7 +60,7 @@ func TestRemoveDeferredValidator(t *testing.T) {
 
 	vm := newCaminoVM(t, caminoGenesisConf, genesisUTXOs)
 	vm.ctx.Lock.Lock()
-	defer stopVM(t, vm, false)
+	defer vm.ctx.Lock.Unlock()
 
 	// Set consortium member
 	// add admin proposer role to root admin
@@ -152,11 +152,11 @@ func TestRemoveDeferredValidator(t *testing.T) {
 	options, err := blk.(snowman.OracleBlock).Options(context.Background())
 	require.NoError(err)
 
-	commit := options[1].(*blockexecutor.Block)
+	commit := options[0].(*blockexecutor.Block)
 	_, ok := commit.Block.(*block.BanffCommitBlock)
 	require.True(ok)
 
-	abort := options[0].(*blockexecutor.Block)
+	abort := options[1].(*blockexecutor.Block)
 	_, ok = abort.Block.(*block.BanffAbortBlock)
 	require.True(ok)
 
@@ -217,7 +217,7 @@ func TestRemoveReactivatedValidator(t *testing.T) {
 
 	vm := newCaminoVM(t, caminoGenesisConf, genesisUTXOs)
 	vm.ctx.Lock.Lock()
-	defer stopVM(t, vm, false)
+	defer vm.ctx.Lock.Unlock()
 
 	// Set consortium member
 	// add admin proposer role to root admin
@@ -322,11 +322,11 @@ func TestRemoveReactivatedValidator(t *testing.T) {
 	options, err := blk.(snowman.OracleBlock).Options(context.Background())
 	require.NoError(err)
 
-	commit := options[1].(*blockexecutor.Block)
+	commit := options[0].(*blockexecutor.Block)
 	_, ok := commit.Block.(*block.BanffCommitBlock)
 	require.True(ok)
 
-	abort := options[0].(*blockexecutor.Block)
+	abort := options[1].(*blockexecutor.Block)
 	_, ok = abort.Block.(*block.BanffAbortBlock)
 	require.True(ok)
 
@@ -388,7 +388,7 @@ func TestDepositsAutoUnlock(t *testing.T) {
 		Address: depositOwnerAddrBech32,
 	}})
 	vm.ctx.Lock.Lock()
-	defer stopVM(t, vm, false)
+	defer vm.ctx.Lock.Unlock()
 
 	// Add deposit
 	depositTx, err := vm.txBuilder.NewDepositTx(
@@ -527,7 +527,7 @@ func TestProposals(t *testing.T) {
 				},
 			})
 			vm.ctx.Lock.Lock()
-			defer stopVM(t, vm, false)
+			defer vm.ctx.Lock.Unlock()
 			checkBalance(t, vm.state, proposerAddr,
 				balance,          // total
 				0, 0, 0, balance, // unlocked
@@ -669,7 +669,7 @@ func TestAdminProposals(t *testing.T) {
 		},
 	})
 	vm.ctx.Lock.Lock()
-	defer stopVM(t, vm, false)
+	defer vm.ctx.Lock.Unlock()
 	checkBalance(t, vm.state, proposerAddr,
 		balance,          // total
 		0, 0, 0, balance, // unlocked
@@ -860,7 +860,7 @@ func TestExcludeMemberProposals(t *testing.T) {
 				InitialAdmin:        rootAdminKey.Address(),
 			}, []api.UTXO{{Amount: json.Uint64(initialBalance - defaultCaminoValidatorWeight), Address: fundsKeyAddrStr}})
 			vm.ctx.Lock.Lock()
-			defer stopVM(t, vm, false)
+			defer vm.ctx.Lock.Unlock()
 			height, err := vm.GetCurrentHeight(context.Background())
 			require.NoError(err)
 			require.Equal(expectedHeight, height)

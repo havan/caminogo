@@ -111,7 +111,7 @@ jobs:
   #       with:
   #         go-version: ${{ env.go_version }}
   #         check-latest: true
-  #     - name: Build caminogo Binary
+  #     - name: Build caminogo binaries
   #       shell: bash
   #       run: ./scripts/build.sh
   #     - name: Run e2e tests
@@ -135,6 +135,9 @@ jobs:
       - name: Run static analysis tests
         shell: bash
         run: scripts/lint.sh
+      - name: Run shellcheck
+        shell: bash
+        run: scripts/shellcheck.sh
   buf-lint:
     name: Protobuf Lint
     runs-on: ubuntu-latest

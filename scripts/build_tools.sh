@@ -13,11 +13,11 @@ CAMINOGO_PATH=$( cd "$( dirname "${BASH_SOURCE[0]}" )"; cd .. && pwd )
 source "$CAMINOGO_PATH"/scripts/constants.sh
 
 echo "Downloading dependencies..."
-(cd $CAMINOGO_PATH && go mod download)
+(cd "$CAMINOGO_PATH" && go mod download)
 
 # Create tools directory
 tools_dir=$build_dir/tools/
-mkdir -p $tools_dir
+mkdir -p "$tools_dir"
 
 echo "Building cert tool..."
 go build -ldflags="-s -w" -o "$tools_dir/cert" "$CAMINOGO_PATH/tools/cert/"*.go

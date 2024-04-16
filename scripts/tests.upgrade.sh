@@ -4,21 +4,21 @@ set -euo pipefail
 
 # e.g.,
 # ./scripts/tests.upgrade.sh                                                # Use default version
-# ./scripts/tests.upgrade.sh 1.10.18                                        # Specify a version
-# AVALANCHEGO_PATH=./path/to/avalanchego ./scripts/tests.upgrade.sh 1.10.18 # Customization of avalanchego path
+# ./scripts/tests.upgrade.sh 1.1.18                                         # Specify a version
+# CAMINOGO_BIN_PATH=./path/to/caminogo ./scripts/tests.upgrade.sh 1.1.18    # Customization of caminogo path
 if ! [[ "$0" =~ scripts/tests.upgrade.sh ]]; then
   echo "must be run from repository root"
   exit 255
 fi
 
-# The AvalancheGo local network does not support long-lived
+# The CaminoGo local network does not support long-lived
 # backwards-compatible networks. When a breaking change is made to the
 # local network, this flag must be updated to the last compatible
 # version with the latest code.
 #
-# v1.10.17 includes the AWM activation on the C-Chain local network
-# and the inclusion of BLS Public Keys in the network genesis.
-DEFAULT_VERSION="1.10.17"
+# v1.1.18 includes restrictions on ports sent over the p2p network along with
+# proposervm and P-chain rule changes on the local network.
+DEFAULT_VERSION="1.1.18"
 
 VERSION="${1:-${DEFAULT_VERSION}}"
 if [[ -z "${VERSION}" ]]; then
@@ -27,35 +27,35 @@ if [[ -z "${VERSION}" ]]; then
   exit 255
 fi
 
-AVALANCHEGO_PATH="$(realpath ${AVALANCHEGO_PATH:-./build/avalanchego})"
+CAMINOGO_BIN_PATH="$(realpath "${CAMINOGO_BIN_PATH:-./build/caminogo}")"
 
 #################################
-# download avalanchego
-# https://github.com/ava-labs/avalanchego/releases
+# download caminogo
+# https://github.com/ava-labs/caminogo/releases
 GOARCH=$(go env GOARCH)
 GOOS=$(go env GOOS)
-DOWNLOAD_URL=https://github.com/ava-labs/avalanchego/releases/download/v${VERSION}/avalanchego-linux-${GOARCH}-v${VERSION}.tar.gz
-DOWNLOAD_PATH=/tmp/avalanchego.tar.gz
+DOWNLOAD_URL=https://github.com/ava-labs/caminogo/releases/download/v${VERSION}/caminogo-linux-${GOARCH}-v${VERSION}.tar.gz
+DOWNLOAD_PATH=/tmp/caminogo.tar.gz
 if [[ ${GOOS} == "darwin" ]]; then
-  DOWNLOAD_URL=https://github.com/ava-labs/avalanchego/releases/download/v${VERSION}/avalanchego-macos-v${VERSION}.zip
-  DOWNLOAD_PATH=/tmp/avalanchego.zip
+  DOWNLOAD_URL=https://github.com/ava-labs/caminogo/releases/download/v${VERSION}/caminogo-macos-v${VERSION}.zip
+  DOWNLOAD_PATH=/tmp/caminogo.zip
 fi
 
 rm -f ${DOWNLOAD_PATH}
-rm -rf /tmp/avalanchego-v${VERSION}
-rm -rf /tmp/avalanchego-build
+rm -rf "/tmp/caminogo-v${VERSION}"
+rm -rf /tmp/caminogo-build
 
-echo "downloading avalanchego ${VERSION} at ${DOWNLOAD_URL}"
-curl -L ${DOWNLOAD_URL} -o ${DOWNLOAD_PATH}
+echo "downloading caminogo ${VERSION} at ${DOWNLOAD_URL}"
+curl -L "${DOWNLOAD_URL}" -o "${DOWNLOAD_PATH}"
 
-echo "extracting downloaded avalanchego"
+echo "extracting downloaded caminogo"
 if [[ ${GOOS} == "linux" ]]; then
   tar xzvf ${DOWNLOAD_PATH} -C /tmp
 elif [[ ${GOOS} == "darwin" ]]; then
-  unzip ${DOWNLOAD_PATH} -d /tmp/avalanchego-build
-  mv /tmp/avalanchego-build/build /tmp/avalanchego-v${VERSION}
+  unzip ${DOWNLOAD_PATH} -d /tmp/caminogo-build
+  mv /tmp/caminogo-build/build "/tmp/caminogo-v${VERSION}"
 fi
-find /tmp/avalanchego-v${VERSION}
+find "/tmp/caminogo-v${VERSION}"
 
 # Sourcing constants.sh ensures that the necessary CGO flags are set to
 # build the portable version of BLST. Without this, ginkgo may fail to
@@ -72,8 +72,8 @@ ACK_GINKGO_RC=true ginkgo build ./tests/upgrade
 
 #################################
 # By default, it runs all upgrade test cases!
-echo "running upgrade tests against the local cluster with ${AVALANCHEGO_PATH}"
+echo "running upgrade tests against the local cluster with ${CAMINOGO_BIN_PATH}"
 ./tests/upgrade/upgrade.test \
   --ginkgo.v \
-  --avalanchego-path=/tmp/avalanchego-v${VERSION}/avalanchego \
-  --avalanchego-path-to-upgrade-to=${AVALANCHEGO_PATH}
+  --avalanchego-path="/tmp/caminogo-v${VERSION}/caminogo" \
+  --avalanchego-path-to-upgrade-to="${CAMINOGO_BIN_PATH}"
