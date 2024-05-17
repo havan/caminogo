@@ -275,7 +275,16 @@ func (n *Network) Create(rootDir string) error {
 		}
 		keysToFund = append(keysToFund, n.PreFundedKeys...)
 
-		genesis, err := NewTestGenesis(networkID, n.Nodes, keysToFund)
+		var (
+			genesis *genesis.UnparsedConfig
+			err     error
+		)
+		if networkID != 1002 {
+			genesis, err = NewTestGenesis(networkID, n.Nodes, keysToFund)
+		} else {
+			genesis, err = NewCaminoTestGenesis(networkID, n.Nodes, keysToFund)
+		}
+
 		if err != nil {
 			return err
 		}
@@ -673,14 +682,21 @@ func findNextNetworkID(rootDir string) (uint32, string, error) {
 	)
 	for {
 		_, reserved := constants.NetworkIDToNetworkName[networkID]
+		networkIDStr := os.Getenv("NETWORK_ID")
+		nID, err := strconv.Atoi(networkIDStr)
+		if err == nil {
+			fmt.Print("Using network ID from env var")
+			networkID = uint32(nID)
+			reserved = false
+		}
 		if reserved {
 			networkID++
 			continue
 		}
 
 		dirPath = filepath.Join(rootDir, strconv.FormatUint(uint64(networkID), 10))
-		err := os.Mkdir(dirPath, perms.ReadWriteExecute)
-		if err == nil {
+		err = os.Mkdir(dirPath, perms.ReadWriteExecute)
+		if err == nil || errors.Is(err, fs.ErrExist) {
 			return networkID, dirPath, nil
 		}
 

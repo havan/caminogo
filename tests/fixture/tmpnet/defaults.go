@@ -47,8 +47,9 @@ func DefaultFlags() FlagsMap {
 		config.AdminAPIEnabledKey:           "e2e",
 		config.IpcAPIEnabledKey:             true,
 		config.IndexEnabledKey:              true,
+		config.KeystoreAPIEnabledKey:        true,
 		config.LogDisplayLevelKey:           "INFO",
-		config.LogLevelKey:                  "DEBUG",
+		config.LogLevelKey:                  "INFO",
 		config.MinStakeDurationKey:          DefaultMinStakeDuration.String(),
 	}
 }
