@@ -74,7 +74,7 @@ func NewCaminoTestGenesis(
 					MinAmount:               1,
 					MinDuration:             110376000,
 					MaxDuration:             110376000,
-					UnlockPeriodDuration:    315360000,
+					UnlockPeriodDuration:    31536000,
 					NoRewardsPeriodDuration: 15768000,
 					Memo:                    "lockedpresale3y",
 					Flags: genesis.UnparsedDepositOfferFlags{
@@ -208,6 +208,47 @@ func NewCaminoTestGenesis(
 					PlatformAllocations: []genesis.UnparsedPlatformAllocation{
 						{
 							Amount: 1000000000000,
+						},
+					},
+				},
+				{
+					ETHAddr:  "0x0000000000000000000000000000000000000000",
+					AVAXAddr: "X-kopernikus1fwrv3kj5jqntuucw67lzgu9a9tkqyczxgcvpst",
+					XAmount:  1000000000000,
+					AddressStates: genesis.AddressStates{
+						ConsortiumMember: true,
+						KYCVerified:      true,
+					},
+					PlatformAllocations: []genesis.UnparsedPlatformAllocation{
+						{
+							Amount: 200000000000000000,
+						},
+					},
+				},
+				{
+					ETHAddr:  "0x0000000000000000000000000000000000000000",
+					AVAXAddr: "X-kopernikus1s93gzmzuvv7gz8q4l83xccrdchh8mtm3xm5s2g",
+					AddressStates: genesis.AddressStates{
+						ConsortiumMember: true,
+						KYCVerified:      true,
+					},
+					PlatformAllocations: []genesis.UnparsedPlatformAllocation{
+						{
+							Amount: 4000000000000,
+						},
+					},
+				},
+				{
+					ETHAddr:  "0x0000000000000000000000000000000000000000",
+					AVAXAddr: "X-kopernikus1jla8ty5c9ud6lsj8s4re2dvzvfxpzrxdcrd8q7",
+					XAmount:  1000000000000,
+					AddressStates: genesis.AddressStates{
+						ConsortiumMember: true,
+						KYCVerified:      true,
+					},
+					PlatformAllocations: []genesis.UnparsedPlatformAllocation{
+						{
+							Amount: 200000000000000000,
 						},
 					},
 				},
