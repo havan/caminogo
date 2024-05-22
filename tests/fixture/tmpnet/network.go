@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/ava-labs/avalanchego/config"
@@ -80,6 +81,8 @@ type Network struct {
 
 	// Subnets that have been enabled on the network
 	Subnets []*Subnet
+
+	once sync.Once
 }
 
 // Ensure a real and absolute network dir so that node
@@ -350,7 +353,9 @@ func (n *Network) StartNode(ctx context.Context, w io.Writer, node *Node) error 
 		return err
 	}
 	node.SetNetworkingConfig(bootstrapIDs, bootstrapIPs)
-
+	n.once.Do(func() {
+		node.Flags[config.HTTPPortKey] = "9650"
+	})
 	if err := node.Write(); err != nil {
 		return err
 	}
