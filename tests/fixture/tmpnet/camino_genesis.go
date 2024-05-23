@@ -178,7 +178,6 @@ func NewCaminoTestGenesis(
 				{
 					ETHAddr:  "0x0000000000000000000000000000000000000000",
 					AVAXAddr: "X-kopernikus1zy075lddftstzpwzvt627mvc0tep0vyk7y9v4l",
-					XAmount:  1000000000000,
 					AddressStates: genesis.AddressStates{
 						ConsortiumMember: true,
 						KYCVerified:      true,
@@ -189,9 +188,6 @@ func NewCaminoTestGenesis(
 							NodeID:            nodes[3].NodeID.String(),
 							ValidatorDuration: 31536000,
 							TimestampOffset:   0,
-						},
-						{
-							Amount: 1000000000000,
 						},
 					},
 				},
@@ -210,20 +206,6 @@ func NewCaminoTestGenesis(
 							ValidatorDuration: 31536000,
 							TimestampOffset:   0,
 						},
-						{
-							Amount: 1000000000000,
-						},
-					},
-				},
-				{
-					ETHAddr:  "0x0000000000000000000000000000000000000000",
-					AVAXAddr: "X-kopernikus16045mxr3s2cjycqe2xfluk304xv3ezhkw6nc99",
-					XAmount:  1000000000000,
-					AddressStates: genesis.AddressStates{
-						ConsortiumMember: true,
-						KYCVerified:      true,
-					},
-					PlatformAllocations: []genesis.UnparsedPlatformAllocation{
 						{
 							Amount: 1000000000000,
 						},
