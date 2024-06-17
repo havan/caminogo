@@ -163,14 +163,14 @@ func TestSimpleVoteOptionsGetMostVoted(t *testing.T) {
 		},
 		"OK: cached result": {
 			proposal: &SimpleVoteOptions[uint64]{
-				mostVotedWeight:      5,
-				mostVotedOptionIndex: 5,
-				unambiguous:          false,
+				mostVotedWeight:             5,
+				mostVotedOptionIndex:        5,
+				mostVotedIndexIsUnambiguous: false,
 			},
 			expectedProposal: &SimpleVoteOptions[uint64]{
-				mostVotedWeight:      5,
-				mostVotedOptionIndex: 5,
-				unambiguous:          false,
+				mostVotedWeight:             5,
+				mostVotedOptionIndex:        5,
+				mostVotedIndexIsUnambiguous: false,
 			},
 			expectedMostVotedWeight: 5,
 			expectedMostVotedIndex:  5,
@@ -179,11 +179,11 @@ func TestSimpleVoteOptionsGetMostVoted(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			mostVotedWeight, mostVotedIndex, unambiguous := tt.proposal.GetMostVoted()
+			mostVotedWeight, mostVotedIndex, mostVotedIndexIsUnambiguous := tt.proposal.GetMostVoted()
 			require.Equal(t, tt.expectedProposal, tt.proposal)
 			require.Equal(t, tt.expectedMostVotedWeight, mostVotedWeight)
 			require.Equal(t, tt.expectedMostVotedIndex, mostVotedIndex)
-			require.Equal(t, tt.expectedUnambiguous, unambiguous)
+			require.Equal(t, tt.expectedUnambiguous, mostVotedIndexIsUnambiguous)
 		})
 	}
 }

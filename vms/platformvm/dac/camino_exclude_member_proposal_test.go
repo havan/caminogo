@@ -178,9 +178,9 @@ func TestExcludeMemberProposalStateAddVote(t *testing.T) {
 						{Value: true, Weight: 2},  // 0
 						{Value: false, Weight: 1}, // 1
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 			voterAddr: voterAddr1,
@@ -195,9 +195,9 @@ func TestExcludeMemberProposalStateAddVote(t *testing.T) {
 						{Value: true, Weight: 2},  // 0
 						{Value: false, Weight: 1}, // 1
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 			expectedErr: ErrWrongVote,
@@ -213,9 +213,9 @@ func TestExcludeMemberProposalStateAddVote(t *testing.T) {
 						{Value: true, Weight: 2},  // 0
 						{Value: false, Weight: 1}, // 1
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 			voterAddr: ids.ShortID{3},
@@ -230,9 +230,9 @@ func TestExcludeMemberProposalStateAddVote(t *testing.T) {
 						{Value: true, Weight: 2},  // 0
 						{Value: false, Weight: 1}, // 1
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 			expectedErr: ErrWrongVote,
@@ -265,9 +265,9 @@ func TestExcludeMemberProposalStateAddVote(t *testing.T) {
 						{Value: true, Weight: 2},  // 0
 						{Value: false, Weight: 0}, // 1
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 			voterAddr: voterAddr1,
@@ -294,9 +294,9 @@ func TestExcludeMemberProposalStateAddVote(t *testing.T) {
 						{Value: true, Weight: 2},  // 0
 						{Value: false, Weight: 0}, // 1
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 		},
@@ -311,9 +311,9 @@ func TestExcludeMemberProposalStateAddVote(t *testing.T) {
 						{Value: true, Weight: 2},  // 0
 						{Value: false, Weight: 1}, // 1
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 			voterAddr: voterAddr1,
@@ -340,9 +340,9 @@ func TestExcludeMemberProposalStateAddVote(t *testing.T) {
 						{Value: true, Weight: 2},  // 0
 						{Value: false, Weight: 1}, // 1
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 		},

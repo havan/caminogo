@@ -236,9 +236,9 @@ func TestFeeDistributionProposalStateAddVote(t *testing.T) {
 						{Value: [FeeDistributionFractionsCount]uint64{20, 20, 60}, Weight: 0}, // 1
 						{Value: [FeeDistributionFractionsCount]uint64{30, 30, 40}, Weight: 1}, // 2
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 			voterAddr: voterAddr1,
@@ -254,9 +254,9 @@ func TestFeeDistributionProposalStateAddVote(t *testing.T) {
 						{Value: [FeeDistributionFractionsCount]uint64{20, 20, 60}, Weight: 0}, // 1
 						{Value: [FeeDistributionFractionsCount]uint64{30, 30, 40}, Weight: 1}, // 2
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 			expectedErr: ErrWrongVote,
@@ -273,9 +273,9 @@ func TestFeeDistributionProposalStateAddVote(t *testing.T) {
 						{Value: [FeeDistributionFractionsCount]uint64{20, 20, 60}, Weight: 0}, // 1
 						{Value: [FeeDistributionFractionsCount]uint64{30, 30, 40}, Weight: 1}, // 2
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 			voterAddr: ids.ShortID{3},
@@ -291,9 +291,9 @@ func TestFeeDistributionProposalStateAddVote(t *testing.T) {
 						{Value: [FeeDistributionFractionsCount]uint64{20, 20, 60}, Weight: 0}, // 1
 						{Value: [FeeDistributionFractionsCount]uint64{30, 30, 40}, Weight: 1}, // 2
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 			expectedErr: ErrWrongVote,
@@ -327,9 +327,9 @@ func TestFeeDistributionProposalStateAddVote(t *testing.T) {
 						{Value: [FeeDistributionFractionsCount]uint64{20, 20, 60}, Weight: 0}, // 1
 						{Value: [FeeDistributionFractionsCount]uint64{30, 30, 40}, Weight: 1}, // 2
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 			voterAddr: voterAddr1,
@@ -358,9 +358,9 @@ func TestFeeDistributionProposalStateAddVote(t *testing.T) {
 						{Value: [FeeDistributionFractionsCount]uint64{20, 20, 60}, Weight: 0}, // 1
 						{Value: [FeeDistributionFractionsCount]uint64{30, 30, 40}, Weight: 1}, // 2
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 		},
@@ -376,9 +376,9 @@ func TestFeeDistributionProposalStateAddVote(t *testing.T) {
 						{Value: [FeeDistributionFractionsCount]uint64{20, 20, 60}, Weight: 0}, // 1
 						{Value: [FeeDistributionFractionsCount]uint64{30, 30, 40}, Weight: 1}, // 2
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 			voterAddr: voterAddr1,
@@ -407,9 +407,9 @@ func TestFeeDistributionProposalStateAddVote(t *testing.T) {
 						{Value: [FeeDistributionFractionsCount]uint64{20, 20, 60}, Weight: 0}, // 1
 						{Value: [FeeDistributionFractionsCount]uint64{30, 30, 40}, Weight: 1}, // 2
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 		},

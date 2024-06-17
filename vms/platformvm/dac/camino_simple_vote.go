@@ -23,39 +23,39 @@ type SimpleVoteOption[T any] struct {
 }
 
 type SimpleVoteOptions[T any] struct {
-	Options              []SimpleVoteOption[T] `serialize:"true"`
-	mostVotedWeight      uint32                // Weight of most voted option
-	mostVotedOptionIndex uint32                // Index of most voted option
-	unambiguous          bool                  // True, if there is an option with weight > then other options weight
+	Options                     []SimpleVoteOption[T] `serialize:"true"`
+	mostVotedWeight             uint32                // Weight of most voted option
+	mostVotedOptionIndex        uint32                // Index of most voted option
+	mostVotedIndexIsUnambiguous bool                  // True, if there is an option with weight > then other options weight
 }
 
 func (p SimpleVoteOptions[T]) GetMostVoted() (
 	mostVotedWeight uint32,
 	mostVotedIndex uint32,
-	unambiguous bool,
+	mostVotedIndexIsUnambiguous bool,
 ) {
 	if p.mostVotedWeight != 0 {
-		return p.mostVotedWeight, p.mostVotedOptionIndex, p.unambiguous
+		return p.mostVotedWeight, p.mostVotedOptionIndex, p.mostVotedIndexIsUnambiguous
 	}
 
-	unambiguous = true
+	mostVotedIndexIsUnambiguous = true
 	mostVotedIndexInt := 0
 	weights := make([]int, len(p.Options))
 	for optionIndex := range p.Options {
 		weights[optionIndex] += int(p.Options[optionIndex].Weight)
 		if optionIndex != mostVotedIndexInt && weights[optionIndex] == weights[mostVotedIndexInt] {
-			unambiguous = false
+			mostVotedIndexIsUnambiguous = false
 		} else if weights[optionIndex] > weights[mostVotedIndexInt] {
 			mostVotedIndexInt = optionIndex
-			unambiguous = true
+			mostVotedIndexIsUnambiguous = true
 		}
 	}
 
 	p.mostVotedWeight = uint32(weights[mostVotedIndexInt])
 	p.mostVotedOptionIndex = uint32(mostVotedIndexInt)
-	p.unambiguous = unambiguous && p.mostVotedWeight > 0
+	p.mostVotedIndexIsUnambiguous = mostVotedIndexIsUnambiguous && p.mostVotedWeight > 0
 
-	return p.mostVotedWeight, p.mostVotedOptionIndex, p.unambiguous
+	return p.mostVotedWeight, p.mostVotedOptionIndex, p.mostVotedIndexIsUnambiguous
 }
 
 func (p SimpleVoteOptions[T]) Voted() uint32 {

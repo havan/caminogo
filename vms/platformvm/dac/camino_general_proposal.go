@@ -181,7 +181,7 @@ func (p *GeneralProposalState) CanBeFinished() bool {
 		return false
 	}
 
-	mostVotedWeight, mostVotedIndex, unambiguous := p.GetMostVoted()
+	mostVotedWeight, mostVotedIndex, mostVotedIndexIsUnambiguous := p.GetMostVoted()
 	voted := p.Voted()
 	remainingVotes := p.TotalAllowedVoters - voted
 
@@ -201,16 +201,42 @@ func (p *GeneralProposalState) CanBeFinished() bool {
 	mostVotedThresholdBig.Div(mostVotedThresholdBig, fractionDenominatorBig)
 	mostVotedThreshold := uint32(mostVotedThresholdBig.Uint64())
 
-	return remainingVotes+mostVotedWeight < mostVotedThreshold+1 || // no option can win
-		voted == p.TotalAllowedVoters || // everyone had voted
-		unambiguous && // option will inevitably win, because
-			(mostVotedWeight > remainingVotes+secondMostVotedWeight || len(p.Options) == 1) && // it has more votes than any other option + remaining votes or its the only option
-			mostVotedWeight > mostVotedThreshold && // it has already surpassed mostVotedThreshold
-			voted > p.TotalVotedThreshold // it has already surpassed totalVotedThreshold
+	noOptionCanWin := remainingVotes+mostVotedWeight < mostVotedThreshold+1
+
+	// TODO@
+	// mostVotedWeight < mostVotedThreshold + 1 - remainingVotes
+	// mostVotedWeight > remainingVotes + secondMostVotedWeight
+	// mostVotedWeight > mostVotedThreshold
+
+	// M < T + 1 - R
+	// M > R + S
+	// M > T
+	// T < M
+
+	// M>max(T,R+S)
+	// M<T+1−R
+
+	// mostVotedWeight as M
+	// mostVotedThreshold as T
+	// remainingVotes as R
+	// secondMostVotedWeightsecondMostVotedWeight as S
+
+	everyoneHadVoted := voted == p.TotalAllowedVoters // TODO@ may also be omitted ?
+
+	totalVotedThresholdReached := voted > p.TotalVotedThreshold
+	mostVotedThresholdReached := mostVotedWeight > mostVotedThreshold
+	hasOnlyOneOption := len(p.Options) == 1
+	// it has more votes than any other option + remaining votes
+	hasUnambiguousWinningOption := mostVotedWeight > remainingVotes+secondMostVotedWeight
+
+	return noOptionCanWin || everyoneHadVoted ||
+		mostVotedIndexIsUnambiguous &&
+			(hasUnambiguousWinningOption || hasOnlyOneOption) &&
+			mostVotedThresholdReached && totalVotedThresholdReached
 }
 
 func (p *GeneralProposalState) IsSuccessful() bool {
-	mostVotedWeight, _, unambiguous := p.GetMostVoted()
+	mostVotedWeight, _, mostVotedIndexIsUnambiguous := p.GetMostVoted()
 	voted := p.Voted()
 
 	// mostVotedThreshold = voted * p.MostVotedThresholdNominator / fractionDenominatorBig
@@ -219,20 +245,20 @@ func (p *GeneralProposalState) IsSuccessful() bool {
 	mostVotedThreshold.Mul(mostVotedThreshold, mostVotedThresholdNominator)
 	mostVotedThreshold.Div(mostVotedThreshold, fractionDenominatorBig)
 
-	return unambiguous && voted > p.TotalVotedThreshold && uint64(mostVotedWeight) > mostVotedThreshold.Uint64()
+	return mostVotedIndexIsUnambiguous && voted > p.TotalVotedThreshold && uint64(mostVotedWeight) > mostVotedThreshold.Uint64()
 }
 
 func (p *GeneralProposalState) Outcome() any {
-	_, mostVotedOptionIndex, unambiguous := p.GetMostVoted()
-	if !unambiguous {
+	_, mostVotedOptionIndex, mostVotedIndexIsUnambiguous := p.GetMostVoted()
+	if !mostVotedIndexIsUnambiguous {
 		return -1
 	}
 	return mostVotedOptionIndex
 }
 
 func (p *GeneralProposalState) Result() (types.JSONByteSlice, uint32, bool) {
-	mostVotedWeight, mostVotedOptionIndex, unambiguous := p.GetMostVoted()
-	return p.Options[mostVotedOptionIndex].Value, mostVotedWeight, unambiguous
+	mostVotedWeight, mostVotedOptionIndex, mostVotedIndexIsUnambiguous := p.GetMostVoted()
+	return p.Options[mostVotedOptionIndex].Value, mostVotedWeight, mostVotedIndexIsUnambiguous
 }
 
 // Will return modified proposal with added vote, original proposal will not be modified!

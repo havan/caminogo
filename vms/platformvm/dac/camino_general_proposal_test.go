@@ -284,9 +284,9 @@ func TestGeneralProposalStateAddVote(t *testing.T) {
 						{Value: []byte{2}, Weight: 0}, // 1
 						{Value: []byte{3}, Weight: 1}, // 2
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 			voterAddr: voterAddr1,
@@ -302,9 +302,9 @@ func TestGeneralProposalStateAddVote(t *testing.T) {
 						{Value: []byte{2}, Weight: 0}, // 1
 						{Value: []byte{3}, Weight: 1}, // 2
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 			expectedErr: ErrWrongVote,
@@ -321,9 +321,9 @@ func TestGeneralProposalStateAddVote(t *testing.T) {
 						{Value: []byte{2}, Weight: 0}, // 1
 						{Value: []byte{3}, Weight: 1}, // 2
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 			voterAddr: ids.ShortID{3},
@@ -339,9 +339,9 @@ func TestGeneralProposalStateAddVote(t *testing.T) {
 						{Value: []byte{2}, Weight: 0}, // 1
 						{Value: []byte{3}, Weight: 1}, // 2
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 			expectedErr: ErrWrongVote,
@@ -375,9 +375,9 @@ func TestGeneralProposalStateAddVote(t *testing.T) {
 						{Value: []byte{2}, Weight: 0}, // 1
 						{Value: []byte{3}, Weight: 1}, // 2
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 			voterAddr: voterAddr1,
@@ -406,9 +406,9 @@ func TestGeneralProposalStateAddVote(t *testing.T) {
 						{Value: []byte{2}, Weight: 0}, // 1
 						{Value: []byte{3}, Weight: 1}, // 2
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 		},
@@ -424,9 +424,9 @@ func TestGeneralProposalStateAddVote(t *testing.T) {
 						{Value: []byte{2}, Weight: 0}, // 1
 						{Value: []byte{3}, Weight: 1}, // 2
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 			voterAddr: voterAddr1,
@@ -455,9 +455,9 @@ func TestGeneralProposalStateAddVote(t *testing.T) {
 						{Value: []byte{2}, Weight: 0}, // 1
 						{Value: []byte{3}, Weight: 1}, // 2
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 		},

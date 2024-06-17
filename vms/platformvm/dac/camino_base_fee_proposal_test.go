@@ -223,9 +223,9 @@ func TestBaseFeeProposalStateAddVote(t *testing.T) {
 						{Value: 20, Weight: 0}, // 1
 						{Value: 30, Weight: 1}, // 2
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 			voterAddr: voterAddr1,
@@ -241,9 +241,9 @@ func TestBaseFeeProposalStateAddVote(t *testing.T) {
 						{Value: 20, Weight: 0}, // 1
 						{Value: 30, Weight: 1}, // 2
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 			expectedErr: ErrWrongVote,
@@ -260,9 +260,9 @@ func TestBaseFeeProposalStateAddVote(t *testing.T) {
 						{Value: 20, Weight: 0}, // 1
 						{Value: 30, Weight: 1}, // 2
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 			voterAddr: ids.ShortID{3},
@@ -278,9 +278,9 @@ func TestBaseFeeProposalStateAddVote(t *testing.T) {
 						{Value: 20, Weight: 0}, // 1
 						{Value: 30, Weight: 1}, // 2
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 			expectedErr: ErrWrongVote,
@@ -314,9 +314,9 @@ func TestBaseFeeProposalStateAddVote(t *testing.T) {
 						{Value: 20, Weight: 0}, // 1
 						{Value: 30, Weight: 1}, // 2
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 			voterAddr: voterAddr1,
@@ -345,9 +345,9 @@ func TestBaseFeeProposalStateAddVote(t *testing.T) {
 						{Value: 20, Weight: 0}, // 1
 						{Value: 30, Weight: 1}, // 2
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 		},
@@ -363,9 +363,9 @@ func TestBaseFeeProposalStateAddVote(t *testing.T) {
 						{Value: 20, Weight: 0}, // 1
 						{Value: 30, Weight: 1}, // 2
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 			voterAddr: voterAddr1,
@@ -394,9 +394,9 @@ func TestBaseFeeProposalStateAddVote(t *testing.T) {
 						{Value: 20, Weight: 0}, // 1
 						{Value: 30, Weight: 1}, // 2
 					},
-					mostVotedWeight:      2,
-					mostVotedOptionIndex: 0,
-					unambiguous:          true,
+					mostVotedWeight:             2,
+					mostVotedOptionIndex:        0,
+					mostVotedIndexIsUnambiguous: true,
 				},
 			},
 		},

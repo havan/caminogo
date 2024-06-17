@@ -133,30 +133,30 @@ func (p *BaseFeeProposalState) VerifyActive(time time.Time) error {
 }
 
 func (p *BaseFeeProposalState) CanBeFinished() bool {
-	mostVotedWeight, _, unambiguous := p.GetMostVoted()
+	mostVotedWeight, _, mostVotedIndexIsUnambiguous := p.GetMostVoted()
 	voted := p.Voted()
 	return p.TotalAllowedVoters-voted+mostVotedWeight < voted/2+1 ||
 		voted == p.TotalAllowedVoters ||
-		unambiguous && mostVotedWeight > p.TotalAllowedVoters/2
+		mostVotedIndexIsUnambiguous && mostVotedWeight > p.TotalAllowedVoters/2
 }
 
 func (p *BaseFeeProposalState) IsSuccessful() bool {
-	mostVotedWeight, _, unambiguous := p.GetMostVoted()
+	mostVotedWeight, _, mostVotedIndexIsUnambiguous := p.GetMostVoted()
 	voted := p.Voted()
-	return unambiguous && voted > p.TotalAllowedVoters/2 && mostVotedWeight > voted/2
+	return mostVotedIndexIsUnambiguous && voted > p.TotalAllowedVoters/2 && mostVotedWeight > voted/2
 }
 
 func (p *BaseFeeProposalState) Outcome() any {
-	_, mostVotedOptionIndex, unambiguous := p.GetMostVoted()
-	if !unambiguous {
+	_, mostVotedOptionIndex, mostVotedIndexIsUnambiguous := p.GetMostVoted()
+	if !mostVotedIndexIsUnambiguous {
 		return -1
 	}
 	return mostVotedOptionIndex
 }
 
 func (p *BaseFeeProposalState) Result() (uint64, uint32, bool) {
-	mostVotedWeight, mostVotedOptionIndex, unambiguous := p.GetMostVoted()
-	return p.Options[mostVotedOptionIndex].Value, mostVotedWeight, unambiguous
+	mostVotedWeight, mostVotedOptionIndex, mostVotedIndexIsUnambiguous := p.GetMostVoted()
+	return p.Options[mostVotedOptionIndex].Value, mostVotedWeight, mostVotedIndexIsUnambiguous
 }
 
 // Will return modified proposal with added vote, original proposal will not be modified!

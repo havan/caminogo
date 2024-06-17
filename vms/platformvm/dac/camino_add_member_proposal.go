@@ -113,30 +113,30 @@ func (p *AddMemberProposalState) VerifyActive(time time.Time) error {
 }
 
 func (p *AddMemberProposalState) CanBeFinished() bool {
-	mostVotedWeight, _, unambiguous := p.GetMostVoted()
+	mostVotedWeight, _, mostVotedIndexIsUnambiguous := p.GetMostVoted()
 	voted := p.Voted()
 	// We don't check for 'no option can reach 50%+ of votes' for this proposal type, cause its impossible with just 2 options
 	return voted == p.TotalAllowedVoters ||
-		unambiguous && mostVotedWeight > p.TotalAllowedVoters/2
+		mostVotedIndexIsUnambiguous && mostVotedWeight > p.TotalAllowedVoters/2
 }
 
 func (p *AddMemberProposalState) IsSuccessful() bool {
-	mostVotedWeight, _, unambiguous := p.GetMostVoted()
+	mostVotedWeight, _, mostVotedIndexIsUnambiguous := p.GetMostVoted()
 	voted := p.Voted()
-	return unambiguous && voted > p.TotalAllowedVoters/2 && mostVotedWeight > voted/2
+	return mostVotedIndexIsUnambiguous && voted > p.TotalAllowedVoters/2 && mostVotedWeight > voted/2
 }
 
 func (p *AddMemberProposalState) Outcome() any {
-	_, mostVotedOptionIndex, unambiguous := p.GetMostVoted()
-	if !unambiguous {
+	_, mostVotedOptionIndex, mostVotedIndexIsUnambiguous := p.GetMostVoted()
+	if !mostVotedIndexIsUnambiguous {
 		return -1
 	}
 	return mostVotedOptionIndex
 }
 
 func (p *AddMemberProposalState) Result() (bool, uint32, bool) {
-	mostVotedWeight, mostVotedOptionIndex, unambiguous := p.GetMostVoted()
-	return p.Options[mostVotedOptionIndex].Value, mostVotedWeight, unambiguous
+	mostVotedWeight, mostVotedOptionIndex, mostVotedIndexIsUnambiguous := p.GetMostVoted()
+	return p.Options[mostVotedOptionIndex].Value, mostVotedWeight, mostVotedIndexIsUnambiguous
 }
 
 // Will return modified proposal with added vote, original proposal will not be modified!
