@@ -122,6 +122,7 @@ var (
 
 	// TODO@ !!!! possibly was missing for our go-live and still missing!
 	// TODO@ might affect existing network!!!
+	// TODO@ NOPE. default 0 is totally fine.
 	ApricotPhase4MinPChainHeight = map[uint32]uint64{
 		constants.MainnetID: 793005,
 		constants.FujiID:    47437,
