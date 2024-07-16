@@ -17,18 +17,16 @@ type Phase int
 
 // Camino phases must go in consecutive order
 const (
-	PhaseApricot3 Phase = -2 // avax
-	PhaseApricot5 Phase = -1 // avax
+	PhaseApricot3 Phase = 1 // avax, included into Sunrise phase
+	PhaseApricot5 Phase = 1 // avax, included into Sunrise phase
+	PhaseBanff    Phase = 1 // avax, included into Sunrise phase
 	PhaseSunrise  Phase = 1
-	PhaseBanff    Phase = 1 // avax, phase actually happened after Sunrise, but before Athens. But first release is Sunrise.
 	PhaseAthens   Phase = 2
 	PhaseCortina  Phase = 3 // avax, included into Berlin phase
 	PhaseBerlin   Phase = 3
 	PhaseCairo    Phase = 4
 	PhaseDurango  Phase = math.MaxInt // avax
 )
-
-// TODO@ we might want to clean up sunrise/banff timestamps/relations later
 
 const (
 	PhaseFirst = PhaseSunrise

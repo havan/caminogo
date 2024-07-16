@@ -84,20 +84,18 @@ func Config(t *testing.T, phase Phase) *config.Config {
 	case PhaseDurango:
 		durangoTime = LatestPhaseTime
 		fallthrough
-	case PhaseBerlin: // same time, as PhaseCortina
+	case PhaseBerlin:
 		berlinTime = LatestPhaseTime
+		cortinaTime = LatestPhaseTime
 		fallthrough
 	case PhaseAthens:
 		athensTime = LatestPhaseTime
 		fallthrough
-	case PhaseSunrise: // Banff is considered to be part of SunrisePhase release
+	case PhaseSunrise:
 		banffTime = LatestPhaseTime
-		fallthrough
-	case PhaseApricot5:
 		apricotPhase5Time = LatestPhaseTime
-		fallthrough
-	case PhaseApricot3:
 		apricotPhase3Time = LatestPhaseTime
+		fallthrough
 	default:
 		require.FailNow(t, "unhandled fork %d", phase)
 	}
