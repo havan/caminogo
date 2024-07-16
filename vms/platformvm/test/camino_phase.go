@@ -28,7 +28,7 @@ const (
 	PhaseDurango  Phase = math.MaxInt // avax
 )
 
-// TODO @evlekht we might want to clean up sunrise/banff timestamps/relations later
+// TODO@ we might want to clean up sunrise/banff timestamps/relations later
 
 const (
 	PhaseFirst = PhaseSunrise
