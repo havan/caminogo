@@ -3,7 +3,7 @@ name: Build + Test Mac-Windows
 on:
   pull_request:
     tags-ignore: ["*"]
-    branches: [chain4travel, dev]
+    branches: [chain4travel, dev, evlekht/new-dev-resulting]
   push:
     branches: [chain4travel, dev]
   workflow_dispatch:
