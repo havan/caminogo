@@ -1,4 +1,4 @@
-module github.com/ava-labs/avalanchego
+module github.com/havan/caminogo
 
 // Changes to the minimum golang version must also be replicated in
 // scripts/build_camino.sh
@@ -142,3 +142,6 @@ require (
 replace github.com/ava-labs/avalanche-ledger-go => github.com/chain4travel/camino-ledger-go v0.0.13-c4t
 
 replace github.com/ava-labs/coreth => github.com/chain4travel/caminoethvm v1.1.0-rc11
+
+replace github.com/ava-labs/avalanchego => ./
+
