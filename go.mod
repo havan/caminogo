@@ -13,6 +13,7 @@ require (
 	github.com/Microsoft/go-winio v0.5.2
 	github.com/NYTimes/gziphandler v1.1.1
 	github.com/ava-labs/avalanche-network-runner-sdk v0.3.0
+	github.com/ava-labs/avalanchego v1.9.16
 	github.com/ava-labs/coreth v0.12.0-rc.2
 	github.com/ava-labs/ledger-avalanche/go v0.0.0-20230105152938-00a24d05a8c7
 	github.com/btcsuite/btcd/btcutil v1.1.3
@@ -67,7 +68,6 @@ require (
 
 require (
 	github.com/VictoriaMetrics/fastcache v1.10.0 // indirect
-	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
@@ -144,4 +144,3 @@ replace github.com/ava-labs/avalanche-ledger-go => github.com/chain4travel/camin
 replace github.com/ava-labs/coreth => github.com/chain4travel/caminoethvm v1.1.0-rc11
 
 replace github.com/ava-labs/avalanchego => ./
-
