@@ -221,6 +221,56 @@ func StateVerifyMultisigOwner(
 		return
 	}
 
+	require.Len(t, msigAliasAddresses, len(msigAliases))
+
+	aliases := make(map[ids.ShortID]*multisig.AliasWithNonce)
+	for i := range msigAliasAddresses {
+		aliases[msigAliasAddresses[i]] = msigAliases[i]
+	}
+
+	addresses := set.Set[ids.ShortID]{}
+
+	if collectAddresses {
+		for _, addr := range owner.Addrs {
+			addresses.Add(addr)
+		}
+		for _, alias := range msigAliases {
+			owner, ok := alias.Owners.(*secp256k1fx.OutputOwners)
+			require.True(t, ok)
+			for _, addr := range owner.Addrs {
+				addresses.Add(addr)
+			}
+		}
+	}
+
+	for _, msigAliasAddress := range msigAliasAddresses {
+		addresses.Add(msigAliasAddress)
+	}
+
+	for addr := range addresses {
+		if _, ok := aliases[addr]; ok {
+			s.EXPECT().GetMultisigAlias(addr).Return(aliases[addr], nil)
+		} else {
+			s.EXPECT().GetMultisigAlias(addr).Return(nil, database.ErrNotFound)
+		}
+	}
+}
+
+func VerifyMultisigOwner(
+	t *testing.T,
+	s *state.MockChain,
+	owner *secp256k1fx.OutputOwners,
+	msigAliasAddresses []ids.ShortID,
+	msigAliases []*multisig.AliasWithNonce,
+	collectAddresses bool,
+) {
+	t.Helper()
+	if owner == nil {
+		return
+	}
+
+	require.Len(t, msigAliasAddresses, len(msigAliases))
+
 	aliases := make(map[ids.ShortID]*multisig.AliasWithNonce)
 	for i := range msigAliasAddresses {
 		aliases[msigAliasAddresses[i]] = msigAliases[i]
@@ -365,5 +415,23 @@ func StateGetBondTxIDs(
 			}
 			j++
 		}
+	}
+}
+
+func GetDepositUnlockableAmounts(
+	t *testing.T,
+	s *state.MockChain,
+	depositTxIDs []ids.ID,
+	deposits []*deposit.Deposit,
+	offers []*deposit.Offer,
+) {
+	t.Helper()
+	require.Len(t, depositTxIDs, len(deposits))
+	require.Len(t, depositTxIDs, len(offers))
+	for i := range depositTxIDs {
+		s.EXPECT().GetDeposit(depositTxIDs[i]).Return(deposits[i], nil)
+	}
+	for i := range offers {
+		s.EXPECT().GetDepositOffer(deposits[i].DepositOfferID).Return(offers[i], nil)
 	}
 }

@@ -430,13 +430,7 @@ func (s *CaminoService) Spend(_ *http.Request, args *SpendArgs, response *SpendR
 		return fmt.Errorf("%w: %s", errEncodeTransferables, err)
 	}
 
-	response.Signers = make([][]ids.ShortID, len(signers))
-	for i, cred := range signers {
-		response.Signers[i] = make([]ids.ShortID, len(cred))
-		for j, sig := range cred {
-			response.Signers[i][j] = sig.Address()
-		}
-	}
+	response.Signers = signersFromKeys(signers)
 
 	bytes, err = txs.Codec.Marshal(txs.Version, owners)
 	if err != nil {
@@ -445,6 +439,115 @@ func (s *CaminoService) Spend(_ *http.Request, args *SpendArgs, response *SpendR
 	if response.Owners, err = formatting.Encode(args.Encoding, bytes); err != nil {
 		return fmt.Errorf("%w: %s", errSerializeOwners, err)
 	}
+	return nil
+}
+
+type Undeposit struct {
+	Amount      utilsjson.Uint64 `json:"amount"`
+	DepositTxID ids.ID           `json:"depositTxID"`
+}
+
+type UndepositArgs struct {
+	api.JSONFromAddrs
+
+	UndepositTo  platformapi.Owner   `json:"undepositTo"`
+	AmountToBurn utilsjson.Uint64    `json:"amountToBurn"`
+	Undeposits   []Undeposit         `json:"undeposits"`
+	Encoding     formatting.Encoding `json:"encoding"`
+}
+
+type UndepositReply struct {
+	Ins     string          `json:"ins"`
+	Outs    string          `json:"outs"`
+	Signers [][]ids.ShortID `json:"signers"`
+	Owners  string          `json:"owners"`
+}
+
+func (s *CaminoService) Undeposit(_ *http.Request, args *UndepositArgs, response *UndepositReply) error {
+	s.vm.ctx.Log.Debug("Platform: Undeposit called")
+
+	if len(args.Undeposits) == 0 {
+		return errors.New("no undeposits provided")
+	}
+
+	privKeys, err := s.getFakeKeys(&args.JSONFromAddrs)
+	if err != nil {
+		return err
+	}
+	if len(privKeys) == 0 {
+		return errNoKeys
+	}
+
+	undepositTo, err := s.secpOwnerFromAPI(&args.UndepositTo)
+	if err != nil {
+		return err
+	}
+
+	undeposits := make(map[ids.ID]uint64, len(args.Undeposits))
+	for _, undeposit := range args.Undeposits {
+		undeposits[undeposit.DepositTxID] = uint64(undeposit.Amount)
+	}
+
+	depositIns, depositOuts, depositSigners, depositOwners, err := s.vm.txBuilder.UnlockDeposit(
+		s.vm.state,
+		privKeys,
+		undeposits,
+		undepositTo,
+	)
+	if err != nil {
+		return fmt.Errorf("%w: %s", errCreateTransferables, err)
+	}
+
+	ins, outs, signers, owners, err := s.vm.txBuilder.Lock(
+		s.vm.state,
+		privKeys,
+		0,
+		uint64(args.AmountToBurn),
+		locked.StateUnlocked,
+		nil,
+		nil,
+		0,
+	)
+	if err != nil {
+		return fmt.Errorf("%w: %s", errCreateTransferables, err)
+	}
+
+	ins = append(ins, depositIns...)
+	outs = append(outs, depositOuts...)
+	signers = append(signers, depositSigners...)
+	owners = append(owners, depositOwners...)
+
+	avax.SortTransferableInputsWithSigners(ins, signers)
+	avax.SortTransferableOutputs(outs, txs.Codec)
+
+	bytes, err := txs.Codec.Marshal(txs.Version, ins)
+	if err != nil {
+		return fmt.Errorf("%w: %s", errSerializeTransferables, err)
+	}
+
+	if response.Ins, err = formatting.Encode(args.Encoding, bytes); err != nil {
+		return fmt.Errorf("%w: %s", errEncodeTransferables, err)
+	}
+
+	bytes, err = txs.Codec.Marshal(txs.Version, outs)
+	if err != nil {
+		return fmt.Errorf("%w: %s", errSerializeTransferables, err)
+	}
+
+	if response.Outs, err = formatting.Encode(args.Encoding, bytes); err != nil {
+		return fmt.Errorf("%w: %s", errEncodeTransferables, err)
+	}
+
+	response.Signers = signersFromKeys(signers)
+
+	bytes, err = txs.Codec.Marshal(txs.Version, owners)
+	if err != nil {
+		return fmt.Errorf("%w: %s", errSerializeOwners, err)
+	}
+	if response.Owners, err = formatting.Encode(args.Encoding, bytes); err != nil {
+		return fmt.Errorf("%w: %s", errSerializeOwners, err)
+	}
+
 	return nil
 }
 
@@ -1148,4 +1251,15 @@ func (s *CaminoService) GetCurrentSupply(_ *http.Request, args *GetCurrentSupply
 	}
 	reply.Supply = utilsjson.Uint64(supply)
 	return err
+}
+
+func signersFromKeys(signersKeys [][]*secp256k1.PrivateKey) [][]ids.ShortID {
+	signers := make([][]ids.ShortID, len(signersKeys))
+	for i, keys := range signersKeys {
+		signers[i] = make([]ids.ShortID, len(keys))
+		for j, key := range keys {
+			signers[i][j] = key.Address()
+		}
+	}
+	return signers
 }
