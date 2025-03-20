@@ -87,7 +87,7 @@ type ProposalState interface {
 	// Visits getter and returns additional lock tx ids, that should be unbonded when this proposal is successfully finished.
 	GetBondTxIDsWith(BondTxIDsGetter) ([]ids.ID, error)
 	// Will return modified ProposalState with added vote, original ProposalState will not be modified!
-	AddVote(voterAddress ids.ShortID, vote Vote) (ProposalState, error)
+	AddVote(voterAddress ids.ShortID, vote Vote, isCairoPhase bool) (ProposalState, error)
 
 	// Returns modified proposal with added vote ignoring allowed voters, original proposal will not be modified!
 	// (used in magellan)
@@ -95,7 +95,7 @@ type ProposalState interface {
 	// We want to keep it in caminogo even if its used only in magellan,
 	// cause it contains internal proposal logic that affects success state.
 	// We don't want to care about that in magellan.
-	ForceAddVote(voteIntf Vote) (ProposalState, error)
+	ForceAddVote(voteIntf Vote, isCairoPhase bool) (ProposalState, error)
 }
 
 type AdminProposal struct {
